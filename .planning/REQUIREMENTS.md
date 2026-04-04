@@ -15,7 +15,7 @@
 - [ ] **DATA-01**: LeClaw initializes embedded PostgreSQL database on first run
 - [ ] **DATA-02**: Company entity can be created, read, updated, deleted
 - [ ] **DATA-03**: Department entity can be created, read, updated, deleted under a Company
-- [ ] **DATA-04**: Agent binding relationship (CEO/Manager/Staff → OpenClaw agent) is stored and retrieved
+- [ ] **DATA-04**: Agent binding relationship (CEO/Manager/Staff -> OpenClaw agent) is stored and retrieved
 - [ ] **DATA-05**: Issue entity can be created and listed (title, description, status, assignee)
 
 ### OpenClaw Connection
@@ -73,24 +73,54 @@
 
 ## Out of Scope
 
-- **Auth/Multi-tenant SaaS** — Single user design, no authentication required
-- **Agent code modification** — LeClaw reads and monitors OpenClaw agents only, does not modify them
-- **OpenClaw embedding** — LeClaw connects to external OpenClaw instances as a separate process
-- **Nested sub-departments** — Fixed Company → Department two-level hierarchy only
-- **Mobile UI** — Web UI only (desktop browser)
+- **Auth/Multi-tenant SaaS** - Single user design, no authentication required
+- **Agent code modification** - LeClaw reads and monitors OpenClaw agents only, does not modify them
+- **OpenClaw embedding** - LeClaw connects to external OpenClaw instances as a separate process
+- **Nested sub-departments** - Fixed Company -> Department two-level hierarchy only
+- **Mobile UI** - Web UI only (desktop browser)
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLI-01 to CLI-05 | 1 | Pending |
-| DATA-01 to DATA-05 | 1 | Pending |
-| OPENCLAW-01 to OPENCLAW-04 | 2 | Pending |
-| UI-01 to UI-09 | 2 | Pending |
-| ISSUE-01 to ISSUE-04 | 2 | Pending |
-| RT-01 to RT-03 | 3 | Pending |
-| API-01 to API-05 | 2 | Pending |
+| CLI-01 | Phase 1 - Foundation + CLI Init | Pending |
+| CLI-02 | Phase 1 - Foundation + CLI Init | Pending |
+| CLI-03 | Phase 1 - Foundation + CLI Init | Pending |
+| DATA-01 | Phase 1 - Foundation + CLI Init | Pending |
+| DATA-02 | Phase 2 - Data Layer + API Foundation | Pending |
+| DATA-03 | Phase 2 - Data Layer + API Foundation | Pending |
+| DATA-04 | Phase 2 - Data Layer + API Foundation | Pending |
+| DATA-05 | Phase 2 - Data Layer + API Foundation | Pending |
+| API-01 | Phase 2 - Data Layer + API Foundation | Pending |
+| API-02 | Phase 2 - Data Layer + API Foundation | Pending |
+| API-03 | Phase 2 - Data Layer + API Foundation | Pending |
+| API-04 | Phase 2 - Data Layer + API Foundation | Pending |
+| API-05 | Phase 2 - Data Layer + API Foundation | Pending |
+| OPENCLAW-01 | Phase 3 - OpenClaw Bridge + API | Pending |
+| OPENCLAW-02 | Phase 3 - OpenClaw Bridge + API | Pending |
+| OPENCLAW-03 | Phase 3 - OpenClaw Bridge + API | Pending |
+| OPENCLAW-04 | Phase 3 - OpenClaw Bridge + API | Pending |
+| RT-01 | Phase 4 - Real-Time Infrastructure | Pending |
+| RT-02 | Phase 4 - Real-Time Infrastructure | Pending |
+| RT-03 | Phase 4 - Real-Time Infrastructure | Pending |
+| UI-01 | Phase 5 - Web UI - Dashboard | Pending |
+| UI-02 | Phase 5 - Web UI - Dashboard | Pending |
+| UI-03 | Phase 5 - Web UI - Dashboard | Pending |
+| UI-04 | Phase 6 - Web UI - Organization | Pending |
+| UI-05 | Phase 6 - Web UI - Organization | Pending |
+| UI-06 | Phase 6 - Web UI - Organization | Pending |
+| UI-07 | Phase 6 - Web UI - Organization | Pending |
+| UI-08 | Phase 6 - Web UI - Organization | Pending |
+| UI-09 | Phase 6 - Web UI - Organization | Pending |
+| ISSUE-01 | Phase 7 - Web UI - Issues | Pending |
+| ISSUE-02 | Phase 7 - Web UI - Issues | Pending |
+| ISSUE-03 | Phase 7 - Web UI - Issues | Pending |
+| ISSUE-04 | Phase 7 - Web UI - Issues | Pending |
 | V2-01 to V2-07 | Future | Deferred |
 
+**Coverage: 35/35 v1 requirements mapped to phases**
+
 ---
+
 *Generated: 2026-04-05*
+*Last updated: 2026-04-05 (roadmap created)*
