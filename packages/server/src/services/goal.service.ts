@@ -1,12 +1,12 @@
 import { eq } from "drizzle-orm";
 import { goals } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
-import type { Goal } from "@leclaw/shared";
+import type { Goal, GoalStatus } from "@leclaw/shared";
 
 export interface CreateGoalInput {
   title: string;
   description?: string;
-  status?: "Open" | "Achieved" | "Archived";
+  status?: GoalStatus;
   verification?: string;
   deadline?: Date;
   departmentIds?: string[];
@@ -17,7 +17,7 @@ export interface CreateGoalInput {
 export interface UpdateGoalInput {
   title?: string;
   description?: string;
-  status?: "Open" | "Achieved" | "Archived";
+  status?: GoalStatus;
   verification?: string;
   deadline?: Date;
   departmentIds?: string[];
@@ -26,49 +26,47 @@ export interface UpdateGoalInput {
 
 export async function listGoalsByCompany(companyId: string): Promise<Goal[]> {
   const db = await getDb();
-  return await db.select().from(goals).where(eq(goals.companyId, companyId));
+  const rows = await db.select().from(goals).where(eq(goals.companyId, companyId));
+  return rows.map(row => ({ ...row, status: row.status as GoalStatus }));
 }
 
 export async function getGoal(id: string): Promise<Goal | null> {
   const db = await getDb();
   const result = await db.select().from(goals).where(eq(goals.id, id));
-  return result[0] ?? null;
+  if (!result[0]) return null;
+  return { ...result[0], status: result[0].status as GoalStatus };
 }
 
 export async function createGoal(input: CreateGoalInput): Promise<Goal> {
   const db = await getDb();
-  const id = crypto.randomUUID();
-  const now = new Date();
 
   const [goal] = await db.insert(goals).values({
-    id,
     companyId: input.companyId,
     title: input.title,
-    description: input.description,
+    description: input.description ?? null,
     status: input.status ?? "Open",
-    verification: input.verification,
-    deadline: input.deadline,
+    verification: input.verification ?? null,
+    deadline: input.deadline ?? null,
     departmentIds: input.departmentIds ?? [],
     issueIds: input.issueIds ?? [],
-    createdAt: now,
-    updatedAt: now,
-  }).returning();
+  } as any).returning();
 
-  return goal;
+  return { ...goal, status: goal.status as GoalStatus };
 }
 
 export async function updateGoal(id: string, input: UpdateGoalInput): Promise<Goal | null> {
   const db = await getDb();
   const [goal] = await db.update(goals)
-    .set({ ...input, updatedAt: new Date() })
+    .set({ ...input, updatedAt: new Date() } as any)
     .where(eq(goals.id, id))
     .returning();
 
-  return goal ?? null;
+  if (!goal) return null;
+  return { ...goal, status: goal.status as GoalStatus };
 }
 
 export async function deleteGoal(id: string): Promise<boolean> {
   const db = await getDb();
   const result = await db.delete(goals).where(eq(goals.id, id));
-  return result.rowCount > 0;
+  return (result as unknown as { rowCount: number }).rowCount > 0;
 }

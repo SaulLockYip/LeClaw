@@ -26,16 +26,11 @@ export async function getCompany(id: string): Promise<Company | null> {
 
 export async function createCompany(input: CreateCompanyInput): Promise<Company> {
   const db = await getDb();
-  const id = crypto.randomUUID();
-  const now = new Date();
 
   const [company] = await db.insert(companies).values({
-    id,
     name: input.name,
-    description: input.description,
-    createdAt: now,
-    updatedAt: now,
-  }).returning();
+    description: input.description ?? null,
+  } as any).returning();
 
   return company;
 }
@@ -43,7 +38,7 @@ export async function createCompany(input: CreateCompanyInput): Promise<Company>
 export async function updateCompany(id: string, input: UpdateCompanyInput): Promise<Company | null> {
   const db = await getDb();
   const [company] = await db.update(companies)
-    .set({ ...input, updatedAt: new Date() })
+    .set({ name: input.name ?? undefined, description: input.description ?? undefined, updatedAt: new Date() } as any)
     .where(eq(companies.id, id))
     .returning();
 
@@ -53,5 +48,5 @@ export async function updateCompany(id: string, input: UpdateCompanyInput): Prom
 export async function deleteCompany(id: string): Promise<boolean> {
   const db = await getDb();
   const result = await db.delete(companies).where(eq(companies.id, id));
-  return result.rowCount > 0;
+  return (result as unknown as { rowCount: number }).rowCount > 0;
 }

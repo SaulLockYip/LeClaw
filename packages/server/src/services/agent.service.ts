@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { agents } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
-import type { Agent } from "@leclaw/shared";
+import type { Agent, AgentRole } from "@leclaw/shared";
 
 export interface UpdateAgentInput {
   name?: string;
@@ -9,14 +9,16 @@ export interface UpdateAgentInput {
 
 export async function listAgentsByCompany(companyId: string): Promise<Agent[]> {
   const db = await getDb();
-  return await db.select().from(agents).where(eq(agents.companyId, companyId));
+  const rows = await db.select().from(agents).where(eq(agents.companyId, companyId));
+  return rows.map(row => ({ ...row, role: row.role as AgentRole }));
 }
 
 export async function getAgent(id: string, companyId: string): Promise<Agent | null> {
   const db = await getDb();
   const result = await db.select().from(agents)
     .where(and(eq(agents.id, id), eq(agents.companyId, companyId)));
-  return result[0] ?? null;
+  if (!result[0]) return null;
+  return { ...result[0], role: result[0].role as AgentRole };
 }
 
 export async function updateAgent(
@@ -26,9 +28,10 @@ export async function updateAgent(
 ): Promise<Agent | null> {
   const db = await getDb();
   const [agent] = await db.update(agents)
-    .set({ ...input, updatedAt: new Date() })
+    .set({ name: input.name, updatedAt: new Date() } as any)
     .where(and(eq(agents.id, id), eq(agents.companyId, companyId)))
     .returning();
 
-  return agent ?? null;
+  if (!agent) return null;
+  return { ...agent, role: agent.role as AgentRole };
 }
