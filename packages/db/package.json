@@ -1,34 +1,23 @@
 {
   "name": "@leclaw/db",
-  "version": "0.1.0",
-  "license": "MIT",
+  "version": "1.0.0",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./*": "./src/*.ts"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc && cp -r src/migrations dist/migrations",
-    "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit",
-    "generate": "tsc -p tsconfig.json && drizzle-kit generate",
-    "migrate": "tsx src/migrate.ts"
-  },
+  "main": "./dist/index.js",
   "dependencies": {
     "drizzle-orm": "^0.38.4",
-    "embedded-postgres": "^18.1.0-beta.16",
+    "embedded-postgres": "^16.0.0",
     "postgres": "^3.4.5"
   },
   "devDependencies": {
-    "@types/node": "^24.6.0",
+    "@types/node": "^22.0.0",
     "drizzle-kit": "^0.31.9",
     "tsx": "^4.21.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.2"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   }
 }
