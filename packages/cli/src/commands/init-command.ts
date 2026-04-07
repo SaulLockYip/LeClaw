@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { confirm, text, select } from "@clack/prompts";
+import * as clack from "@clack/prompts";
 import path from "path";
 import os from "os";
 import fs from "fs";
@@ -27,34 +27,33 @@ export function registerInitCommand(program: Command): void {
           existingConfig = loadConfig({ configPath: CONFIG_FILE });
         }
 
-        const s = await import("@clack/prompts").then((m) => m.default);
-        s.intro("LeClaw Init");
+        clack.intro("LeClaw Init");
 
-        const openclawDir = (await s.text({
+        const openclawDir = (await clack.text({
           message: "OpenClaw directory:",
           defaultValue: existingConfig?.openclaw?.dir ?? "",
           placeholder: "/path/to/openclaw",
         })) as string;
 
-        const gatewayUrl = (await s.text({
+        const gatewayUrl = (await clack.text({
           message: "Gateway WebSocket URL:",
           defaultValue: existingConfig?.openclaw?.gatewayUrl ?? "ws://localhost:8080",
           placeholder: "ws://localhost:8080",
         })) as string;
 
-        const gatewayToken = (await s.text({
+        const gatewayToken = (await clack.text({
           message: "Gateway API token:",
           defaultValue: existingConfig?.openclaw?.gatewayToken ?? "",
           placeholder: "your-api-token",
         })) as string;
 
-        const serverPort = (await s.text({
+        const serverPort = (await clack.text({
           message: "Server port:",
           defaultValue: String(existingConfig?.server?.port ?? 8080),
           placeholder: "8080",
         })) as string;
 
-        s.info("Initializing embedded PostgreSQL database...");
+        clack.log.info("Initializing embedded PostgreSQL database...");
 
         // Initialize embedded PostgreSQL
         let connectionString = existingConfig?.database?.connectionString ?? "";
@@ -80,7 +79,7 @@ export function registerInitCommand(program: Command): void {
 
         await writeConfig({ configPath: CONFIG_FILE, config });
 
-        s.success(`Configuration saved to ${CONFIG_FILE}`);
+        clack.log.success(`Configuration saved to ${CONFIG_FILE}`);
 
         console.log(
           JSON.stringify({
