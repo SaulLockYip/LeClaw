@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, mkdirSync, readdirSync } from "node:fs";
 import path from "node:path";
 import os from "os";
 import { allocatePort } from "./port-allocator.js";
@@ -56,6 +56,24 @@ function readPidFilePort(postmasterPidFile: string): number | null {
   }
 }
 
+function isDatabaseInitialized(dataDir: string): boolean {
+  const pgVersionFile = path.resolve(dataDir, "PG_VERSION");
+  const baseDir = path.resolve(dataDir, "base");
+
+  // Must have PG_VERSION file and base directory (created by initdb)
+  if (!existsSync(pgVersionFile) || !existsSync(baseDir)) {
+    return false;
+  }
+
+  // Check that base directory is not empty (should contain database files)
+  try {
+    const baseFiles = readdirSync(baseDir);
+    return baseFiles.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function loadEmbeddedPostgresCtor(): Promise<EmbeddedPostgresCtor> {
   try {
     const mod = await import("embedded-postgres");
@@ -81,7 +99,6 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
   const EmbeddedPostgres = await loadEmbeddedPostgresCtor();
   const selectedPort = await allocatePort(preferredPort);
   const postmasterPidFile = path.resolve(dataDir, "postmaster.pid");
-  const pgVersionFile = path.resolve(dataDir, "PG_VERSION");
   const runningPid = readRunningPostmasterPid(postmasterPidFile);
   const runningPort = readPidFilePort(postmasterPidFile);
   const logBuffer: string[] = [];
@@ -97,6 +114,11 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
     };
   }
 
+  // Clean up stale postmaster.pid if exists (from previous crash/termination)
+  if (existsSync(postmasterPidFile)) {
+    rmSync(postmasterPidFile, { force: true });
+  }
+
   // Start new instance
   const instance = new EmbeddedPostgres({
     databaseDir: dataDir,
@@ -109,12 +131,23 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
     onError: (msg) => logBuffer.push(String(msg)),
   });
 
-  if (!existsSync(pgVersionFile)) {
-    await instance.initialise();
-  }
-
-  if (existsSync(postmasterPidFile)) {
-    rmSync(postmasterPidFile, { force: true });
+  // Initialize database if not already done
+  if (!isDatabaseInitialized(dataDir)) {
+    try {
+      await instance.initialise();
+    } catch (err) {
+      // Check if initialization actually succeeded despite the error
+      // (initdb returns non-zero exit code when data directory already exists)
+      if (!isDatabaseInitialized(dataDir)) {
+        throw new Error(
+          `Failed to initialize database: ${err}. Data directory: ${dataDir}`,
+        );
+      }
+      // Database was initialized despite the error - log a warning
+      console.warn(
+        "Database initialization raised an error but the database appears to be initialized. Continuing...",
+      );
+    }
   }
 
   await instance.start();
