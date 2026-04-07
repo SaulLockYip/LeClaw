@@ -11,11 +11,11 @@
 
 - [x] **Phase 1: Foundation - CLI Init** - Project scaffolding, leclaw init/config, config file (completed 2026-04-07)
 - [x] **Phase 2: Data Layer - Entity Models + DB** - Embedded PostgreSQL, Company/Department/Agent/Issue/Goal/Project/Approval schemas (completed 2026-04-07)
-- [ ] **Phase 3: OpenClaw Integration** - openclaw.json reading, agent scanning, agent onboard, API key
+- [x] **Phase 3: OpenClaw Integration** - openclaw.json reading, agent scanning, agent onboard, API key (completed 2026-04-07)
 - [x] **Phase 4: REST API + SSE** - CRUD for all entities, SSE real-time updates (completed 2026-04-07)
-- [ ] **Phase 5: Web UI - Layout + Dashboard** - Company Rail, Sidebar, Dashboard with metrics
-- [ ] **Phase 6: Web UI - Entity Pages** - Issues, Goals, Projects, Approvals, Departments detail
-- [ ] **Phase 7: Harness Infrastructure** - Audit Log, Comments on Issues
+- [x] **Phase 5: Web UI - Layout + Dashboard** - Company Rail, Sidebar, Dashboard with metrics (completed 2026-04-07)
+- [x] **Phase 6: Web UI - Entity Pages** - Issues, Goals, Projects, Approvals, Departments detail (completed 2026-04-07)
+- [x] **Phase 7: Harness Infrastructure** - Audit Log, Comments on Issues (completed 2026-04-07)
 - [ ] **Phase 8: Integration + Testing** - End-to-end testing, CLI + API integration
 
 ---
@@ -151,10 +151,10 @@
 | 4. REST API + SSE | Completed | 2026-04-07 |
 | 5. Web UI - Layout + Dashboard | Completed | 2026-04-07 |
 | 6. Web UI - Entity Pages | Completed | 2026-04-07 |
-| 7. Harness Infrastructure | Not started | - |
+| 7. Harness Infrastructure | Completed | 2026-04-07 |
 | 8. Integration + Testing | Not started | - |
 
 ---
 
 *Generated: 2026-04-05*
-*Updated: 2026-04-07*
+*Updated: 2026-04-07 (Phase 7 complete)*
