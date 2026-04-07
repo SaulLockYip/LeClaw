@@ -37,8 +37,8 @@ export function registerInitCommand(program: Command): void {
 
         const gatewayUrl = (await clack.text({
           message: "Gateway WebSocket URL:",
-          defaultValue: existingConfig?.openclaw?.gatewayUrl ?? "ws://localhost:8080",
-          placeholder: "ws://localhost:8080",
+          defaultValue: existingConfig?.openclaw?.gatewayUrl ?? "ws://localhost:4396",
+          placeholder: "ws://localhost:4396",
         })) as string;
 
         const gatewayToken = (await clack.text({
@@ -49,8 +49,8 @@ export function registerInitCommand(program: Command): void {
 
         const serverPort = (await clack.text({
           message: "Server port:",
-          defaultValue: String(existingConfig?.server?.port ?? 8080),
-          placeholder: "8080",
+          defaultValue: String(existingConfig?.server?.port ?? 4396),
+          placeholder: "4396",
         })) as string;
 
         clack.log.info("Initializing embedded PostgreSQL database...");
@@ -70,7 +70,7 @@ export function registerInitCommand(program: Command): void {
             gatewayToken,
           },
           server: {
-            port: parseInt(serverPort, 10) || 8080,
+            port: parseInt(serverPort, 10) || 4396,
           },
           database: {
             connectionString,

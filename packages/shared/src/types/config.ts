@@ -17,5 +17,5 @@ export interface LeClawConfig {
 
 export const DEFAULT_CONFIG: Partial<LeClawConfig> = {
   version: "1.0.0",
-  server: { port: 8080 },
+  server: { port: 4396 },
 };

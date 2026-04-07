@@ -97,7 +97,7 @@ export function registerDoctorCommand(program: Command): void {
       // 6. Port availability
       if (configExists) {
         const config = loadConfig({ configPath: CONFIG_FILE });
-        const port = config.server?.port ?? 8080;
+        const port = config.server?.port ?? 4396;
         const portAvailable = !(await isPortInUse(port));
         checks.push({
           name: "port_available",

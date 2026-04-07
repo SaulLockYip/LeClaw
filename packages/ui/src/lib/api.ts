@@ -2,7 +2,7 @@
  * REST API client for LeClaw backend
  */
 
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = 'http://localhost:4396/api'
 
 export interface Company {
   id: string

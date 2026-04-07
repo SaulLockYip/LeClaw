@@ -27,7 +27,7 @@ export function registerStartCommand(program: Command): void {
         }
 
         const config = loadConfig({ configPath: CONFIG_FILE });
-        const port = opts.port ?? String(config.server?.port ?? 8080);
+        const port = opts.port ?? String(config.server?.port ?? 4396);
         const host = opts.host;
 
         // Fork server process

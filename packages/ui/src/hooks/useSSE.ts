@@ -20,7 +20,7 @@ const MAX_RECONNECT_DELAY = 30000
 
 export function useSSE({
   companyId,
-  port = 8080,
+  port = 4396,
   onEvent,
   onError,
   onConnect,
