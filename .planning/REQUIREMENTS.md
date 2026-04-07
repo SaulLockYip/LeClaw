@@ -86,11 +86,11 @@
 | CLI-01 | Phase 1 - Foundation + CLI Init | Pending |
 | CLI-02 | Phase 1 - Foundation + CLI Init | Pending |
 | CLI-03 | Phase 1 - Foundation + CLI Init | Pending |
-| DATA-01 | Phase 1 - Foundation + CLI Init | Pending |
-| DATA-02 | Phase 2 - Data Layer + API Foundation | Pending |
-| DATA-03 | Phase 2 - Data Layer + API Foundation | Pending |
-| DATA-04 | Phase 2 - Data Layer + API Foundation | Pending |
-| DATA-05 | Phase 2 - Data Layer + API Foundation | Pending |
+| DATA-01 | Phase 1 - Foundation + CLI Init | Completed |
+| DATA-02 | Phase 2 - Data Layer + API Foundation | Completed |
+| DATA-03 | Phase 2 - Data Layer + API Foundation | Completed |
+| DATA-04 | Phase 2 - Data Layer + API Foundation | Completed |
+| DATA-05 | Phase 2 - Data Layer + API Foundation | Completed |
 | API-01 | Phase 2 - Data Layer + API Foundation | Pending |
 | API-02 | Phase 2 - Data Layer + API Foundation | Pending |
 | API-03 | Phase 2 - Data Layer + API Foundation | Pending |
