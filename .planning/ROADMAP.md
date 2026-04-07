@@ -149,8 +149,8 @@
 | 2. Data Layer - Entity Models + DB | Completed | 2026-04-07 |
 | 3. OpenClaw Integration | Completed | 2026-04-07 |
 | 4. REST API + SSE | Completed | 2026-04-07 |
-| 5. Web UI - Layout + Dashboard | Not started | - |
-| 6. Web UI - Entity Pages | Not started | - |
+| 5. Web UI - Layout + Dashboard | Completed | 2026-04-07 |
+| 6. Web UI - Entity Pages | Completed | 2026-04-07 |
 | 7. Harness Infrastructure | Not started | - |
 | 8. Integration + Testing | Not started | - |
 
