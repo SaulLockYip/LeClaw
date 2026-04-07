@@ -1,0 +1,28 @@
+{
+  "name": "@leclaw/cli",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "leclaw": "./bin/leclaw.js"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.2.0",
+    "@leclaw/db": "workspace:*",
+    "@leclaw/shared": "workspace:*",
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.2"
+  }
+}
