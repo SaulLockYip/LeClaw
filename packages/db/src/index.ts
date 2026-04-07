@@ -2,3 +2,5 @@
 // Entity schemas and database utilities
 
 export * from "./schema/index.js";
+export * from "./embedded-postgres.js";
+export * from "./port-allocator.js";
