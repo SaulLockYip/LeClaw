@@ -5,6 +5,8 @@ import { registerConfigCommand } from "../commands/config-command.js";
 import { registerStatusCommand } from "../commands/status-command.js";
 import { registerStartCommand } from "../commands/start-command.js";
 import { registerDoctorCommand } from "../commands/doctor-command.js";
+import { registerAgentsCommand } from "../commands/agents/agents-list.js";
+import { registerAgentCommand } from "../commands/agent/agent-onboard.js";
 
 export function buildProgram(): Command {
   const program = new Command();
@@ -20,6 +22,8 @@ export function buildProgram(): Command {
   registerStatusCommand(program);
   registerDoctorCommand(program);
   registerStartCommand(program);
+  registerAgentsCommand(program);
+  registerAgentCommand(program);
 
   return program;
 }
