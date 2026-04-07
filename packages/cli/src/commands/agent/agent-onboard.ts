@@ -120,7 +120,7 @@ export async function onboardAgent(
   try {
     // Insert into agents table
     const now = new Date();
-    await db.insert(agents).values({
+    await db.insert(agents as any).values({
       companyId,
       departmentId: role === "CEO" ? null : departmentId,
       name: agentName,
@@ -133,7 +133,7 @@ export async function onboardAgent(
     });
 
     // Insert into agent_api_keys table
-    await db.insert(agentApiKeys).values({
+    await db.insert(agentApiKeys as any).values({
       agentId: openClawAgentId,
       keyHash: apiKey.secret,
       createdAt: now,
