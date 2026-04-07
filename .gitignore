@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+*/dist/
+dist/
+mock-ui/dist/
+
+# TypeScript build info
+*/tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Compiled schema files (generated from TypeScript)
+packages/db/src/schema/*.js
+packages/db/src/schema/*.js.map
+packages/db/src/schema/*.d.ts
+packages/db/src/schema/*.d.ts.map
+
+# CLI binary
+packages/cli/cli
+
+# Runtime data (generated at runtime)
+runtime/
+
+# Reference repositories (external materials)
+referenceRepo/
+
+# Local design files
+*.pen
+
+# Package manager lock (we use pnpm but this is untracked)
+# pnpm-lock.yaml is TRACKED for reproducible builds
+
+# OS files
+.DS_Store
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Environment (may contain secrets)
+.env
+.env.local
+.env.*.local

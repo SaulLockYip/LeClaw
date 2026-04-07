@@ -2,12 +2,12 @@
   "name": "@leclaw/db",
   "version": "1.0.0",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts",
-    "./schema/*": "./src/schema/*.ts",
-    "./client": "./src/client.ts"
+    ".": "./dist/index.js",
+    "./schema": "./dist/schema/index.js",
+    "./schema/*": "./dist/schema/*.js",
+    "./client": "./dist/client.js"
   },
   "dependencies": {
     "drizzle-orm": "^0.38.4",
