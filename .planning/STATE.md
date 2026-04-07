@@ -11,9 +11,9 @@
 
 **Target Users:** 个人用户管理多个 AI-native 公司，处理不同业务线。无 Auth 设计。
 
-**Current Phase:** Phase 6 Complete (Web UI - Entity Pages)
+**Current Phase:** Phase 7 Complete (Harness Infrastructure)
 
-**Focus:** Ready for Phase 7 planning
+**Focus:** Ready for Phase 8 planning
 
 ---
 
@@ -29,12 +29,12 @@
 | 4. Real-Time Infrastructure | Completed | 5/5 | 1 |
 | 5. Web UI - Dashboard | Completed | 5/5 | 1 |
 | 6. Web UI - Entity Pages | Completed | 11/11 | 1 |
-| 7. Harness Infrastructure | Not started | 0/5 | 1 |
+| 7. Harness Infrastructure | Completed | 5/5 | 1 |
 | 8. Integration + E2E Testing | Not started | 0/5 | 1 |
 
 ### Overall Progress
 
-- **Phases:** 6/8 complete
+- **Phases:** 7/8 complete
 - **Requirements:** 25/35 validated
 - **Plans:** 8/8 created
 
@@ -104,19 +104,20 @@
 - [x] Phase 4: Real-Time Infrastructure
 - [x] Phase 5: Web UI - Dashboard
 - [x] Phase 6: Web UI - Entity Pages
-- [ ] Begin Phase 7 planning via `/gsd:plan-phase 7`
+- [x] Phase 7: Harness Infrastructure
+- [ ] Begin Phase 8 planning via `/gsd:plan-phase 8`
 
 ### Blockers
 
-None - Phase 6 complete
+None - Phase 7 complete
 
 ### Notes
 
-- Phase 6 completed with entity pages: Issues, Goals, Projects, Approvals, Departments
-- All list pages support row-click navigation to detail views
-- Approvals page supports human write actions (approve/reject) via Dialog
-- Web UI read-only policy enforced for all other entities
-- Build verified: `pnpm build` succeeds in mock-ui
+- Phase 7 completed with harness infrastructure: audit logging, issue comments, issue report append
+- Audit log table created with indexes for agent and command queries
+- CLI commands: `leclaw issue comment add`, `leclaw issue report update`
+- Agent onboard integrated with audit logging
+- Build verified: `pnpm build` succeeds
 
 ### Notes
 
@@ -158,11 +159,10 @@ Roadmap derived from requirements with 100% coverage validation. Fine granularit
 **Requirements:** UI-04, UI-05, UI-06, UI-07, UI-08, UI-09
 **UI hint:** yes
 
-### Phase 7: Web UI - Issues
-**Goal:** Users can create, view, and manage Issues; external systems can create Issues via REST API
-**Dependencies:** Phase 5
-**Requirements:** ISSUE-01, ISSUE-02, ISSUE-03, ISSUE-04
-**UI hint:** yes
+### Phase 7: Harness Infrastructure
+**Goal:** Audit logging for CLI operations, issue comments (agent-write/human-read), issue report append-only
+**Dependencies:** Phase 6
+**Requirements:** Audit log, issue comments, issue report
 
 ### Phase 8: Integration + E2E Testing
 **Goal:** All components work together end-to-end; critical user workflows are verified
