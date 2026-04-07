@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   AlertCircle,
@@ -15,15 +15,21 @@ import {
 import { useCompany } from '../hooks/useCompany'
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'issues', label: 'Issues', icon: AlertCircle },
-  { id: 'goals', label: 'Goals', icon: Target },
-  { id: 'projects', label: 'Projects', icon: FolderKanban },
-  { id: 'approvals', label: 'Approvals', icon: CheckCircle },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  { id: 'issues', label: 'Issues', icon: AlertCircle, path: '/issues' },
+  { id: 'goals', label: 'Goals', icon: Target, path: '/goals' },
+  { id: 'projects', label: 'Projects', icon: FolderKanban, path: '/projects' },
+  { id: 'approvals', label: 'Approvals', icon: CheckCircle, path: '/approvals' },
 ]
 
 function Sidebar() {
   const { selectedCompany, departments, agents } = useCompany()
+  const location = useLocation()
+
+  // Check if a path matches the current location (including nested routes)
+  const isPathActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/')
+  }
 
   if (!selectedCompany) {
     return (
@@ -65,13 +71,12 @@ function Sidebar() {
         {navItems.map((item) => (
           <NavLink
             key={item.id}
-            to={item.id === 'dashboard' ? '/dashboard' : `/${item.id}`}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
-                isActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
-              }`
+            to={item.path}
+            className={`flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
+              isPathActive(item.path)
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+            }`
             }
           >
             <item.icon className="w-4 h-4" />
@@ -94,12 +99,11 @@ function Sidebar() {
       <div className="px-2 pb-2">
         <NavLink
           to="/departments"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
-              isActive
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
-            }`
+          className={`flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
+            isPathActive('/departments')
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+          }`
           }
         >
           <Building2 className="w-4 h-4" />
@@ -119,10 +123,9 @@ function Sidebar() {
             <div key={dept.id} className="mb-3">
               <NavLink
                 to={`/departments/${dept.id}`}
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-1.5 rounded text-sm text-slate-300 hover:bg-slate-700 ${
-                    isActive ? 'bg-slate-700' : ''
-                  }`
+                className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm text-slate-300 hover:bg-slate-700 ${
+                  isPathActive(`/departments/${dept.id}`) ? 'bg-slate-700' : ''
+                }`
                 }
               >
                 <ChevronDown className="w-3 h-3 text-slate-500" />
