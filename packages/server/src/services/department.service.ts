@@ -28,17 +28,12 @@ export async function getDepartment(id: string, companyId: string): Promise<Depa
 
 export async function createDepartment(input: CreateDepartmentInput): Promise<Department> {
   const db = await getDb();
-  const id = crypto.randomUUID();
-  const now = new Date();
 
   const [department] = await db.insert(departments).values({
-    id,
     name: input.name,
     companyId: input.companyId,
-    description: input.description,
-    createdAt: now,
-    updatedAt: now,
-  }).returning();
+    description: input.description ?? null,
+  } as any).returning();
 
   return department;
 }
@@ -50,7 +45,7 @@ export async function updateDepartment(
 ): Promise<Department | null> {
   const db = await getDb();
   const [department] = await db.update(departments)
-    .set({ ...input, updatedAt: new Date() })
+    .set({ name: input.name ?? undefined, description: input.description ?? undefined, updatedAt: new Date() } as any)
     .where(and(eq(departments.id, id), eq(departments.companyId, companyId)))
     .returning();
 
@@ -61,5 +56,5 @@ export async function deleteDepartment(id: string, companyId: string): Promise<b
   const db = await getDb();
   const result = await db.delete(departments)
     .where(and(eq(departments.id, id), eq(departments.companyId, companyId)));
-  return result.rowCount > 0;
+  return (result as unknown as { rowCount: number }).rowCount > 0;
 }

@@ -1,14 +1,15 @@
 import { Router, Request, Response } from "express";
 import { getDb } from "@leclaw/db/client";
+import { sql } from "drizzle-orm";
 
-export const healthRouter = Router();
+export const healthRouter: Router = Router();
 
 healthRouter.get("/", async (_req: Request, res: Response) => {
   let dbConnected = false;
 
   try {
     const db = await getDb();
-    await db.select({ count: true }).from({}).all();
+    await db.execute(sql`SELECT 1`);
     dbConnected = true;
   } catch {
     dbConnected = false;
