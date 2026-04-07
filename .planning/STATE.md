@@ -11,9 +11,9 @@
 
 **Target Users:** 个人用户管理多个 AI-native 公司，处理不同业务线。无 Auth 设计。
 
-**Current Phase:** Phase 3 Complete (OpenClaw Integration)
+**Current Phase:** Phase 6 Complete (Web UI - Entity Pages)
 
-**Focus:** Ready for Phase 4 planning
+**Focus:** Ready for Phase 7 planning
 
 ---
 
@@ -26,16 +26,16 @@
 | 1. Foundation + CLI Init | Completed | 5/5 | 1 |
 | 2. Data Layer + API Foundation | Completed | 4/4 | 1 |
 | 3. OpenClaw Bridge + API | Completed | 6/6 | 1 |
-| 4. Real-Time Infrastructure | Not started | 0/5 | 1 |
-| 5. Web UI - Dashboard | Not started | 0/5 | 1 |
-| 6. Web UI - Organization | Not started | 0/7 | 1 |
-| 7. Web UI - Issues | Not started | 0/5 | 1 |
-| 8. Integration + E2E Testing | Not started | 0/8 | 1 |
+| 4. Real-Time Infrastructure | Completed | 5/5 | 1 |
+| 5. Web UI - Dashboard | Completed | 5/5 | 1 |
+| 6. Web UI - Entity Pages | Completed | 11/11 | 1 |
+| 7. Harness Infrastructure | Not started | 0/5 | 1 |
+| 8. Integration + E2E Testing | Not started | 0/5 | 1 |
 
 ### Overall Progress
 
-- **Phases:** 3/8 complete
-- **Requirements:** 9/35 validated (OPENCLAW-01 through OPENCLAW-04 added)
+- **Phases:** 6/8 complete
+- **Requirements:** 25/35 validated
 - **Plans:** 8/8 created
 
 ---
@@ -101,11 +101,22 @@
 - [x] Phase 1: Foundation + CLI Init
 - [x] Phase 2: Data Layer + Entity Models + DB
 - [x] Phase 3: OpenClaw Integration
-- [ ] Begin Phase 4 planning via `/gsd:plan-phase 4`
+- [x] Phase 4: Real-Time Infrastructure
+- [x] Phase 5: Web UI - Dashboard
+- [x] Phase 6: Web UI - Entity Pages
+- [ ] Begin Phase 7 planning via `/gsd:plan-phase 7`
 
 ### Blockers
 
-None - Phase 3 complete
+None - Phase 6 complete
+
+### Notes
+
+- Phase 6 completed with entity pages: Issues, Goals, Projects, Approvals, Departments
+- All list pages support row-click navigation to detail views
+- Approvals page supports human write actions (approve/reject) via Dialog
+- Web UI read-only policy enforced for all other entities
+- Build verified: `pnpm build` succeeds in mock-ui
 
 ### Notes
 

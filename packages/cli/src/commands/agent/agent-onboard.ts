@@ -9,6 +9,7 @@ import { eq, and } from "drizzle-orm";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
+import { auditLog } from "../../helpers/audit-log.js";
 
 export type AgentRole = "CEO" | "Manager" | "Staff";
 
@@ -178,7 +179,17 @@ export function registerAgentCommand(program: Command): void {
         departmentId,
       );
 
+      // Audit the onboard operation (use openClawAgentId as agentId since agent doesn't have API key yet)
+      const auditArgs = { companyId, openClawAgentId: agentId, role, name, departmentId };
       if (result.success) {
+        await auditLog({
+          agentId,
+          command: "agent onboard",
+          args: auditArgs,
+          result: "success",
+          output: `Agent onboarded: ${name} (${agentId}) as ${role}`,
+        });
+
         console.log(JSON.stringify({
           success: true,
           agentId: result.agentId,
@@ -186,6 +197,14 @@ export function registerAgentCommand(program: Command): void {
           message: "Agent onboarded successfully. Store the API key securely.",
         }, null, 2));
       } else {
+        await auditLog({
+          agentId,
+          command: "agent onboard",
+          args: auditArgs,
+          result: "failure",
+          output: result.error ?? result.validationErrors?.join("; ") ?? "Unknown error",
+        });
+
         console.error(JSON.stringify({
           success: false,
           error: result.error,
