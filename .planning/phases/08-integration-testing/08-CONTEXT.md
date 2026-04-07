@@ -95,6 +95,13 @@ test('leclaw start launches without errors', async () => {
 
 </deferred>
 
+### Migration Strategy (CRITICAL)
+- **D-11:** Use **Drizzle Kit** for schema migrations
+- **D-12:** Workflow:
+  - Development: `drizzle-kit generate` → auto-generate SQL from schema changes
+  - Runtime: `leclaw start` auto-applies pending migrations
+- **Rationale:** Matches Drizzle ORM usage; paperclip reference; embedded PG friendly
+
 ---
 
 *Phase: 08-integration-testing*

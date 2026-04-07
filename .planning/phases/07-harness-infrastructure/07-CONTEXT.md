@@ -53,11 +53,12 @@ audit_logs {
 - **D-06:** Comments stored in `issue_comments` table (from Phase 2)
 - **D-07:** Access:
   - **Agent**: write via CLI (`leclaw issue comment add`)
-  - **Human**: read via Web UI only
+  - **Human**: **read-only** via Web UI only (no comment form in Web UI)
 - **D-08:** CLI command:
 ```
 leclaw issue comment add --issue-id <id> --message "comment text"
 ```
+- **D-09:** `author` field in `issue_comments` = `agentId` (not nullable)
 
 ### Issue Report (Append-Only)
 - **D-09:** Report field = **append-only** (no overwrite)
@@ -142,6 +143,7 @@ CREATE INDEX audit_logs_command_timestamp_idx ON audit_logs (command, created_at
 - Harness workflow customization (CEO→Manager→Staff orchestration) — v2
 - Audit log retention/rotation policy — v2
 - Audit log viewer UI — v2
+- Migration strategy — Drizzle Kit (resolved: apply at server start)
 
 </deferred>
 

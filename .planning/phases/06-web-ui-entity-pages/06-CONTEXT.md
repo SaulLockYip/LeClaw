@@ -15,6 +15,16 @@ Full pages for all entities with list and detail views.
 - Approvals Page: List with approve/reject actions (row-level + dialog confirmation)
 - Departments Page: Department detail with Manager and Staff lists
 
+### Web UI Read-Only Policy (CRITICAL)
+- **D-15:** Web UI is **read-only** for all entities except Approvals
+- **D-16:** No Create/Edit/Delete via Web UI — all write operations via CLI only
+- **D-17:** Entity pages display data only; no forms for create/update
+- **Rationale:** Agent writes via CLI; Human reads via Web UI; only Approval has human write via Web UI
+
+### Approval Write Access (CRITICAL)
+- **D-18:** Approval approve/reject = **Web UI write** (human)
+- **D-19:** Approval create = **CLI only** (agent)
+
 **Out of scope for this phase:**
 - Harness Infrastructure (Phase 7)
 

@@ -48,7 +48,7 @@ interface OpenClawConfig {
 - **D-04:** `leclaw agent onboard --company-id <id> --agent-id <id> --role CEO` (no department)
 - **D-05:** `leclaw agent onboard --company-id <id> --agent-id <id> --role Manager --department-id <id>`
 - **D-06:** `leclaw agent onboard --company-id <id> --agent-id <id> --role Staff --department-id <id>`
-- **D-07:** Validation: role CEO requires no departmentId; role Manager/Staff require departmentId
+- **D-07:** Validation rules: see **D-12**
 
 ### API Key Format
 - **D-08:** API Key format = **fixed string**: `{agentId}:{randomSecret}`
@@ -58,10 +58,23 @@ interface OpenClawConfig {
 
 ### API Key Storage
 - **D-10:** **Separate storage**:
-  - LeClaw DB: `agent_api_keys` table stores `agentId` + `keyHash` (bcrypt/argon2)
+  - LeClaw DB: `agent_api_keys` table stores `agentId` + `keyHash` (bcrypt)
   - Agent local: stores full `agentId:secret` in `~/.leclaw/agent-keys/{agentId}`
-- **D-11:** Key validation: hash incoming key, compare with stored hash
-- **Rationale:** LeClaw never stores plaintext; agent stores plaintext for CLI calls
+- **D-11:** Key verification flow:
+  1. CLI parses `key` → extracts `agentId` and `secret` via string split
+  2. Query DB for `storedKeyHash` by `agentId`
+  3. `bcrypt.compare(secret, storedKeyHash)`
+  4. Match → continue; No match → error
+- **Rationale:** Split gives agentId for audit logging; bcrypt hash comparison is secure
+
+### Onboarding Validation (REVISED)
+- **D-12:** All validation checks run before onboard succeeds:
+  1. Company with `companyId` must exist
+  2. If `role = Manager` or `role = Staff`: `departmentId` must exist AND belong to `companyId`
+  3. If `role = CEO`: this Company must not already have a CEO (unique per company)
+  4. `openClawAgentId` must not be bound to any other company (globally unique)
+  5. `role` must be one of: `CEO` | `Manager` | `Staff`
+- **Rationale:** Prevent invalid state; maintain data integrity
 
 ### Agent Status
 - **D-12:** Agent status = **on-demand query** from Gateway (not cached)
@@ -90,7 +103,7 @@ interface OpenClawConfig {
 ### Agent Binding (DB)
 - **D-17:** `agents` table fields: id, name, role, openClawAgentId, openClawAgentWorkspace, openClawAgentDir, companyId, departmentId, createdAt, updatedAt
 - **D-18:** `agent_api_keys` table fields: agentId, keyHash, createdAt
-- **D-19:** One agent can only be bound to ONE role (companyId + role unique constraint)
+- **D-19:** Unique constraints enforced by onboard validation (D-12)
 
 </decisions>
 
