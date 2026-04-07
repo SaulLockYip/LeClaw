@@ -52,63 +52,59 @@ Company (公司)
 - 后台监控：轮询 + heartbeat 机制
 - Timeline 日志：每次监控事件记录
 
-## Features
+## Current State
 
-### v1 Requirements
+**v1.0 MVP shipped** — All 8 phases complete. CLI, REST API, Web UI, and E2E test infrastructure operational.
 
-#### 1. CLI 端
-- [ ] `leclaw init` — 初始化配置目录
-- [ ] `leclaw config openclaw --dir <path>` — 配置 OpenClaw 目录
-- [ ] `leclaw config gateway --url <url> --key <key>` — 配置 Gateway 地址和密钥
-- [ ] `leclaw start` — 启动 LeClaw 服务
-- [ ] `leclaw status` — 查看连接状态
+### Validated Requirements (v1.0)
 
-#### 2. Web 调度中心
-- [ ] Dashboard — 总览所有 Companies 和 Agents 状态
-- [ ] OpenClaw Agent 列表 — 自动扫描展示所有可用 agents 及实时状态
-- [ ] Company 管理 — 创建、编辑、删除 Company
-- [ ] Department 管理 — 在 Company 下创建 Department
-- [ ] Agent 绑定 — 从 OpenClaw agents 中指定 CEO/Manager/Staff
-- [ ] Issue 面板 — 创建、查看 Issues（支持 Web UI 人工创建 + REST API 创建）
+| Requirement | Description | Milestone |
+|-------------|-------------|-----------|
+| CLI-01 to CLI-05 | All CLI commands implemented | v1.0 |
+| DATA-01 to DATA-05 | All entity schemas + embedded PostgreSQL | v1.0 |
+| OPENCLAW-01 to OPENCLAW-04 | Agent discovery, polling, heartbeat, SSE events | v1.0 |
+| API-01 to API-05 | REST API for all entities | v1.0 |
+| RT-01 to RT-03 | SSE real-time updates with auto-reconnect | v1.0 |
+| UI-01 to UI-09 | Web UI dashboard and entity pages | v1.0 |
+| ISSUE-01 to ISSUE-04 | Issue CRUD and API creation | v1.0 |
 
-#### 3. OpenClaw 连接层
-- [ ] 定期扫描 OpenClaw agents 列表
-- [ ] 轮询 agent 状态（参考 control-center monitor）
-- [ ] Gateway 连接与认证
-- [ ] Agent 心跳检测
+### Active Requirements (v2)
 
-#### 4. 数据层
-- [ ] Embedded PostgreSQL 初始化
-- [ ] Company/Department 数据模型
-- [ ] Agent 绑定关系存储
-- [ ] Issue 数据模型
+- [ ] V2-01: Issues automatically assigned to appropriate Department agents based on routing rules
+- [ ] V2-02: CEO agent can decompose a goal and distribute subtasks to Manager agents
+- [ ] V2-03: Manager agents coordinate Staff agents for parallel task execution
+- [ ] V2-04: Agent completion triggers automatic Issue status update and notification
+- [ ] V2-05: Full audit log viewer UI
+- [ ] V2-06: Performance metrics dashboard for agent execution times
+- [ ] V2-07: Strategy evolution engine adjusts agent behavior based on success/failure patterns
 
-### v2 Requirements (Deferred)
-- [ ] Issue 自动分配给 Agent（基于策略）
-- [ ] Agent 协同任务执行
-- [ ] 全链路日志聚合
-- [ ] 调用链路追踪
-- [ ] 性能指标监控
-- [ ] 安全审计
-- [ ] 策略进化引擎
+### Out of Scope (Still Valid)
 
-### Out of Scope
-- [ ] Auth/多租户 SaaS — LeClaw 单用户设计
-- [ ] Agent 代码修改 — 只读加载 OpenClaw agents
-- [ ] OpenClaw 嵌入 — 独立进程连接外部实例
-- [ ] 嵌套子部门 — 固定 Company→Department 两层
+- [x] ~~Auth/多租户 SaaS~~ — LeClaw 单用户设计
+- [x] ~~Agent 代码修改~~ — 只读加载 OpenClaw agents
+- [x] ~~OpenClaw 嵌入~~ — 独立进程连接外部实例
+- [x] ~~嵌套子部门~~ — 固定 Company→Department 两层
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| 独立进程连接 OpenClaw | 不修改 OpenClaw，保持灵活性 | LeClaw 作为管理层 |
-| React Web UI | 用户指定技术栈 | — |
-| SSE 实时推送 | 参考 openclaw-control-center | — |
-| Embedded PostgreSQL | 参考 paperclip 设计 | — |
-| 固定两层组织 | 简化复杂度，MVP 优先 | — |
-| Hybrid 协作模式 | 支持分配+验收 + 平行协作 | — |
-| 零 Auth 设计 | 单用户管理多公司 | — |
+| 独立进程连接 OpenClaw | 不修改 OpenClaw，保持灵活性 | ✅ LeClaw 作为管理层 |
+| React Web UI | 用户指定技术栈 | ✅ Implemented in Phase 5-6 |
+| SSE 实时推送 | 参考 openclaw-control-center | ✅ Implemented with 30s heartbeat |
+| Embedded PostgreSQL | 参考 paperclip 设计 | ✅ Working with skipLibCheck workaround |
+| 固定两层组织 | 简化复杂度，MVP 优先 | ✅ Company→Department only |
+| Hybrid 协作模式 | 支持分配+验收 + 平行协作 | ✅ Designed, not yet active |
+| 零 Auth 设计 | 单用户管理多公司 | ✅ No auth implemented |
+| Express over Hono | 现有代码库使用 Express | ✅ Phase 4 switched from Hono |
+
+## Context
+
+**v1.0 shipped:** 2026-04-07
+**Tech stack:** TypeScript (ES2023), Node.js 22+, Express 5.2.1, React Router v7, Drizzle ORM, embedded-postgres, Playwright
+**Lines of code:** ~10,800 source files
+**Timeline:** 2 days (2026-04-05 → 2026-04-07)
+**Commits:** 38
 
 ## Evolution
 
@@ -128,4 +124,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after initialization*
+*Last updated: 2026-04-07 after v1.0 milestone*
