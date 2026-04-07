@@ -1,245 +1,160 @@
 # LeClaw Roadmap
 
-**Project:** LeClaw - Agent Management Platform
-**Granularity:** fine (8-12 phases)
-**Total v1 Requirements:** 35
+**Project:** LeClaw - OpenClaw Orchestration Center
+**Granularity:** fine
 **Created:** 2026-04-05
+**Updated:** 2026-04-07
 
 ---
 
 ## Phases
 
-- [ ] **Phase 1: Foundation + CLI Init** - Project scaffolding, shared types, CLI init/config commands
-- [ ] **Phase 2: Data Layer + API Foundation** - Embedded PostgreSQL, Company/Department CRUD, REST API foundations
-- [ ] **Phase 3: OpenClaw Bridge + API** - OpenClaw Gateway connection, agent scanning/heartbeat, Issue/Agent REST API
-- [ ] **Phase 4: Real-Time Infrastructure** - SSE endpoint, heartbeat, client reconnection
-- [ ] **Phase 5: Web UI - Dashboard** - Company overview, real-time agent status, recent issues
-- [ ] **Phase 6: Web UI - Organization** - Company/Department/Agent management, binding/unbinding
-- [ ] **Phase 7: Web UI - Issues** - Issue creation, listing, status updates, external REST API
-- [ ] **Phase 8: Integration + E2E Testing** - End-to-end integration, verification of all workflows
+- [ ] **Phase 1: Foundation - CLI Init** - Project scaffolding, leclaw init/config, config file
+- [ ] **Phase 2: Data Layer - Entity Models + DB** - Embedded PostgreSQL, Company/Department/Agent/Issue/Goal/Project/Approval schemas
+- [ ] **Phase 3: OpenClaw Integration** - openclaw.json reading, agent scanning, agent onboard, API key
+- [ ] **Phase 4: REST API + SSE** - CRUD for all entities, SSE real-time updates
+- [x] **Phase 5: Web UI - Layout + Dashboard** - Company Rail, Sidebar, Dashboard with metrics (completed 2026-04-07)
+- [ ] **Phase 6: Web UI - Entity Pages** - Issues, Goals, Projects, Approvals, Departments detail
+- [ ] **Phase 7: Harness Infrastructure** - Audit Log, Comments on Issues
+- [ ] **Phase 8: Integration + Testing** - End-to-end testing, CLI + API integration
 
 ---
 
 ## Phase Details
 
-### Phase 1: Foundation + CLI Init
+### Phase 1: Foundation - CLI Init
 
-**Goal:** User can initialize LeClaw project and configure OpenClaw/Gateway settings via CLI
+**Goal:** User can initialize LeClaw project and configure settings via CLI
 
 **Depends on:** Nothing (first phase)
 
-**Requirements:** CLI-01, CLI-02, CLI-03, DATA-01
-
-**Success Criteria** (what must be TRUE):
-1. User can run `leclaw init` and configuration directory `~/.leclaw/` is created
-2. User can run `leclaw config openclaw --dir <path>` and directory is stored in config
-3. User can run `leclaw config gateway --url <url> --key <key>` and gateway settings are stored
-4. User can verify config with `leclaw config` and see all configured values
-5. On first run, LeClaw initializes embedded PostgreSQL database automatically
-
-**Plans**: TBD
+**Success Criteria:**
+1. `leclaw init` runs interactively and creates `~/.leclaw/` directory
+2. `leclaw config` shows current configuration
+3. `leclaw config set <key> <value>` updates config
+4. Config structure matches SPEC: openclaw.dir, openclaw.gatewayUrl, server.port
 
 ---
 
-### Phase 2: Data Layer + API Foundation
+### Phase 2: Data Layer - Entity Models + DB
 
-**Goal:** All core entities persist correctly and REST API exposes Company/Department CRUD
+**Goal:** All core entities persist correctly in embedded PostgreSQL with Drizzle ORM
 
 **Depends on:** Phase 1
 
-**Requirements:** DATA-02, DATA-03, DATA-04, DATA-05, API-01, API-02, API-03, API-04, API-05
-
-**Success Criteria** (what must be TRUE):
-1. Company entity can be created via API and persisted to database
-2. Company entity can be retrieved, updated, and deleted via API
-3. Department entity can be created under a Company and persists correctly
-4. Agent binding relationship (CEO/Manager/Staff role to OpenClaw agent ID) is stored and retrieved
-5. Issue entity with title, description, status, and assignee is stored and listed via API
-6. API returns proper error responses with codes for invalid requests
-7. Database schema supports multi-Company data isolation
-
-**Plans**: TBD
+**Success Criteria:**
+1. Company entity: id, name, description, createdAt, updatedAt
+2. Department entity: id, name, companyId, description, createdAt, updatedAt
+3. Agent entity: id, name, role, openClawAgentId, openClawAgentWorkspace, openClawAgentDir, companyId, departmentId
+4. Issue entity: id, title, description, status, assignee, departmentId, subIssues, comments, report, projectId, goalId
+5. Goal entity: id, title, description, status, verification, deadline, departmentIds, issueIds
+6. Project entity: id, companyId, title, description, status, projectDir, issueIds
+7. Approval entity: id, title, description, requester, status, rejectMessage
 
 ---
 
-### Phase 3: OpenClaw Bridge + API
+### Phase 3: OpenClaw Integration
 
-**Goal:** LeClaw connects to OpenClaw Gateway and surfaces agent status; Issue and Agent APIs are complete
+**Goal:** LeClaw discovers OpenClaw agents and supports agent onboarding
 
 **Depends on:** Phase 2
 
-**Requirements:** OPENCLAW-01, OPENCLAW-02, OPENCLAW-03, OPENCLAW-04
-
-**Success Criteria** (what must be TRUE):
-1. LeClaw scans configured OpenClaw directory and discovers all available agents
-2. LeClaw polls OpenClaw Gateway for agent status at configurable intervals
-3. LeClaw maintains heartbeat with OpenClaw agents and verifies liveness
-4. Agent status changes emit SSE events to connected Web UI clients
-5. REST API exposes OpenClaw agent list with current status
-6. REST API exposes Issue CRUD with proper status transitions
-
-**Plans**: TBD
+**Success Criteria:**
+1. LeClaw reads `#{openclaw.dir}/openclaw.json` to discover agents
+2. `openclaw agents list` command shows available agents
+3. `leclaw agent onboard --company-id <id> --agent-id <id> --role <role> [--department-id <id>]` works
+4. API key is generated and returned to agent after successful onboard
+5. Agent binding is stored in database
 
 ---
 
-### Phase 4: Real-Time Infrastructure
+### Phase 4: REST API + SSE
 
-**Goal:** Web UI receives real-time updates via SSE with reliable connection management
+**Goal:** All entities exposed via REST API; SSE for real-time Web UI updates
 
 **Depends on:** Phase 3
 
-**Requirements:** RT-01, RT-02, RT-03
-
-**Success Criteria** (what must be TRUE):
-1. Web UI connects to SSE endpoint and receives agent status change events
-2. SSE connections include heartbeat comments every 15-30 seconds to prevent timeout
-3. After SSE connection drop, Web UI reconnects automatically using Last-Event-ID
-4. Server cleans up SSE connections when clients disconnect
-5. SSE events follow consistent schema across all event types
-
-**Plans**: TBD
+**Success Criteria:**
+1. CRUD endpoints for: Companies, Departments, Agents, Issues, Goals, Projects, Approvals
+2. REST API path structure: `/api/companies`, `/api/companies/:id/departments`, etc.
+3. SSE endpoint for real-time updates (Web UI only)
+4. SSE includes heartbeat comments to prevent timeout
+5. SSE events follow consistent schema
 
 ---
 
-### Phase 5: Web UI - Dashboard
+### Phase 5: Web UI - Layout + Dashboard
 
-**Goal:** Users see overview of all Companies, real-time agent status, and recent activity
+**Goal:** Basic layout with Company Rail, Sidebar, and Dashboard metrics
 
 **Depends on:** Phase 4
 
-**Requirements:** UI-01, UI-02, UI-03
-
-**Success Criteria** (what must be TRUE):
-1. Dashboard displays summary cards showing total Companies and Department counts
-2. Dashboard displays real-time status indicators (online/offline/busy) for all detected OpenClaw agents
-3. Dashboard shows list of recent Issues with their current states
-4. Dashboard updates automatically when agent status changes via SSE
-5. Dashboard updates automatically when new Issues are created
-
-**Plans**: TBD
-**UI hint**: yes
+**Success Criteria:**
+1. Company Rail on left side with company avatars
+2. Sidebar with navigation: Dashboard, Issues, Goals, Projects, Approvals, Departments
+3. Dashboard shows: Companies count, Agents Online, Open Issues, Total Agents
+4. Dashboard shows: Agent Status table, Recent Issues list
+5. Navigation between pages works
 
 ---
 
-### Phase 6: Web UI - Organization
+### Phase 6: Web UI - Entity Pages
 
-**Goal:** Users can manage Companies, Departments, and assign OpenClaw agents to roles
+**Goal:** Full pages for all entities with list and detail views
 
 **Depends on:** Phase 5
 
-**Requirements:** UI-04, UI-05, UI-06, UI-07, UI-08, UI-09
-
-**Success Criteria** (what must be TRUE):
-1. User can view paginated list of all Companies and click to view a specific Company
-2. User can view Company detail page showing CEO agent assignment
-3. User can view list of Departments under a Company and create new Departments
-4. User can assign a Manager agent to a Department by selecting from available OpenClaw agents
-5. User can assign one or more Staff agents to a Department by selecting from available OpenClaw agents
-6. User can reassign any bound agent to a different role or unbind them completely
-7. Agent availability reflects current connection status from OpenClaw
-
-**Plans**: TBD
-**UI hint**: yes
+**Success Criteria:**
+1. **Issues Page:** List with filters (All/Open/In Progress/Done), detail view with sub-issues and comments
+2. **Goals Page:** List with filters, detail showing related issues
+3. **Projects Page:** List with projectDir, detail view
+4. **Approvals Page:** List with approve/reject actions
+5. **Departments Page:** Department detail with Manager and Staff lists
 
 ---
 
-### Phase 7: Web UI - Issues
+### Phase 7: Harness Infrastructure
 
-**Goal:** Users can create, view, and manage Issues; external systems can create Issues via REST API
+**Goal:** Audit logging and agent interaction mechanisms
 
-**Depends on:** Phase 5
+**Depends on:** Phase 6
 
-**Requirements:** ISSUE-01, ISSUE-02, ISSUE-03, ISSUE-04
-
-**Success Criteria** (what must be TRUE):
-1. User can create an Issue from Web UI with title, description, and target Department selection
-2. User can view list of all Issues with filter controls for Company and Department
-3. User can click an Issue to view its detail and change status (open, in-progress, done)
-4. External systems can POST to `/api/issues` with API key authentication to create Issues
-5. Issue list updates in real-time when Issues are created or status changes
-
-**Plans**: TBD
-**UI hint**: yes
+**Success Criteria:**
+1. Audit Log: records every CLI/API operation (agentId, command, args, result, timestamp)
+2. Comments on Issues: human read-only, agent can write
+3. Issue report field: Markdown, can be updated with separator for updates
 
 ---
 
-### Phase 8: Integration + E2E Testing
+### Phase 8: Integration + Testing
 
-**Goal:** All components work together end-to-end; critical user workflows are verified
+**Goal:** End-to-end integration and verification
 
 **Depends on:** Phase 7
 
-**Requirements:** (Cross-phase integration requirements)
-
-**Success Criteria** (what must be TRUE):
-1. `leclaw start` launches both backend server and Web UI without errors
-2. CLI status command accurately reflects connection state to OpenClaw and Gateway
-3. Creating a Company via Web UI persists correctly and appears in Dashboard
-4. Assigning OpenClaw agents to Company/Department roles persists and displays in UI
-5. Creating an Issue via Web UI and via REST API both appear in Issues list
-6. Agent status changes in OpenClaw reflect in Web UI within one polling interval
-7. SSE connection remains stable across multiple agent status changes
-8. All REST API endpoints return correct error codes for edge cases
-
-**Plans**: TBD
+**Success Criteria:**
+1. `leclaw start` launches server without errors
+2. All CRUD operations work end-to-end
+3. Agent onboard flow works: LeClaw UI → onboarding prompt → agent CLI → API key returned
+4. SSE updates reflect in Web UI when data changes
+5. Basic E2E tests pass
 
 ---
 
 ## Progress Table
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation + CLI Init | 0/5 | Not started | - |
-| 2. Data Layer + API Foundation | 0/7 | Not started | - |
-| 3. OpenClaw Bridge + API | 0/6 | Not started | - |
-| 4. Real-Time Infrastructure | 0/5 | Not started | - |
-| 5. Web UI - Dashboard | 0/5 | Not started | - |
-| 6. Web UI - Organization | 0/7 | Not started | - |
-| 7. Web UI - Issues | 0/5 | Not started | - |
-| 8. Integration + E2E Testing | 0/8 | Not started | - |
-
----
-
-## Requirement Coverage Map
-
-| Requirement | Phase | Phase Name |
-|-------------|-------|------------|
-| CLI-01 | 1 | Foundation + CLI Init |
-| CLI-02 | 1 | Foundation + CLI Init |
-| CLI-03 | 1 | Foundation + CLI Init |
-| DATA-01 | 1 | Foundation + CLI Init |
-| DATA-02 | 2 | Data Layer + API Foundation |
-| DATA-03 | 2 | Data Layer + API Foundation |
-| DATA-04 | 2 | Data Layer + API Foundation |
-| DATA-05 | 2 | Data Layer + API Foundation |
-| API-01 | 2 | Data Layer + API Foundation |
-| API-02 | 2 | Data Layer + API Foundation |
-| API-03 | 2 | Data Layer + API Foundation |
-| API-04 | 2 | Data Layer + API Foundation |
-| API-05 | 2 | Data Layer + API Foundation |
-| OPENCLAW-01 | 3 | OpenClaw Bridge + API |
-| OPENCLAW-02 | 3 | OpenClaw Bridge + API |
-| OPENCLAW-03 | 3 | OpenClaw Bridge + API |
-| OPENCLAW-04 | 3 | OpenClaw Bridge + API |
-| RT-01 | 4 | Real-Time Infrastructure |
-| RT-02 | 4 | Real-Time Infrastructure |
-| RT-03 | 4 | Real-Time Infrastructure |
-| UI-01 | 5 | Web UI - Dashboard |
-| UI-02 | 5 | Web UI - Dashboard |
-| UI-03 | 5 | Web UI - Dashboard |
-| UI-04 | 6 | Web UI - Organization |
-| UI-05 | 6 | Web UI - Organization |
-| UI-06 | 6 | Web UI - Organization |
-| UI-07 | 6 | Web UI - Organization |
-| UI-08 | 6 | Web UI - Organization |
-| UI-09 | 6 | Web UI - Organization |
-| ISSUE-01 | 7 | Web UI - Issues |
-| ISSUE-02 | 7 | Web UI - Issues |
-| ISSUE-03 | 7 | Web UI - Issues |
-| ISSUE-04 | 7 | Web UI - Issues |
-
-**Coverage: 35/35 requirements mapped**
+| Phase | Status | Completed |
+|-------|--------|-----------|
+| 1. Foundation - CLI Init | Completed | 2026-04-07 |
+| 2. Data Layer - Entity Models + DB | Completed | 2026-04-07 |
+| 3. OpenClaw Integration | Not started | - |
+| 4. REST API + SSE | Not started | - |
+| 5. Web UI - Layout + Dashboard | Not started | - |
+| 6. Web UI - Entity Pages | Not started | - |
+| 7. Harness Infrastructure | Not started | - |
+| 8. Integration + Testing | Not started | - |
 
 ---
 
 *Generated: 2026-04-05*
+*Updated: 2026-04-07*
