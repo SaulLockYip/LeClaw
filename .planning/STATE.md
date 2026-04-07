@@ -11,9 +11,9 @@
 
 **Target Users:** 个人用户管理多个 AI-native 公司，处理不同业务线。无 Auth 设计。
 
-**Current Phase:** Phase 7 Complete (Harness Infrastructure)
+**Current Phase:** Phase 8 Complete (Integration + E2E Testing)
 
-**Focus:** Ready for Phase 8 planning
+**Focus:** All phases complete
 
 ---
 
@@ -30,11 +30,11 @@
 | 5. Web UI - Dashboard | Completed | 5/5 | 1 |
 | 6. Web UI - Entity Pages | Completed | 11/11 | 1 |
 | 7. Harness Infrastructure | Completed | 5/5 | 1 |
-| 8. Integration + E2E Testing | Not started | 0/5 | 1 |
+| 8. Integration + E2E Testing | Completed | 8/8 | 1 |
 
 ### Overall Progress
 
-- **Phases:** 7/8 complete
+- **Phases:** 8/8 complete
 - **Requirements:** 25/35 validated
 - **Plans:** 8/8 created
 
@@ -105,21 +105,19 @@
 - [x] Phase 5: Web UI - Dashboard
 - [x] Phase 6: Web UI - Entity Pages
 - [x] Phase 7: Harness Infrastructure
-- [ ] Begin Phase 8 planning via `/gsd:plan-phase 8`
+- [x] Phase 8: Integration + E2E Testing
 
 ### Blockers
 
-None - Phase 7 complete
+None - All phases complete
 
 ### Notes
 
-- Phase 7 completed with harness infrastructure: audit logging, issue comments, issue report append
-- Audit log table created with indexes for agent and command queries
-- CLI commands: `leclaw issue comment add`, `leclaw issue report update`
-- Agent onboard integrated with audit logging
+- Phase 8 completed with E2E test infrastructure
+- E2E tests: server-start, company-crud, department-crud, issue-crud, approval-flow, sse-updates, agent-onboard, agent-crud
+- CLI tests: init integration tests
 - Build verified: `pnpm build` succeeds
-
-### Notes
+- Bug fixes: @clack/prompts import, skipLibCheck added to all tsconfigs
 
 Roadmap derived from requirements with 100% coverage validation. Fine granularity applied (8 phases).
 
@@ -171,4 +169,4 @@ Roadmap derived from requirements with 100% coverage validation. Fine granularit
 
 ---
 
-*Last updated: 2026-04-07 (Phase 3 complete)*
+*Last updated: 2026-04-07 (Phase 8 complete)*
