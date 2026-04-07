@@ -6,7 +6,7 @@
     "./src/index.ts": "./src/index.ts"
   },
   "dependencies": {
-    "json5": "^14.1.1"
+    "json5": "^2.2.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

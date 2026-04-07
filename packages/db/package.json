@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.38.4",
-    "embedded-postgres": "^16.0.0",
+    "embedded-postgres": "^18.1.0-beta.16",
     "postgres": "^3.4.5"
   },
   "devDependencies": {
@@ -23,7 +23,7 @@
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "generate": "tsx --tsconfig ./tsconfig.json ../../node_modules/.bin/drizzle-kit generate",
+    "generate": "drizzle-kit generate",
     "migrate": "tsx src/migrate.ts"
   }
 }

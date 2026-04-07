@@ -9,3 +9,4 @@ export { issueComments } from "./issue_comments.js";
 export { goals } from "./goals.js";
 export { projects } from "./projects.js";
 export { approvals } from "./approvals.js";
+export { agentApiKeys } from "./agent-api-keys.js";
