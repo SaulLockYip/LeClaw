@@ -1,20 +1,15 @@
 import { Router, Request, Response } from "express";
-import path from "path";
-import os from "os";
-import fs from "fs";
-import { loadConfig } from "@leclaw/shared";
+import { getDb } from "@leclaw/db/client";
 
 export const healthRouter = Router();
 
-healthRouter.get("/", (req: Request, res: Response) => {
-  const configPath = path.join(os.homedir(), ".leclaw", "config.json");
+healthRouter.get("/", async (_req: Request, res: Response) => {
   let dbConnected = false;
 
   try {
-    if (fs.existsSync(configPath)) {
-      const config = loadConfig({ configPath });
-      dbConnected = !!config.database?.connectionString;
-    }
+    const db = await getDb();
+    await db.select({ count: true }).from({}).all();
+    dbConnected = true;
   } catch {
     dbConnected = false;
   }

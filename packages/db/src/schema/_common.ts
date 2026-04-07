@@ -1,6 +1,6 @@
 // Shared schema helpers for LeClaw entities
 
-import { type Column, timestamp } from "drizzle-orm/pg-core";
+import { timestamp } from "drizzle-orm/pg-core";
 
 /**
  * Standard created_at/updated_at timestamp columns
@@ -14,6 +14,6 @@ export const timestamps = {
 /**
  * Helper to reference a timestamp column with timezone
  */
-export function createdAtTimestamp(col: Column) {
+export function createdAtTimestamp() {
   return timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 }
