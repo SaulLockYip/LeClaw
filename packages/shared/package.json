@@ -5,7 +5,11 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./api-key": "./dist/api-key.js",
+    "./openclaw-scanner": "./dist/openclaw-scanner.js",
+    "./gateway-client": "./dist/gateway-client.js",
+    "./agent-status": "./dist/agent-status.js"
   },
   "dependencies": {
     "json5": "^2.2.3"
