@@ -21,7 +21,11 @@ function DepartmentsPage() {
           <h1 className="text-2xl font-bold text-slate-800">Departments</h1>
           <p className="text-slate-500 text-sm mt-1">{selectedCompany.name}</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+        <button
+          className="px-4 py-2 bg-slate-300 text-slate-500 rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2"
+          disabled
+          title="Web UI is read-only. Create departments via CLI."
+        >
           <Plus className="w-4 h-4" />
           New Department
         </button>

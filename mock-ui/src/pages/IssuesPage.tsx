@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, AlertCircle, Clock, CheckCircle } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useCompany } from '../hooks/useCompany'
 import { issueApi } from '../lib/api'
 import type { Issue } from '../lib/api'
@@ -8,7 +8,7 @@ function IssuesPage() {
   const { selectedCompany, isLoading: isCompanyLoading } = useCompany()
   const [issues, setIssues] = useState<Issue[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [filter, setFilter] = useState<'All' | 'Open' | 'InProgress' | 'Done'>('All')
+  const [filter, setFilter] = useState<'All' | 'Open' | 'InProgress' | 'Blocked' | 'Done' | 'Cancelled'>('All')
 
   useEffect(() => {
     if (!selectedCompany) return
@@ -42,6 +42,8 @@ function IssuesPage() {
         return 'bg-green-100 text-green-700'
       case 'Blocked':
         return 'bg-red-100 text-red-700'
+      case 'Cancelled':
+        return 'bg-slate-100 text-slate-700'
       default:
         return 'bg-slate-100 text-slate-700'
     }
@@ -51,7 +53,9 @@ function IssuesPage() {
     { label: 'All', count: issues.length },
     { label: 'Open', count: issues.filter((i) => i.status === 'Open').length },
     { label: 'InProgress', count: issues.filter((i) => i.status === 'InProgress').length },
+    { label: 'Blocked', count: issues.filter((i) => i.status === 'Blocked').length },
     { label: 'Done', count: issues.filter((i) => i.status === 'Done').length },
+    { label: 'Cancelled', count: issues.filter((i) => i.status === 'Cancelled').length },
   ]
 
   if (isCompanyLoading) {
@@ -70,7 +74,11 @@ function IssuesPage() {
           <h1 className="text-2xl font-bold text-slate-800">Issues</h1>
           <p className="text-slate-500 text-sm mt-1">{selectedCompany?.name}</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 flex items-center gap-2">
+        <button
+          className="px-4 py-2 bg-slate-300 text-slate-500 rounded-lg font-medium text-sm cursor-not-allowed flex items-center gap-2"
+          disabled
+          title="Web UI is read-only. Create issues via CLI."
+        >
           <Plus className="w-4 h-4" />
           New Issue
         </button>
@@ -120,7 +128,11 @@ function IssuesPage() {
               </tr>
             ) : (
               filteredIssues.map((issue) => (
-                <tr key={issue.id} className="hover:bg-slate-50">
+                <tr
+                  key={issue.id}
+                  className="hover:bg-slate-50 cursor-pointer"
+                  onClick={() => window.location.href = `/issues/${issue.id}`}
+                >
                   <td className="px-4 py-3 text-sm font-medium text-slate-800">{issue.title}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(issue.status)}`}>

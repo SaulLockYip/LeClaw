@@ -66,7 +66,11 @@ function ProjectsPage() {
           <h1 className="text-2xl font-bold text-slate-800">Projects</h1>
           <p className="text-slate-500 text-sm mt-1">{selectedCompany?.name}</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+        <button
+          className="px-4 py-2 bg-slate-300 text-slate-500 rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2"
+          disabled
+          title="Web UI is read-only. Create projects via CLI."
+        >
           <Plus className="w-4 h-4" />
           New Project
         </button>
@@ -92,50 +96,60 @@ function ProjectsPage() {
         ))}
       </div>
 
-      {/* Projects Grid */}
-      {isLoading ? (
-        <div className="text-center py-12 text-slate-500">Loading...</div>
-      ) : filteredProjects.length === 0 ? (
-        <div className="text-center py-12 text-slate-500">No projects found</div>
-      ) : (
-        <div className="grid grid-cols-3 gap-4">
-          {filteredProjects.map((project) => (
-            <div
-              key={project.id}
-              className="bg-white rounded-lg shadow-sm p-4 space-y-3"
-            >
-              {/* Title and Status */}
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <FolderKanban className="w-4 h-4 text-slate-400" />
-                  <h3 className="font-semibold text-slate-800">{project.title}</h3>
-                </div>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeColor(project.status)}`}>
-                  {project.status}
-                </span>
-              </div>
-
-              {/* Description */}
-              <p className="text-sm text-slate-500">{project.description}</p>
-
-              {/* Stats Row */}
-              <div className="flex items-center gap-4 pt-2 border-t border-slate-100">
-                <div className="text-sm">
-                  <span className="text-slate-500">Issues: </span>
-                  <span className="font-medium text-slate-700">{project.issueIds.length}</span>
-                </div>
-              </div>
-
-              {/* Project Dir */}
-              <div className="pt-2">
-                <span className="text-xs text-slate-500">
-                  Dir: <span className="font-medium text-slate-700">{project.projectDir || '-'}</span>
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Projects Table */}
+      <div className="bg-white rounded-lg shadow-sm">
+        <table className="w-full">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Title</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Description</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Directory</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Issues</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {isLoading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">Loading...</td>
+              </tr>
+            ) : filteredProjects.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">No projects found</td>
+              </tr>
+            ) : (
+              filteredProjects.map((project) => (
+                <tr
+                  key={project.id}
+                  className="hover:bg-slate-50 cursor-pointer"
+                  onClick={() => window.location.href = `/projects/${project.id}`}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <FolderKanban className="w-4 h-4 text-slate-400" />
+                      <span className="text-sm font-medium text-slate-800">{project.title}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">
+                    {project.description || '-'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeColor(project.status)}`}>
+                      {project.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-500 font-mono">
+                    {project.projectDir || '-'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {project.issueIds?.length || 0}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
