@@ -4,8 +4,7 @@
 import { Command } from "commander";
 import { scanOpenClawAgents, type OpenClawAgent } from "@leclaw/shared/openclaw-scanner";
 import { getAgentStatus, type AgentStatus } from "@leclaw/shared/agent-status";
-import { loadConfig } from "@leclaw/shared/config/io";
-import { db, agents, agentApiKeys, companies, departments } from "@leclaw/db";
+import { db, agents, companies } from "@leclaw/db";
 import { eq } from "drizzle-orm";
 
 export interface AgentListEntry {
@@ -39,17 +38,6 @@ async function getBoundAgents() {
 }
 
 /**
- * Get company name by ID
- */
-async function getCompanyName(companyId: string): Promise<string | undefined> {
-  const result = await db.select({ name: companies.name })
-    .from(companies)
-    .where(eq(companies.id, companyId))
-    .limit(1);
-  return result[0]?.name;
-}
-
-/**
  * List all agents (discovered + bound)
  */
 export async function listAgents(): Promise<AgentsListOutput> {
@@ -61,7 +49,12 @@ export async function listAgents(): Promise<AgentsListOutput> {
   errors.push(...scanResult.errors);
 
   // Get bound agents from DB
-  const boundAgentsList = await getBoundAgents();
+  let boundAgentsList: Awaited<ReturnType<typeof getBoundAgents>> = [];
+  try {
+    boundAgentsList = await getBoundAgents();
+  } catch {
+    // DB not initialized - continue without bound agent info
+  }
   const boundAgentMap = new Map(boundAgentsList.map(a => [a.openClawAgentId, a]));
 
   // Merge: add status and binding info

@@ -2,8 +2,10 @@
   "name": "@leclaw/shared",
   "version": "1.0.0",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "./src/index.ts": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "dependencies": {
     "json5": "^2.2.3"

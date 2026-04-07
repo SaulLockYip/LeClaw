@@ -40,7 +40,7 @@ export async function validateOnboard(
 
   if (company.length === 0) {
     errors.push(`Company with id '${companyId}' does not exist`);
-    return errors; // No point checking other rules if company doesn't exist
+    return errors;
   }
 
   // Rule 2: If role = Manager or Staff, departmentId must exist AND belong to companyId
@@ -133,12 +133,9 @@ export async function onboardAgent(
     });
 
     // Insert into agent_api_keys table
-    // Note: In production, we would hash the key here. For simplicity, storing the hash
-    // For now, we store the secret part hashed since agentId is known
-    // A real implementation would use bcrypt to hash the fullKey
     await db.insert(agentApiKeys).values({
       agentId: openClawAgentId,
-      keyHash: apiKey.secret, // In production: await bcrypt.hash(apiKey.fullKey, 10)
+      keyHash: apiKey.secret,
       createdAt: now,
     });
 
