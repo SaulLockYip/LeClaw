@@ -9,11 +9,11 @@
 
 ## Phases
 
-- [ ] **Phase 1: Foundation - CLI Init** - Project scaffolding, leclaw init/config, config file
-- [ ] **Phase 2: Data Layer - Entity Models + DB** - Embedded PostgreSQL, Company/Department/Agent/Issue/Goal/Project/Approval schemas
+- [x] **Phase 1: Foundation - CLI Init** - Project scaffolding, leclaw init/config, config file (completed 2026-04-07)
+- [x] **Phase 2: Data Layer - Entity Models + DB** - Embedded PostgreSQL, Company/Department/Agent/Issue/Goal/Project/Approval schemas (completed 2026-04-07)
 - [ ] **Phase 3: OpenClaw Integration** - openclaw.json reading, agent scanning, agent onboard, API key
 - [ ] **Phase 4: REST API + SSE** - CRUD for all entities, SSE real-time updates
-- [x] **Phase 5: Web UI - Layout + Dashboard** - Company Rail, Sidebar, Dashboard with metrics (completed 2026-04-07)
+- [ ] **Phase 5: Web UI - Layout + Dashboard** - Company Rail, Sidebar, Dashboard with metrics
 - [ ] **Phase 6: Web UI - Entity Pages** - Issues, Goals, Projects, Approvals, Departments detail
 - [ ] **Phase 7: Harness Infrastructure** - Audit Log, Comments on Issues
 - [ ] **Phase 8: Integration + Testing** - End-to-end testing, CLI + API integration
