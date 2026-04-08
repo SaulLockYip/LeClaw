@@ -363,7 +363,10 @@ export function registerDoctorCommand(program: Command): void {
       });
 
       // 9. Database port availability (use config.database.embeddedPort)
-      if (config) {
+      // Note: If dbInitialized is true, we already know the port works because initializeDb
+      // internally calls allocatePort which would fail if the port was truly in use.
+      // We skip this check when dbInitialized is true to avoid false positives from TIME_WAIT.
+      if (config && !dbInitialized) {
         const dbPort = config.database?.embeddedPort ?? DEFAULT_DB_PORT;
         const portInUse = await isPortInUse(dbPort);
         checks.push({
@@ -375,6 +378,14 @@ export function registerDoctorCommand(program: Command): void {
           suggestion: portInUse
             ? `Stop the other process using port ${dbPort}, or change the database.embeddedPort in ${CONFIG_FILE}`
             : undefined,
+          category: "Database",
+        });
+      } else if (dbInitialized) {
+        // Port was already proven available by initializeDb succeeding
+        checks.push({
+          name: "db_port_available",
+          status: "PASS",
+          details: `Port ${config?.database?.embeddedPort ?? DEFAULT_DB_PORT} is available (verified by database initialization)`,
           category: "Database",
         });
       }

@@ -4,10 +4,12 @@ export async function isPortInUse(port: number): Promise<boolean> {
   return await new Promise((resolve) => {
     const server = net.createServer();
     server.unref();
+    server.on("connection", (socket) => socket.destroy());
     server.once("error", (error: NodeJS.ErrnoException) => {
       resolve(error.code === "EADDRINUSE");
     });
-    server.listen(port, "127.0.0.1", () => {
+    // SO_REUSEADDR allows binding to a port in TIME_WAIT state after close()
+    server.listen({ port, host: "127.0.0.1", reuseAddress: true }, () => {
       server.close(() => resolve(false));
     });
   });
