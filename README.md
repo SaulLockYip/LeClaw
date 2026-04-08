@@ -18,11 +18,25 @@ LeClaw is an **OpenClaw orchestration center** for managing hierarchical AI agen
 
 ## Quick Start
 
+### Clone and Build
+
+```bash
+# Clone the repository
+git clone https://github.com/SaulLockYip/LeClaw.git
+cd LeClaw
+
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+```
+
 ### 1. Initialize LeClaw
 
 ```bash
 # Interactive setup - configures OpenClaw path, gateway, and database
-leclaw init
+pnpm exec tsx packages/cli/bin/leclaw.js init
 ```
 
 The init command will prompt for:
@@ -36,8 +50,8 @@ Configuration is saved to `~/.leclaw/config.json` and an embedded PostgreSQL dat
 ### 2. Start the Server
 
 ```bash
-leclaw start
-# Server runs on http://localhost:4396
+# Start the API server (runs on http://localhost:4396)
+pnpm exec tsx packages/server/src/index.ts
 ```
 
 ### 3. Use the Web UI
