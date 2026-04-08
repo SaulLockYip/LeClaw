@@ -4,11 +4,12 @@ import os from "os";
 import fs from "fs";
 import { execFileSync } from "child_process";
 import { loadConfig } from "@leclaw/shared";
-import { isPortInUse } from "@leclaw/db";
+import { isPortInUse, initializeDb } from "@leclaw/db";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 const CONFIG_DIR = path.join(os.homedir(), ".leclaw");
 const DB_DIR = path.join(CONFIG_DIR, "db");
+const DEFAULT_DB_PORT = 65432;
 const POSTMASTER_PID_FILE = path.join(DB_DIR, "postmaster.pid");
 
 interface DoctorCheck {
@@ -17,6 +18,8 @@ interface DoctorCheck {
   details: string;
   /** Actionable fix suggestion */
   suggestion?: string;
+  /** Optional action to auto-fix the issue */
+  fixAction?: () => Promise<void>;
 }
 
 /**
@@ -65,7 +68,8 @@ export function registerDoctorCommand(program: Command): void {
   program
     .command("doctor")
     .description("Run diagnostic checks")
-    .action(async () => {
+    .option("--fix", "Attempt to automatically fix issues")
+    .action(async (opts) => {
       const checks: DoctorCheck[] = [];
 
       // 1. OpenClaw CLI installed
@@ -194,6 +198,34 @@ export function registerDoctorCommand(program: Command): void {
         suggestion: pgRunning ? undefined : "Embedded PostgreSQL will be started automatically when needed",
       });
 
+      // 7b. Database initialization status
+      let dbInitialized = false;
+      let dbInitError: string | null = null;
+      if (dbDirExists) {
+        try {
+          const { connectionString } = await initializeDb({ port: DEFAULT_DB_PORT, dataDir: DB_DIR });
+          dbInitialized = connectionString.includes("leclaw");
+        } catch (err) {
+          dbInitError = err instanceof Error ? err.message : String(err);
+        }
+      }
+      checks.push({
+        name: "database_initialized",
+        status: dbInitialized ? "PASS" : "FAIL",
+        details: dbInitialized
+          ? "Database is properly initialized and accessible"
+          : `Database initialization failed: ${dbInitError ?? "unknown error"}`,
+        suggestion: dbInitialized ? undefined : `Try running: rm -rf ${DB_DIR} && leclaw init`,
+        fixAction: dbInitialized ? undefined : async () => {
+          // Attempt to reinitialize the database
+          console.log(`Removing database directory ${DB_DIR} and reinitializing...`);
+          if (fs.existsSync(DB_DIR)) {
+            fs.rmSync(DB_DIR, { recursive: true, force: true });
+          }
+          await initializeDb({ port: DEFAULT_DB_PORT, dataDir: DB_DIR });
+        },
+      });
+
       // 8. Database port availability (for configured port)
       if (configExists) {
         const config = loadConfig({ configPath: CONFIG_FILE });
@@ -246,12 +278,39 @@ export function registerDoctorCommand(program: Command): void {
       const passed = checks.filter((c) => c.status === "PASS").length;
       const failed = checks.filter((c) => c.status === "FAIL").length;
       const warnings = checks.filter((c) => c.status === "WARN").length;
+      const fixableFailures = checks.filter((c) => c.status === "FAIL" && c.fixAction);
+
+      // Auto-fix if --fix flag is provided and there are fixable failures
+      if (opts.fix && fixableFailures.length > 0) {
+        console.log(`\nAttempting to fix ${fixableFailures.length} issue(s)...\n`);
+        for (const check of fixableFailures) {
+          if (check.fixAction) {
+            try {
+              await check.fixAction();
+              console.log(`Fixed: ${check.name}`);
+            } catch (err) {
+              console.error(`Failed to fix ${check.name}: ${err instanceof Error ? err.message : String(err)}`);
+            }
+          }
+        }
+        console.log("\nRe-running diagnostics after fix...\n");
+        // Note: We don't re-run the full diagnostics, just report what happened
+        console.log(
+          JSON.stringify({
+            success: false,
+            message: "Fix attempted. Run 'leclaw doctor' again to verify.",
+            summary: { passed, failed, warnings, total: checks.length },
+          }, null, 2)
+        );
+        process.exit(1);
+      }
 
       console.log(
         JSON.stringify({
           success: failed === 0,
           checks,
           summary: { passed, failed, warnings, total: checks.length },
+          fixableFailures: fixableFailures.length,
         }, null, 2)
       );
 

@@ -1,6 +1,8 @@
-import { existsSync, readFileSync, rmSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, mkdirSync, readdirSync, symlinkSync, unlinkSync } from "node:fs";
 import path from "node:path";
 import os from "os";
+import net from "net";
+import { fileURLToPath } from "url";
 import postgres from "postgres";
 import { allocatePort } from "./port-allocator.js";
 
@@ -86,6 +88,62 @@ async function loadEmbeddedPostgresCtor(): Promise<EmbeddedPostgresCtor> {
   }
 }
 
+/**
+ * Fix embedded-postgres library symlinks for pnpm compatibility.
+ * The binaries use @loader_path which requires specific symlinks that pnpm doesn't create.
+ * This function creates the necessary symlinks for the libraries to be found.
+ */
+async function fixLibrarySymlinks(): Promise<void> {
+  try {
+    // Find the embedded-postgres package location using import.meta.url
+    const pgPackageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../..");
+    // Navigate to the actual embedded-postgres package in pnpm's node_modules structure
+    const pnpmNodeModules = path.join(pgPackageDir, "node_modules/.pnpm");
+    const entries = readdirSync(pnpmNodeModules);
+    const embeddedPgEntry = entries.find((e) => e.includes("embedded-postgres@"));
+    if (!embeddedPgEntry) return;
+
+    const nativeLibDir = path.join(pnpmNodeModules, embeddedPgEntry, "node_modules/@embedded-postgres/darwin-arm64/native/lib");
+    if (!existsSync(nativeLibDir)) return;
+
+    // Map of library names to their base names (without version)
+    const symlinkMappings: Record<string, string> = {
+      "libpq.5.dylib": "libpq.dylib",
+      "libssl.3.dylib": "libssl.dylib",
+      "libcrypto.3.dylib": "libcrypto.dylib",
+      "libcom_err.3.0.dylib": "libcom_err.dylib",
+      "libedit.0.dylib": "libedit.dylib",
+      "libintl.8.dylib": "libintl.dylib",
+      "libuuid.1.1.dylib": "libuuid.dylib",
+      "liblz4.1.10.0.dylib": "liblz4.1.dylib",
+      "libzstd.1.5.7.dylib": "libzstd.1.dylib",
+      "libkrb5.3.3.dylib": "libkrb5.dylib",
+      "libk5crypto.3.1.dylib": "libk5crypto.3.dylib",
+      "libkrb5support.1.1.dylib": "libkrb5support.1.dylib",
+      "libicui18n.77.1.dylib": "libicui18n.dylib",
+      "libicuuc.77.1.dylib": "libicuuc.77.dylib",
+      "libicudata.77.1.dylib": "libicudata.77.dylib",
+      "libz.1.3.1.dylib": "libz.dylib",
+      "libxml2.16.dylib": "libxml2.dylib",
+    };
+
+    const files = readdirSync(nativeLibDir);
+    for (const file of files) {
+      if (file in symlinkMappings) {
+        const targetName = symlinkMappings[file];
+        const targetPath = path.join(nativeLibDir, targetName);
+
+        // Only create symlink if it doesn't exist
+        if (!existsSync(targetPath)) {
+          symlinkSync(file, targetPath);
+        }
+      }
+    }
+  } catch {
+    // Silently fail - the symlinks might already be correct or the package structure is different
+  }
+}
+
 export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
   const dataDir = config?.dataDir ?? path.join(os.homedir(), ".leclaw", "db");
   const user = config?.user ?? "postgres";
@@ -104,21 +162,30 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
   const runningPort = readPidFilePort(postmasterPidFile);
   const logBuffer: string[] = [];
 
-  // Reuse existing instance if running
-  if (runningPid) {
-    const port = runningPort ?? selectedPort;
-    const connectionString = `postgres://${user}:${password}@127.0.0.1:${port}/leclaw`;
-    return {
-      connectionString,
-      source: `embedded-postgres@${port}`,
-      stop: async () => {},
-    };
+  // Check if we can connect to an existing postgres on the configured port
+  if (runningPort) {
+    const isResponsive = await checkPostgresResponsive(runningPort);
+    if (isResponsive) {
+      const connectionString = `postgres://${user}:${password}@127.0.0.1:${runningPort}/leclaw`;
+      return {
+        connectionString,
+        source: `embedded-postgres@${runningPort}`,
+        stop: async () => {},
+      };
+    }
+    // Stale postmaster.pid - postgres not actually running, clean up
+    if (existsSync(postmasterPidFile)) {
+      rmSync(postmasterPidFile, { force: true });
+    }
   }
 
   // Clean up stale postmaster.pid if exists (from previous crash/termination)
   if (existsSync(postmasterPidFile)) {
     rmSync(postmasterPidFile, { force: true });
   }
+
+  // Fix library symlinks for pnpm compatibility (issue with @loader_path)
+  await fixLibrarySymlinks();
 
   // Start new instance
   const instance = new EmbeddedPostgres({
@@ -137,16 +204,20 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
     try {
       await instance.initialise();
     } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
       // Check if initialization actually succeeded despite the error
-      // (initdb returns non-zero exit code when data directory already exists)
+      // (initdb sometimes returns non-zero exit code even on success)
       if (!isDatabaseInitialized(dataDir)) {
         throw new Error(
-          `Failed to initialize database: ${err}. Data directory: ${dataDir}`,
+          `Failed to initialize database: ${errMsg}. Data directory: ${dataDir}. ` +
+          "This may be caused by: (1) another postgres process using this data directory, " +
+          "(2) insufficient permissions, (3) corrupted data directory. " +
+          "Try deleting the data directory and running init again.",
         );
       }
       // Database was initialized despite the error - log a warning
       console.warn(
-        "Database initialization raised an error but the database appears to be initialized. Continuing...",
+        `Database initialization raised an error but the database appears to be initialized: ${errMsg}. Continuing...`,
       );
     }
   }
@@ -171,4 +242,29 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
       await instance.stop();
     },
   };
+}
+
+/**
+ * Check if a postgres process is actually responsive on the given port
+ */
+async function checkPostgresResponsive(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    const timeout = setTimeout(() => {
+      socket.destroy();
+      resolve(false);
+    }, 2000);
+
+    socket.connect(port, "127.0.0.1", () => {
+      clearTimeout(timeout);
+      socket.destroy();
+      resolve(true);
+    });
+
+    socket.on("error", () => {
+      clearTimeout(timeout);
+      socket.destroy();
+      resolve(false);
+    });
+  });
 }
