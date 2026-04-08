@@ -12,6 +12,7 @@ export interface LeClawConfig {
   database: {
     connectionString: string;
     embeddedDataDir?: string;
+    embeddedPort?: number;
   };
 }
 

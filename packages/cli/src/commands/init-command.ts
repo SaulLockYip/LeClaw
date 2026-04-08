@@ -8,13 +8,16 @@ import { writeConfig, loadConfig, type LeClawConfig } from "@leclaw/shared";
 
 const CONFIG_DIR = path.join(os.homedir(), ".leclaw");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
-const DB_DIR = path.join(CONFIG_DIR, "db");
+const DEFAULT_DB_DIR = path.join(CONFIG_DIR, "db");
+const DEFAULT_DB_PORT = 65432;
 
 export function registerInitCommand(program: Command): void {
   program
     .command("init")
     .description("Initialize LeClaw configuration (interactive)")
-    .action(async () => {
+    .option("--db-port <port>", "Embedded PostgreSQL port", String(DEFAULT_DB_PORT))
+    .option("--db-path <path>", "Embedded PostgreSQL data directory", DEFAULT_DB_DIR)
+    .action(async (opts) => {
       try {
         // Create directories
         if (!fs.existsSync(CONFIG_DIR)) {
@@ -56,9 +59,11 @@ export function registerInitCommand(program: Command): void {
         clack.log.info("Initializing embedded PostgreSQL database...");
 
         // Initialize embedded PostgreSQL
+        const dbPort = parseInt(opts.dbPort, 10) || DEFAULT_DB_PORT;
+        const dbPath = opts.dbPath || DEFAULT_DB_DIR;
         let connectionString = existingConfig?.database?.connectionString ?? "";
         if (!connectionString) {
-          const { connectionString: cs } = await initializeDb({ dataDir: DB_DIR });
+          const { connectionString: cs } = await initializeDb({ port: dbPort, dataDir: dbPath });
           connectionString = cs;
         }
 
@@ -74,6 +79,8 @@ export function registerInitCommand(program: Command): void {
           },
           database: {
             connectionString,
+            embeddedDataDir: dbPath,
+            embeddedPort: dbPort,
           },
         };
 

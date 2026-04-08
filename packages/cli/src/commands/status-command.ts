@@ -49,7 +49,8 @@ export function registerStatusCommand(program: Command): void {
           try {
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 5000);
-            const response = await fetch(config.openclaw.gatewayUrl, {
+            const httpUrl = config.openclaw.gatewayUrl.replace(/^ws:\/\//, "http://").replace(/^wss:\/\//, "https://");
+            const response = await fetch(httpUrl, {
               method: "HEAD",
               signal: controller.signal,
             });
