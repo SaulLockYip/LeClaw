@@ -30,8 +30,8 @@ export function registerStartCommand(program: Command): void {
         const port = opts.port ?? String(config.server?.port ?? 4396);
         const host = opts.host;
 
-        // Fork server process
-        const serverDistPath = path.resolve(import.meta.dirname, "..", "..", "server", "dist", "index.js");
+        // Fork server process - need to go up 3 levels: dist/commands -> dist -> cli -> repo root
+        const serverDistPath = path.resolve(import.meta.dirname, "..", "..", "..", "server", "dist", "index.js");
 
         if (!fs.existsSync(serverDistPath)) {
           console.error(

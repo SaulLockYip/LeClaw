@@ -15,7 +15,28 @@
     "format": "pnpm oxfmt"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "-",
+      "/",
+      "4",
+      "6",
+      "@",
+      "@embedded-postgres/darwin-arm64",
+      "a",
+      "b",
+      "d",
+      "e",
+      "g",
+      "i",
+      "m",
+      "n",
+      "o",
+      "p",
+      "r",
+      "s",
+      "t",
+      "w"
+    ]
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -1,2 +1,22 @@
 packages:
   - packages/*
+allowBuilds:
+  '4': true
+  '6': true
+  '-': true
+  /: true
+  '@': true
+  a: true
+  b: true
+  d: true
+  e: true
+  g: true
+  i: true
+  m: true
+  n: true
+  o: true
+  p: true
+  r: true
+  s: true
+  t: true
+  w: true
