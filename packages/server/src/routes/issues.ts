@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import * as issueService from "../services/issue.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
 
-export const issuesRouter: Router = Router();
+export const issuesRouter: Router = Router({ mergeParams: true });
 
 // Middleware to extract and validate companyId
 function requireCompanyId(req: Request, res: Response, next: NextFunction) {

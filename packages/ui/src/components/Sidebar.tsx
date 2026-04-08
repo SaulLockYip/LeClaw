@@ -166,11 +166,19 @@ function Sidebar() {
       </div>
 
       {/* Settings */}
-      <div className="p-4 border-t border-slate-700">
-        <div className="flex items-center gap-2 text-slate-400 hover:text-slate-200 cursor-pointer text-sm">
+      <div className="px-2 pb-4">
+        <NavLink
+          to="/settings"
+          className={`flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
+            isPathActive('/settings')
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+          }`
+          }
+        >
           <Settings className="w-4 h-4" />
           <span>Settings</span>
-        </div>
+        </NavLink>
       </div>
     </div>
   )

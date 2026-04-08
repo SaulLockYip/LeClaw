@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
 
-export const agentsRouter: Router = Router();
+export const agentsRouter: Router = Router({ mergeParams: true });
 
 // Middleware to extract and validate companyId
 function requireCompanyId(req: Request, res: Response, next: NextFunction) {
@@ -17,6 +17,28 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
 }
 
 agentsRouter.use(requireCompanyId);
+
+// POST /api/companies/:companyId/agents - Create agent
+agentsRouter.post("/", async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).companyId;
+    const agent = await agentService.createAgent(companyId, {
+      name: req.body.name,
+      role: req.body.role,
+      departmentId: req.body.departmentId,
+      openClawAgentId: req.body.openClawAgentId,
+      openClawAgentWorkspace: req.body.openClawAgentWorkspace,
+      openClawAgentDir: req.body.openClawAgentDir,
+    });
+
+    broadcastEvent({ type: "agent_created", payload: agent as unknown as Record<string, unknown> });
+
+    res.status(201).json({ success: true, data: agent });
+  } catch (error) {
+    console.error("Error creating agent:", error);
+    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create agent" } });
+  }
+});
 
 // GET /api/companies/:companyId/agents - List agents
 agentsRouter.get("/", async (req: Request, res: Response) => {

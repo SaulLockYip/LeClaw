@@ -11,6 +11,7 @@ import ProjectDetailPage from './pages/projects/ProjectDetailPage'
 import ApprovalsListPage from './pages/approvals/ApprovalsListPage'
 import DepartmentsPage from './pages/DepartmentsPage'
 import DepartmentDetailPage from './pages/DepartmentDetailPage'
+import SettingsPage from './pages/SettingsPage'
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/approvals" element={<ApprovalsListPage />} />
             <Route path="/departments" element={<DepartmentsPage />} />
             <Route path="/departments/:id" element={<DepartmentDetailPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Routes>
       </CompanyProvider>

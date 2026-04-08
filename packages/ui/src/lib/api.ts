@@ -98,7 +98,12 @@ async function fetchApi<T>(endpoint: string): Promise<T> {
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${response.statusText}`)
   }
-  return response.json()
+  const json = await response.json()
+  // Unwrap { success: true, data: ... } response format
+  if (json && typeof json === 'object' && 'success' in json && 'data' in json) {
+    return json.data as T
+  }
+  return json as T
 }
 
 // Company API

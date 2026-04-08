@@ -2,10 +2,11 @@ import { Router, Request, Response, NextFunction } from "express";
 import * as departmentService from "../services/department.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
 
-export const departmentsRouter: Router = Router();
+export const departmentsRouter: Router = Router({ mergeParams: true });
 
 // Middleware to extract and validate companyId
 function requireCompanyId(req: Request, res: Response, next: NextFunction) {
+  console.log("[DEBUG] req.params:", JSON.stringify(req.params));
   const companyId = req.params.companyId;
   if (!companyId) {
     return res.status(400).json({

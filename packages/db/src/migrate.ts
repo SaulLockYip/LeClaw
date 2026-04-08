@@ -1,34 +1,41 @@
-// LeClaw Database Migration Runner
-// Applies pending Drizzle migrations to the database
-
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
-import * as schema from "./schema/index.js";
+import { inspectMigrations, applyPendingMigrations } from "./client.js";
 
 const MIGRATIONS_FOLDER = new URL("./migrations", import.meta.url).pathname;
 
-async function main(): Promise<void> {
+export async function runMigrations(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
 
   if (!databaseUrl) {
-    console.error("DATABASE_URL environment variable is not set");
-    process.exit(1);
+    console.log("No DATABASE_URL configured, skipping migrations");
+    return;
   }
 
-  console.log(`Connecting to database: ${databaseUrl.split("@")[1] ?? "localhost"}`);
+  console.log(`Inspecting migrations for: ${databaseUrl.split("@")[1] ?? "localhost"}`);
 
-  const sql = postgres(databaseUrl);
-  const db = drizzle(sql, { schema });
+  const before = await inspectMigrations(databaseUrl);
+  if (before.status === "upToDate") {
+    console.log("Database is up to date");
+    return;
+  }
 
-  console.log("Applying pending migrations...");
-  await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
+  console.log(`Applying ${before.pendingMigrations.length} pending migration(s)...`);
+  await applyPendingMigrations(databaseUrl);
 
+  const after = await inspectMigrations(databaseUrl);
+  if (after.status !== "upToDate") {
+    throw new Error(`Migrations incomplete: ${after.pendingMigrations.join(", ")}`);
+  }
   console.log("Migrations complete");
-  await sql.end();
 }
 
-main().catch((error) => {
-  console.error("Migration failed:", error);
-  process.exit(1);
-});
+// CLI runner
+async function main(): Promise<void> {
+  try {
+    await runMigrations();
+  } catch (error) {
+    console.error("Migration failed:", error);
+    process.exit(1);
+  }
+}
+
+await main();

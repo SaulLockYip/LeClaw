@@ -5,7 +5,7 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { agents, agentApiKeys, approvals, companies, departments, goals, issues, issueComments, projects, auditLogs } from "./schema/index.js";
 
 // Use environment or defaults
-const connectionString = process.env.DATABASE_URL ?? "postgres://postgres:postgres@127.0.0.1:5432/leclaw";
+const connectionString = process.env.DATABASE_URL ?? "postgres://postgres:postgres@127.0.0.1:65432/leclaw";
 
 // Create singleton instances
 const sql = postgres(connectionString);

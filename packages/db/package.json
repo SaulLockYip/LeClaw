@@ -7,7 +7,8 @@
     ".": "./dist/index.js",
     "./schema": "./dist/schema/index.js",
     "./schema/*": "./dist/schema/*.js",
-    "./client": "./dist/client.js"
+    "./client": "./dist/client.js",
+    "./migrate": "./dist/migrate.js"
   },
   "dependencies": {
     "drizzle-orm": "^0.38.4",
@@ -22,7 +23,7 @@
     "vitest": "^4.1.2"
   },
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && cp -r src/migrations dist/",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "generate": "drizzle-kit generate",

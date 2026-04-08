@@ -3,8 +3,35 @@ import { agents } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import type { Agent, AgentRole } from "@leclaw/shared";
 
+export interface CreateAgentInput {
+  name: string;
+  role: "CEO" | "Manager" | "Staff";
+  departmentId?: string;
+  openClawAgentId?: string;
+  openClawAgentWorkspace?: string;
+  openClawAgentDir?: string;
+}
+
 export interface UpdateAgentInput {
   name?: string;
+}
+
+export async function createAgent(
+  companyId: string,
+  input: CreateAgentInput
+): Promise<Agent> {
+  const db = await getDb();
+  const [agent] = await db.insert(agents).values({
+    companyId,
+    name: input.name,
+    role: input.role,
+    departmentId: input.departmentId || null,
+    openClawAgentId: input.openClawAgentId,
+    openClawAgentWorkspace: input.openClawAgentWorkspace,
+    openClawAgentDir: input.openClawAgentDir,
+  } as any).returning();
+
+  return { ...agent, role: agent.role as AgentRole };
 }
 
 export async function listAgentsByCompany(companyId: string): Promise<Agent[]> {

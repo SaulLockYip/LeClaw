@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, rmSync, mkdirSync, readdirSync } from "node:fs";
 import path from "node:path";
 import os from "os";
+import postgres from "postgres";
 import { allocatePort } from "./port-allocator.js";
 
 type EmbeddedPostgresInstance = {
@@ -89,7 +90,7 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
   const dataDir = config?.dataDir ?? path.join(os.homedir(), ".leclaw", "db");
   const user = config?.user ?? "postgres";
   const password = config?.password ?? "postgres";
-  const preferredPort = config?.port ?? 5432;
+  const preferredPort = config?.port ?? 65432;
 
   // Ensure data directory exists
   if (!existsSync(dataDir)) {
@@ -151,6 +152,15 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
   }
 
   await instance.start();
+
+  // Create the "leclaw" database if it doesn't exist
+  const maintenanceConn = postgres(`postgres://${user}:${password}@127.0.0.1:${selectedPort}/postgres`, { max: 1 });
+  try {
+    await maintenanceConn.unsafe(`CREATE DATABASE leclaw`);
+  } catch {
+    // Database might already exist, ignore error
+  }
+  await maintenanceConn.end();
 
   const connectionString = `postgres://${user}:${password}@127.0.0.1:${selectedPort}/leclaw`;
 

@@ -2,7 +2,7 @@
 export type SseEventType =
   | "company_created" | "company_updated" | "company_deleted"
   | "department_created" | "department_updated" | "department_deleted"
-  | "agent_status_changed" | "agent_updated"
+  | "agent_status_changed" | "agent_updated" | "agent_created"
   | "issue_created" | "issue_updated"
   | "goal_updated" | "project_updated" | "approval_updated"
   | "heartbeat";
@@ -14,7 +14,7 @@ const clients = new Set<ReadableStreamDefaultController<Uint8Array>>();
 const TRACKED_EVENTS: SseEventType[] = [
   "company_created", "company_updated", "company_deleted",
   "department_created", "department_updated", "department_deleted",
-  "agent_status_changed", "agent_updated",
+  "agent_status_changed", "agent_updated", "agent_created",
   "issue_created", "issue_updated",
   "goal_updated", "project_updated", "approval_updated",
 ];

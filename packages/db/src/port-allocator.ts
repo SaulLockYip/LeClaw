@@ -13,7 +13,7 @@ export async function isPortInUse(port: number): Promise<boolean> {
   });
 }
 
-export async function allocatePort(startPort: number = 5432): Promise<number> {
+export async function allocatePort(startPort: number = 65432): Promise<number> {
   const maxLookahead = 20;
   let port = startPort;
   for (let i = 0; i < maxLookahead; i += 1, port += 1) {
