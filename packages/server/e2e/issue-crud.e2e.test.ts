@@ -1,34 +1,28 @@
 // E2E Test: Issue CRUD + SSE
 // Tests Issue CRUD operations via REST API
+// Each test is fully independent - creates its own company, department, and issue
 
 import { test, expect } from "@playwright/test";
 
-const ISSUE_TITLE = `E2E-Issue-${Date.now()}`;
-
 test.describe("Issue CRUD", () => {
-  let companyId: string;
-  let departmentId: string;
-  let issueId: string;
-
-  test.beforeEach(async ({ page }) => {
+  test("create issue", async ({ page }) => {
     // Setup: create company and department
     const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
       data: { name: `E2E-Company-${Date.now()}`, description: "For issue test" },
     });
     const companyBody = await companyRes.json();
-    companyId = companyBody.data.id;
+    const companyId = companyBody.data.id;
 
     const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
       data: { name: "Test Dept for Issues", description: "Issue test department" },
     });
     const deptBody = await deptRes.json();
-    departmentId = deptBody.data.id;
-  });
+    const departmentId = deptBody.data.id;
 
-  test("create issue", async ({ page }) => {
+    const issueTitle = `E2E-Issue-${Date.now()}`;
     const res = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/issues`, {
       data: {
-        title: ISSUE_TITLE,
+        title: issueTitle,
         description: "Test issue description",
         status: "Open",
         departmentId,
@@ -37,30 +31,101 @@ test.describe("Issue CRUD", () => {
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
-    expect(body.data).toHaveProperty("title", ISSUE_TITLE);
+    expect(body.data).toHaveProperty("title", issueTitle);
     expect(body.data).toHaveProperty("status", "Open");
-    issueId = body.data.id;
   });
 
   test("list issues", async ({ page }) => {
+    // Setup: create company, department, and issue
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For issue test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: "Test Dept for Issues", description: "Issue test department" },
+    });
+    const deptBody = await deptRes.json();
+    const departmentId = deptBody.data.id;
+
+    const issueTitle = `E2E-Issue-${Date.now()}`;
+    await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/issues`, {
+      data: {
+        title: issueTitle,
+        description: "Test issue description",
+        status: "Open",
+        departmentId,
+      },
+    });
+
     const res = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/issues`);
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
     expect(body.data).toBeInstanceOf(Array);
-    expect(body.data.some((i: { title: string }) => i.title === ISSUE_TITLE)).toBe(true);
+    expect(body.data.some((i: { title: string }) => i.title === issueTitle)).toBe(true);
   });
 
   test("get issue by id", async ({ page }) => {
+    // Setup: create company, department, and issue
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For issue test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: "Test Dept for Issues", description: "Issue test department" },
+    });
+    const deptBody = await deptRes.json();
+    const departmentId = deptBody.data.id;
+
+    const issueTitle = `E2E-Issue-${Date.now()}`;
+    const issueRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/issues`, {
+      data: {
+        title: issueTitle,
+        description: "Test issue description",
+        status: "Open",
+        departmentId,
+      },
+    });
+    const issueBody = await issueRes.json();
+    const issueId = issueBody.data.id;
+
     const res = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/issues/${issueId}`);
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
     expect(body.data).toHaveProperty("id", issueId);
-    expect(body.data).toHaveProperty("title", ISSUE_TITLE);
+    expect(body.data).toHaveProperty("title", issueTitle);
   });
 
   test("update issue status", async ({ page }) => {
+    // Setup: create company, department, and issue
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For issue test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: "Test Dept for Issues", description: "Issue test department" },
+    });
+    const deptBody = await deptRes.json();
+    const departmentId = deptBody.data.id;
+
+    const issueRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/issues`, {
+      data: {
+        title: `E2E-Issue-${Date.now()}`,
+        description: "Test issue description",
+        status: "Open",
+        departmentId,
+      },
+    });
+    const issueBody = await issueRes.json();
+    const issueId = issueBody.data.id;
+
     const res = await page.request.put(`http://127.0.0.1:4396/api/companies/${companyId}/issues/${issueId}`, {
       data: { status: "InProgress" },
     });
@@ -71,6 +136,30 @@ test.describe("Issue CRUD", () => {
   });
 
   test("update issue fields", async ({ page }) => {
+    // Setup: create company, department, and issue
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For issue test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: "Test Dept for Issues", description: "Issue test department" },
+    });
+    const deptBody = await deptRes.json();
+    const departmentId = deptBody.data.id;
+
+    const issueRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/issues`, {
+      data: {
+        title: `E2E-Issue-${Date.now()}`,
+        description: "Test issue description",
+        status: "Open",
+        departmentId,
+      },
+    });
+    const issueBody = await issueRes.json();
+    const issueId = issueBody.data.id;
+
     const res = await page.request.put(`http://127.0.0.1:4396/api/companies/${companyId}/issues/${issueId}`, {
       data: {
         title: "Updated Issue Title",
@@ -85,6 +174,30 @@ test.describe("Issue CRUD", () => {
   });
 
   test("delete issue", async ({ page }) => {
+    // Setup: create company, department, and issue
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For issue test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: "Test Dept for Issues", description: "Issue test department" },
+    });
+    const deptBody = await deptRes.json();
+    const departmentId = deptBody.data.id;
+
+    const issueRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/issues`, {
+      data: {
+        title: `E2E-Issue-${Date.now()}`,
+        description: "Test issue description",
+        status: "Open",
+        departmentId,
+      },
+    });
+    const issueBody = await issueRes.json();
+    const issueId = issueBody.data.id;
+
     const res = await page.request.delete(`http://127.0.0.1:4396/api/companies/${companyId}/issues/${issueId}`);
     expect(res.ok()).toBe(true);
   });

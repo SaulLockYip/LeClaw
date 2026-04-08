@@ -1,45 +1,64 @@
 // E2E Test: Department CRUD
-// Tests Department CRUD operations via REST API with companyId isolation
+// Tests Department CRUD operations via REST API
+// Each test is fully independent - creates its own company and department
 
 import { test, expect } from "@playwright/test";
 
-const DEPT_NAME = `E2E-Department-${Date.now()}`;
-
 test.describe("Department CRUD", () => {
-  let companyId: string;
-  let departmentId: string;
-
-  test.beforeEach(async ({ page }) => {
+  test("create department", async ({ page }) => {
     // Create company first
-    const res = await page.request.post("http://127.0.0.1:4396/api/companies", {
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
       data: { name: `E2E-Company-${Date.now()}`, description: "For dept test" },
     });
-    const body = await res.json();
-    companyId = body.data.id;
-  });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
 
-  test("create department", async ({ page }) => {
+    const deptName = `E2E-Department-${Date.now()}`;
     const res = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
-      data: { name: DEPT_NAME, description: "Test department" },
+      data: { name: deptName, description: "Test department" },
     });
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
-    expect(body.data).toHaveProperty("name", DEPT_NAME);
+    expect(body.data).toHaveProperty("name", deptName);
     expect(body.data).toHaveProperty("companyId", companyId);
-    departmentId = body.data.id;
   });
 
   test("list departments for company", async ({ page }) => {
+    // Create company and department first
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For dept test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptName = `E2E-Department-${Date.now()}`;
+    await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: deptName, description: "Test department" },
+    });
+
     const res = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/departments`);
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
     expect(body.data).toBeInstanceOf(Array);
-    expect(body.data.some((d: { name: string }) => d.name === DEPT_NAME)).toBe(true);
+    expect(body.data.some((d: { name: string }) => d.name === deptName)).toBe(true);
   });
 
   test("get department by id", async ({ page }) => {
+    // Create company and department first
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For dept test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: `E2E-Department-${Date.now()}`, description: "Test department" },
+    });
+    const deptBody = await deptRes.json();
+    const departmentId = deptBody.data.id;
+
     const res = await page.request.get(
       `http://127.0.0.1:4396/api/companies/${companyId}/departments/${departmentId}`
     );
@@ -50,6 +69,19 @@ test.describe("Department CRUD", () => {
   });
 
   test("update department", async ({ page }) => {
+    // Create company and department first
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For dept test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: `E2E-Department-${Date.now()}`, description: "Test department" },
+    });
+    const deptBody = await deptRes.json();
+    const departmentId = deptBody.data.id;
+
     const res = await page.request.put(
       `http://127.0.0.1:4396/api/companies/${companyId}/departments/${departmentId}`,
       { data: { description: "Updated dept description" } }
@@ -61,6 +93,19 @@ test.describe("Department CRUD", () => {
   });
 
   test("delete department", async ({ page }) => {
+    // Create company and department first
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
+      data: { name: `E2E-Company-${Date.now()}`, description: "For dept test" },
+    });
+    const companyBody = await companyRes.json();
+    const companyId = companyBody.data.id;
+
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
+      data: { name: `E2E-Department-${Date.now()}`, description: "Test department" },
+    });
+    const deptBody = await deptRes.json();
+    const departmentId = deptBody.data.id;
+
     const res = await page.request.delete(
       `http://127.0.0.1:4396/api/companies/${companyId}/departments/${departmentId}`
     );
