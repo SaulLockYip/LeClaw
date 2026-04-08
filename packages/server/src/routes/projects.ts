@@ -18,6 +18,27 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
 
 projectsRouter.use(requireCompanyId);
 
+// POST /api/companies/:companyId/projects - Create project
+projectsRouter.post("/", async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).companyId;
+    const project = await projectService.createProject(companyId, {
+      title: req.body.title,
+      description: req.body.description,
+      status: req.body.status,
+      projectDir: req.body.projectDir,
+      issueIds: req.body.issueIds,
+    });
+
+    broadcastEvent({ type: "project_created", payload: project as unknown as Record<string, unknown> });
+
+    res.status(201).json({ success: true, data: project });
+  } catch (error) {
+    console.error("Error creating project:", error);
+    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create project" } });
+  }
+});
+
 // GET /api/companies/:companyId/projects - List projects
 projectsRouter.get("/", async (req: Request, res: Response) => {
   try {

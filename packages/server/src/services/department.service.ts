@@ -55,6 +55,7 @@ export async function updateDepartment(
 export async function deleteDepartment(id: string, companyId: string): Promise<boolean> {
   const db = await getDb();
   const result = await db.delete(departments)
-    .where(and(eq(departments.id, id), eq(departments.companyId, companyId)));
-  return (result as unknown as { rowCount: number }).rowCount > 0;
+    .where(and(eq(departments.id, id), eq(departments.companyId, companyId)))
+    .returning();
+  return result.length > 0;
 }

@@ -18,6 +18,30 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
 
 goalsRouter.use(requireCompanyId);
 
+// POST /api/companies/:companyId/goals - Create goal
+goalsRouter.post("/", async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).companyId;
+    const goal = await goalService.createGoal({
+      companyId,
+      title: req.body.title,
+      description: req.body.description,
+      status: req.body.status,
+      verification: req.body.verification,
+      deadline: req.body.deadline ? new Date(req.body.deadline) : undefined,
+      departmentIds: req.body.departmentIds,
+      issueIds: req.body.issueIds,
+    });
+
+    broadcastEvent({ type: "goal_created", payload: goal as unknown as Record<string, unknown> });
+
+    res.status(201).json({ success: true, data: goal });
+  } catch (error) {
+    console.error("Error creating goal:", error);
+    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create goal" } });
+  }
+});
+
 // GET /api/companies/:companyId/goals - List goals
 goalsRouter.get("/", async (req: Request, res: Response) => {
   try {

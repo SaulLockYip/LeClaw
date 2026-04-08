@@ -18,6 +18,26 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
 
 approvalsRouter.use(requireCompanyId);
 
+// POST /api/companies/:companyId/approvals - Create approval
+approvalsRouter.post("/", async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).companyId;
+    const approval = await approvalService.createApproval({
+      companyId,
+      title: req.body.title,
+      description: req.body.description,
+      requesterAgentId: req.body.requesterAgentId,
+    });
+
+    broadcastEvent({ type: "approval_created", payload: approval as unknown as Record<string, unknown> });
+
+    res.status(201).json({ success: true, data: approval });
+  } catch (error) {
+    console.error("Error creating approval:", error);
+    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create approval" } });
+  }
+});
+
 // GET /api/companies/:companyId/approvals - List approvals
 approvalsRouter.get("/", async (req: Request, res: Response) => {
   try {

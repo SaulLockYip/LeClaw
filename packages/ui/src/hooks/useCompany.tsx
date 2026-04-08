@@ -92,16 +92,36 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
         )
         break
       }
-      case 'issue_updated': {
-        // Trigger a refresh or update local state
-        // For now, we'll just trigger a re-fetch
+      case 'agent_created':
+      case 'agent_updated': {
+        if (selectedCompanyId) {
+          agentApi.listByCompany(selectedCompanyId).then(setAgents).catch(console.error)
+        }
         break
       }
-      case 'department_updated': {
-        // Refresh departments
+      case 'issue_created':
+      case 'issue_updated': {
+        // Refresh issues - would need issueApi and state
+        break
+      }
+      case 'department_created':
+      case 'department_updated':
+      case 'department_deleted': {
         if (selectedCompanyId) {
           departmentApi.listByCompany(selectedCompanyId).then(setDepartments).catch(console.error)
         }
+        break
+      }
+      case 'company_created':
+      case 'company_updated':
+      case 'company_deleted': {
+        companyApi.list().then(setCompanies).catch(console.error)
+        break
+      }
+      case 'goal_updated':
+      case 'project_updated':
+      case 'approval_updated': {
+        // Refresh related data - would need respective APIs and state
         break
       }
     }

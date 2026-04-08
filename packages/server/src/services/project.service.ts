@@ -9,7 +9,7 @@ export interface CreateProjectInput {
   status?: ProjectStatus;
   projectDir?: string;
   issueIds?: string[];
-  companyId: string;
+  companyId?: string;
 }
 
 export interface UpdateProjectInput {

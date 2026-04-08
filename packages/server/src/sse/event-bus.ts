@@ -4,7 +4,7 @@ export type SseEventType =
   | "department_created" | "department_updated" | "department_deleted"
   | "agent_status_changed" | "agent_updated" | "agent_created"
   | "issue_created" | "issue_updated"
-  | "goal_updated" | "project_updated" | "approval_updated"
+  | "goal_created" | "goal_updated" | "project_created" | "project_updated" | "approval_created" | "approval_updated"
   | "heartbeat";
 
 // Connected SSE clients
@@ -16,7 +16,7 @@ const TRACKED_EVENTS: SseEventType[] = [
   "department_created", "department_updated", "department_deleted",
   "agent_status_changed", "agent_updated", "agent_created",
   "issue_created", "issue_updated",
-  "goal_updated", "project_updated", "approval_updated",
+  "goal_created", "goal_updated", "project_created", "project_updated", "approval_created", "approval_updated",
 ];
 
 export interface EventPayload {

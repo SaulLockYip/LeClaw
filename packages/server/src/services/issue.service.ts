@@ -78,8 +78,8 @@ export async function updateIssue(id: string, input: UpdateIssueInput): Promise<
 
 export async function deleteIssue(id: string): Promise<boolean> {
   const db = await getDb();
-  const result = await db.delete(issues).where(eq(issues.id, id));
-  return (result as unknown as { rowCount: number }).rowCount > 0;
+  const result = await db.delete(issues).where(eq(issues.id, id)).returning();
+  return result.length > 0;
 }
 
 export async function addComment(issueId: string, authorAgentId: string, message: string): Promise<IssueComment> {

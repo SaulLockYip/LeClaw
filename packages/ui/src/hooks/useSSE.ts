@@ -1,7 +1,24 @@
 import { useEffect, useRef, useCallback } from 'react'
 
+export type SSEEventType =
+  | 'agent_status_changed'
+  | 'agent_created'
+  | 'agent_updated'
+  | 'issue_created'
+  | 'issue_updated'
+  | 'department_created'
+  | 'department_updated'
+  | 'department_deleted'
+  | 'company_created'
+  | 'company_updated'
+  | 'company_deleted'
+  | 'goal_updated'
+  | 'project_updated'
+  | 'approval_updated'
+  | 'heartbeat'
+
 export interface SSEEvent {
-  type: 'agent_status_changed' | 'issue_updated' | 'department_updated' | 'heartbeat'
+  type: SSEEventType
   payload: Record<string, unknown>
   timestamp: string
 }

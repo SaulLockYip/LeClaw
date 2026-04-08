@@ -47,6 +47,6 @@ export async function updateCompany(id: string, input: UpdateCompanyInput): Prom
 
 export async function deleteCompany(id: string): Promise<boolean> {
   const db = await getDb();
-  const result = await db.delete(companies).where(eq(companies.id, id));
-  return (result as unknown as { rowCount: number }).rowCount > 0;
+  const result = await db.delete(companies).where(eq(companies.id, id)).returning();
+  return result.length > 0;
 }
