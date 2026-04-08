@@ -6,7 +6,7 @@ import { test, expect } from "@playwright/test";
 test.describe("SSE real-time updates", () => {
   test("SSE endpoint is accessible", async ({ page }) => {
     // Just verify the SSE endpoint exists and returns event-stream content type
-    const response = await page.request.get("/api/events", {
+    const response = await page.request.get("http://127.0.0.1:4396/api/events", {
       headers: { Accept: "text/event-stream" },
     });
 
@@ -24,7 +24,7 @@ test.describe("SSE real-time updates", () => {
 
   test("SSE includes heartbeat comments", async ({ page }) => {
     // Use raw fetch to check SSE stream for heartbeat comments
-    const response = await page.request.get("/api/events", {
+    const response = await page.request.get("http://127.0.0.1:4396/api/events", {
       headers: { Accept: "text/event-stream" },
     });
 

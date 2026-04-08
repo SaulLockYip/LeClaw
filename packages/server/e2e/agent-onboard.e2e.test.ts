@@ -7,9 +7,9 @@ import { test, expect } from "@playwright/test";
 test.describe("Agent onboard flow", () => {
   let companyId: string;
 
-  test.beforeAll(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     // Create test company
-    const res = await page.request.post("/api/companies", {
+    const res = await page.request.post("http://127.0.0.1:4396/api/companies", {
       data: { name: `E2E-Agent-Company-${Date.now()}` },
     });
     const body = await res.json();
@@ -24,7 +24,7 @@ test.describe("Agent onboard flow", () => {
     expect(companyId).toBeTruthy();
 
     // Verify we can list agents (empty initially)
-    const agentsRes = await page.request.get(`/api/companies/${companyId}/agents`);
+    const agentsRes = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/agents`);
     expect(agentsRes.ok()).toBe(true);
 
     const agentsBody = await agentsRes.json();

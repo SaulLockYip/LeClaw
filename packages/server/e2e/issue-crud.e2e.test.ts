@@ -10,15 +10,15 @@ test.describe("Issue CRUD", () => {
   let departmentId: string;
   let issueId: string;
 
-  test.beforeAll(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     // Setup: create company and department
-    const companyRes = await page.request.post("/api/companies", {
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
       data: { name: `E2E-Company-${Date.now()}`, description: "For issue test" },
     });
     const companyBody = await companyRes.json();
     companyId = companyBody.data.id;
 
-    const deptRes = await page.request.post(`/api/companies/${companyId}/departments`, {
+    const deptRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/departments`, {
       data: { name: "Test Dept for Issues", description: "Issue test department" },
     });
     const deptBody = await deptRes.json();
@@ -26,7 +26,7 @@ test.describe("Issue CRUD", () => {
   });
 
   test("create issue", async ({ page }) => {
-    const res = await page.request.post(`/api/companies/${companyId}/issues`, {
+    const res = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/issues`, {
       data: {
         title: ISSUE_TITLE,
         description: "Test issue description",
@@ -43,7 +43,7 @@ test.describe("Issue CRUD", () => {
   });
 
   test("list issues", async ({ page }) => {
-    const res = await page.request.get(`/api/companies/${companyId}/issues`);
+    const res = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/issues`);
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
@@ -52,7 +52,7 @@ test.describe("Issue CRUD", () => {
   });
 
   test("get issue by id", async ({ page }) => {
-    const res = await page.request.get(`/api/companies/${companyId}/issues/${issueId}`);
+    const res = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/issues/${issueId}`);
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
@@ -61,7 +61,7 @@ test.describe("Issue CRUD", () => {
   });
 
   test("update issue status", async ({ page }) => {
-    const res = await page.request.put(`/api/companies/${companyId}/issues/${issueId}`, {
+    const res = await page.request.put(`http://127.0.0.1:4396/api/companies/${companyId}/issues/${issueId}`, {
       data: { status: "InProgress" },
     });
     expect(res.ok()).toBe(true);
@@ -71,7 +71,7 @@ test.describe("Issue CRUD", () => {
   });
 
   test("update issue fields", async ({ page }) => {
-    const res = await page.request.put(`/api/companies/${companyId}/issues/${issueId}`, {
+    const res = await page.request.put(`http://127.0.0.1:4396/api/companies/${companyId}/issues/${issueId}`, {
       data: {
         title: "Updated Issue Title",
         description: "Updated description",
@@ -85,7 +85,7 @@ test.describe("Issue CRUD", () => {
   });
 
   test("delete issue", async ({ page }) => {
-    const res = await page.request.delete(`/api/companies/${companyId}/issues/${issueId}`);
+    const res = await page.request.delete(`http://127.0.0.1:4396/api/companies/${companyId}/issues/${issueId}`);
     expect(res.ok()).toBe(true);
   });
 });

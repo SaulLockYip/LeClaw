@@ -9,9 +9,9 @@ test.describe("Agent CRUD", () => {
   let companyId: string;
   let agentId: string;
 
-  test.beforeAll(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     // Create company first
-    const res = await page.request.post("/api/companies", {
+    const res = await page.request.post("http://127.0.0.1:4396/api/companies", {
       data: { name: `E2E-Agent-Company-${Date.now()}`, description: "For agent test" },
     });
     const body = await res.json();
@@ -19,7 +19,7 @@ test.describe("Agent CRUD", () => {
   });
 
   test("create agent", async ({ page }) => {
-    const res = await page.request.post(`/api/companies/${companyId}/agents`, {
+    const res = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/agents`, {
       data: {
         name: TEST_AGENT_NAME,
         role: "CEO",
@@ -35,7 +35,7 @@ test.describe("Agent CRUD", () => {
   });
 
   test("list agents for company", async ({ page }) => {
-    const res = await page.request.get(`/api/companies/${companyId}/agents`);
+    const res = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/agents`);
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
@@ -44,7 +44,7 @@ test.describe("Agent CRUD", () => {
   });
 
   test("get agent by id", async ({ page }) => {
-    const res = await page.request.get(`/api/companies/${companyId}/agents/${agentId}`);
+    const res = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/agents/${agentId}`);
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
@@ -53,7 +53,7 @@ test.describe("Agent CRUD", () => {
   });
 
   test("update agent", async ({ page }) => {
-    const res = await page.request.put(`/api/companies/${companyId}/agents/${agentId}`, {
+    const res = await page.request.put(`http://127.0.0.1:4396/api/companies/${companyId}/agents/${agentId}`, {
       data: { name: "UpdatedAgentName" },
     });
     expect(res.ok()).toBe(true);

@@ -8,16 +8,16 @@ test.describe("Approval flow", () => {
   let agentId: string;
   let approvalId: string;
 
-  test.beforeAll(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     // Setup: create company
-    const companyRes = await page.request.post("/api/companies", {
+    const companyRes = await page.request.post("http://127.0.0.1:4396/api/companies", {
       data: { name: `E2E-Company-${Date.now()}`, description: "For approval test" },
     });
     const companyBody = await companyRes.json();
     companyId = companyBody.data.id;
 
     // Create agent for requester
-    const agentRes = await page.request.post(`/api/companies/${companyId}/agents`, {
+    const agentRes = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/agents`, {
       data: {
         name: "TestAgent",
         role: "CEO",
@@ -31,7 +31,7 @@ test.describe("Approval flow", () => {
   });
 
   test("create approval via API", async ({ page }) => {
-    const res = await page.request.post(`/api/companies/${companyId}/approvals`, {
+    const res = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/approvals`, {
       data: {
         title: "E2E Test Approval",
         description: "Please approve this test request",
@@ -48,7 +48,7 @@ test.describe("Approval flow", () => {
   });
 
   test("list approvals", async ({ page }) => {
-    const res = await page.request.get(`/api/companies/${companyId}/approvals`);
+    const res = await page.request.get(`http://127.0.0.1:4396/api/companies/${companyId}/approvals`);
     expect(res.ok()).toBe(true);
 
     const body = await res.json();
@@ -57,7 +57,7 @@ test.describe("Approval flow", () => {
 
   test("get approval by id", async ({ page }) => {
     const res = await page.request.get(
-      `/api/companies/${companyId}/approvals/${approvalId}`
+      `http://127.0.0.1:4396/api/companies/${companyId}/approvals/${approvalId}`
     );
     expect(res.ok()).toBe(true);
 
@@ -68,7 +68,7 @@ test.describe("Approval flow", () => {
 
   test("approve approval via PUT", async ({ page }) => {
     const res = await page.request.put(
-      `/api/companies/${companyId}/approvals/${approvalId}`,
+      `http://127.0.0.1:4396/api/companies/${companyId}/approvals/${approvalId}`,
       {
         data: { status: "Approved" },
       }
@@ -81,7 +81,7 @@ test.describe("Approval flow", () => {
 
   test("reject approval via PUT with reason", async ({ page }) => {
     // Create another approval for reject test
-    const res = await page.request.post(`/api/companies/${companyId}/approvals`, {
+    const res = await page.request.post(`http://127.0.0.1:4396/api/companies/${companyId}/approvals`, {
       data: {
         title: "E2E Reject Test",
         description: "This should be rejected",
@@ -95,7 +95,7 @@ test.describe("Approval flow", () => {
     const rejectApprovalId = body.data.id;
 
     const rejectRes = await page.request.put(
-      `/api/companies/${companyId}/approvals/${rejectApprovalId}`,
+      `http://127.0.0.1:4396/api/companies/${companyId}/approvals/${rejectApprovalId}`,
       {
         data: {
           status: "Rejected",
