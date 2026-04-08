@@ -39,7 +39,7 @@ pnpm link --global packages/cli
 
 ```bash
 # Interactive setup - configures OpenClaw path, gateway, and database
-pnpm tsx packages/cli/bin/leclaw.js init
+npx tsx packages/cli/bin/leclaw.js init
 ```
 
 The init command will prompt for:
@@ -54,7 +54,7 @@ Configuration is saved to `~/.leclaw/config.json` and an embedded PostgreSQL dat
 
 ```bash
 # Start the API server (runs on http://localhost:4396)
-pnpm tsx packages/server/src/index.ts
+npx tsx packages/server/src/index.ts
 ```
 
 ### 3. Use the Web UI
@@ -90,7 +90,7 @@ pnpm build
 
 ```bash
 # Use tsx to run directly
-pnpm tsx packages/cli/bin/leclaw.js init
+npx tsx packages/cli/bin/leclaw.js init
 ```
 
 ---
@@ -518,10 +518,10 @@ pnpm install
 pnpm build
 
 # Run CLI directly without build
-pnpm tsx packages/cli/bin/leclaw.js status
+npx tsx packages/cli/bin/leclaw.js status
 
 # Start server
-pnpm tsx packages/server/src/index.ts
+npx tsx packages/server/src/index.ts
 ```
 
 ### Database
