@@ -56,14 +56,26 @@ export function registerInitCommand(program: Command): void {
           placeholder: "4396",
         })) as string;
 
+        const dbPort = (await clack.text({
+          message: "Database port:",
+          defaultValue: String(existingConfig?.database?.embeddedPort ?? DEFAULT_DB_PORT),
+          placeholder: "65432",
+        })) as string;
+
+        const dbPath = (await clack.text({
+          message: "Database path:",
+          defaultValue: existingConfig?.database?.embeddedDataDir ?? DEFAULT_DB_DIR,
+          placeholder: "~/.leclaw/db",
+        })) as string;
+
         clack.log.info("Initializing embedded PostgreSQL database...");
 
         // Initialize embedded PostgreSQL
-        const dbPort = parseInt(opts.dbPort, 10) || DEFAULT_DB_PORT;
-        const dbPath = opts.dbPath || DEFAULT_DB_DIR;
+        const parsedDbPort = parseInt(dbPort, 10) || DEFAULT_DB_PORT;
+        const parsedDbPath = dbPath || DEFAULT_DB_DIR;
         let connectionString = existingConfig?.database?.connectionString ?? "";
         if (!connectionString) {
-          const { connectionString: cs } = await initializeDb({ port: dbPort, dataDir: dbPath });
+          const { connectionString: cs } = await initializeDb({ port: parsedDbPort, dataDir: parsedDbPath });
           connectionString = cs;
         }
 
@@ -79,8 +91,8 @@ export function registerInitCommand(program: Command): void {
           },
           database: {
             connectionString,
-            embeddedDataDir: dbPath,
-            embeddedPort: dbPort,
+            embeddedDataDir: parsedDbPath,
+            embeddedPort: parsedDbPort,
           },
         };
 
