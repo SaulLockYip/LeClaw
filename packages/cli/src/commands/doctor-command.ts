@@ -157,22 +157,26 @@ export function registerDoctorCommand(program: Command): void {
         }
       }
 
-      // 5. Database directory exists
-      const dbDirExists = fs.existsSync(DB_DIR);
+      // Load config once for database checks
+      const config = configExists ? loadConfig({ configPath: CONFIG_FILE }) : null;
+
+      // 5. Database directory exists (use config.database.embeddedDataDir)
+      const dbDataDir = config?.database?.embeddedDataDir ?? DB_DIR;
+      const dbDirExists = fs.existsSync(dbDataDir);
       checks.push({
         name: "db_dir_exists",
         status: dbDirExists ? "PASS" : "WARN",
         details: dbDirExists
-          ? `Database directory exists: ${DB_DIR}`
-          : `Database directory not found: ${DB_DIR}`,
-        suggestion: dbDirExists ? undefined : `Database will be created at ${DB_DIR} on first run`,
+          ? `Database directory exists: ${dbDataDir}`
+          : `Database directory not found: ${dbDataDir}`,
+        suggestion: dbDirExists ? undefined : `Database will be created at ${dbDataDir} on first run`,
       });
 
       // 6. Database directory writable
       if (dbDirExists) {
         let dbDirWritable = false;
         try {
-          fs.accessSync(DB_DIR, fs.constants.W_OK);
+          fs.accessSync(dbDataDir, fs.constants.W_OK);
           dbDirWritable = true;
         } catch {
           dbDirWritable = false;
@@ -181,9 +185,9 @@ export function registerDoctorCommand(program: Command): void {
           name: "db_dir_writable",
           status: dbDirWritable ? "PASS" : "FAIL",
           details: dbDirWritable
-            ? `Database directory is writable: ${DB_DIR}`
-            : `Database directory is not writable: ${DB_DIR}`,
-          suggestion: dbDirWritable ? undefined : `Run 'chmod u+w ${DB_DIR}' to make the directory writable`,
+            ? `Database directory is writable: ${dbDataDir}`
+            : `Database directory is not writable: ${dbDataDir}`,
+          suggestion: dbDirWritable ? undefined : `Run 'chmod u+w ${dbDataDir}' to make the directory writable`,
         });
       }
 
@@ -203,7 +207,8 @@ export function registerDoctorCommand(program: Command): void {
       let dbInitError: string | null = null;
       if (dbDirExists) {
         try {
-          const { connectionString } = await initializeDb({ port: DEFAULT_DB_PORT, dataDir: DB_DIR });
+          const dbPort = config?.database?.embeddedPort ?? DEFAULT_DB_PORT;
+          const { connectionString } = await initializeDb({ port: dbPort, dataDir: dbDataDir });
           dbInitialized = connectionString.includes("leclaw");
         } catch (err) {
           dbInitError = err instanceof Error ? err.message : String(err);
@@ -215,64 +220,63 @@ export function registerDoctorCommand(program: Command): void {
         details: dbInitialized
           ? "Database is properly initialized and accessible"
           : `Database initialization failed: ${dbInitError ?? "unknown error"}`,
-        suggestion: dbInitialized ? undefined : `Try running: rm -rf ${DB_DIR} && leclaw init`,
+        suggestion: dbInitialized ? undefined : `Try running: rm -rf ${dbDataDir} && leclaw init`,
         fixAction: dbInitialized ? undefined : async () => {
           // Attempt to reinitialize the database
-          console.log(`Removing database directory ${DB_DIR} and reinitializing...`);
-          if (fs.existsSync(DB_DIR)) {
-            fs.rmSync(DB_DIR, { recursive: true, force: true });
+          const dbPort = config?.database?.embeddedPort ?? DEFAULT_DB_PORT;
+          console.log(`Removing database directory ${dbDataDir} and reinitializing...`);
+          if (fs.existsSync(dbDataDir)) {
+            fs.rmSync(dbDataDir, { recursive: true, force: true });
           }
-          await initializeDb({ port: DEFAULT_DB_PORT, dataDir: DB_DIR });
+          await initializeDb({ port: dbPort, dataDir: dbDataDir });
         },
       });
 
-      // 8. Database port availability (for configured port)
-      if (configExists) {
-        const config = loadConfig({ configPath: CONFIG_FILE });
-        const port = config.server?.port ?? 4396;
-        const portInUse = await isPortInUse(port);
+      // 8. Database port availability (use config.database.embeddedPort)
+      if (config) {
+        const dbPort = config.database?.embeddedPort ?? DEFAULT_DB_PORT;
+        const portInUse = await isPortInUse(dbPort);
         checks.push({
           name: "db_port_available",
           status: !portInUse ? "PASS" : "FAIL",
           details: portInUse
-            ? `Port ${port} is already in use - another process is listening`
-            : `Port ${port} is available for use`,
+            ? `Port ${dbPort} is already in use - another process is listening`
+            : `Port ${dbPort} is available for use`,
           suggestion: portInUse
-            ? `Stop the other process using port ${port}, or change the server.port in ${CONFIG_FILE}`
+            ? `Stop the other process using port ${dbPort}, or change the database.embeddedPort in ${CONFIG_FILE}`
             : undefined,
         });
       }
 
       // 9. Gateway connectivity
-      if (configExists) {
-        const config = loadConfig({ configPath: CONFIG_FILE });
-        if (config.openclaw?.gatewayUrl) {
-          try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 5000);
-            const response = await fetch(config.openclaw.gatewayUrl, { method: "HEAD", signal: controller.signal });
-            clearTimeout(timeout);
-            checks.push({
-              name: "gateway_reachable",
-              status: response.ok ? "PASS" : "FAIL",
-              details: `Gateway responded with status ${response.status}`,
-              suggestion: response.ok ? undefined : "Check if the gateway service is running",
-            });
-          } catch (err) {
-            checks.push({
-              name: "gateway_reachable",
-              status: "FAIL",
-              details: `Gateway unreachable: ${err instanceof Error ? err.message : String(err)}`,
-              suggestion: "Verify the gateway URL in config and ensure the gateway service is accessible",
-            });
-          }
-        } else {
+      if (config?.openclaw?.gatewayUrl) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 5000);
+          // Convert ws:// to http:// for fetch (like status command does)
+          const httpUrl = config.openclaw.gatewayUrl.replace(/^ws:\/\//, "http://").replace(/^wss:\/\//, "https://");
+          const response = await fetch(httpUrl, { method: "HEAD", signal: controller.signal });
+          clearTimeout(timeout);
           checks.push({
             name: "gateway_reachable",
-            status: "WARN",
-            details: "Gateway URL not configured in config file",
+            status: response.ok ? "PASS" : "FAIL",
+            details: `Gateway responded with status ${response.status}`,
+            suggestion: response.ok ? undefined : "Check if the gateway service is running",
+          });
+        } catch (err) {
+          checks.push({
+            name: "gateway_reachable",
+            status: "FAIL",
+            details: `Gateway unreachable: ${err instanceof Error ? err.message : String(err)}`,
+            suggestion: "Verify the gateway URL in config and ensure the gateway service is accessible",
           });
         }
+      } else {
+        checks.push({
+          name: "gateway_reachable",
+          status: "WARN",
+          details: "Gateway URL not configured in config file",
+        });
       }
 
       const passed = checks.filter((c) => c.status === "PASS").length;
