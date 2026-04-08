@@ -37,8 +37,8 @@ export function registerInitCommand(program: Command): void {
 
         const gatewayUrl = (await clack.text({
           message: "Gateway WebSocket URL:",
-          defaultValue: existingConfig?.openclaw?.gatewayUrl ?? "ws://localhost:4396",
-          placeholder: "ws://localhost:4396",
+          defaultValue: existingConfig?.openclaw?.gatewayUrl ?? "ws://127.0.0.1:18789",
+          placeholder: "ws://127.0.0.1:18789",
         })) as string;
 
         const gatewayToken = (await clack.text({
