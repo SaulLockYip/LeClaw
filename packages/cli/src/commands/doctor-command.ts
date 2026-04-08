@@ -12,14 +12,39 @@ const DB_DIR = path.join(CONFIG_DIR, "db");
 const DEFAULT_DB_PORT = 65432;
 const POSTMASTER_PID_FILE = path.join(DB_DIR, "postmaster.pid");
 
+// ANSI color codes for terminal output
+const c = {
+  reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  cyan: "\x1b[36m",
+  white: "\x1b[37m",
+};
+
+const sym = {
+  pass: "\u2705",
+  fail: "\u274C",
+  warn: "\u26A0",
+  info: "\u2139",
+};
+
 interface DoctorCheck {
   name: string;
   status: "PASS" | "FAIL" | "WARN";
   details: string;
-  /** Actionable fix suggestion */
   suggestion?: string;
-  /** Optional action to auto-fix the issue */
   fixAction?: () => Promise<void>;
+  category: "OpenClaw" | "Database" | "Gateway";
+}
+
+interface GroupedChecks {
+  category: "OpenClaw" | "Database" | "Gateway";
+  checks: DoctorCheck[];
+  overallStatus: "PASS" | "FAIL" | "WARN";
 }
 
 /**
@@ -51,7 +76,6 @@ function checkEmbeddedPostgresRunning(): { running: boolean; pid: number | null;
       return { running: false, pid: null, port: null };
     }
 
-    // Line 4 contains the port (0-indexed line 3)
     const port = lines[3] ? Number(lines[3]) : null;
     if (!Number.isInteger(port) || port <= 0) {
       return { running: false, pid: null, port: null };
@@ -62,6 +86,104 @@ function checkEmbeddedPostgresRunning(): { running: boolean; pid: number | null;
   } catch {
     return { running: false, pid: null, port: null };
   }
+}
+
+function getStatusIcon(status: "PASS" | "FAIL" | "WARN"): { symbol: string; color: string } {
+  switch (status) {
+    case "PASS":
+      return { symbol: sym.pass, color: c.green };
+    case "FAIL":
+      return { symbol: sym.fail, color: c.red };
+    case "WARN":
+      return { symbol: sym.warn, color: c.yellow };
+  }
+}
+
+function printHeader(passed: number, failed: number, warnings: number): void {
+  console.log("");
+  console.log(`${c.bold}${c.white}LeClaw Doctor${c.reset}`);
+  console.log("");
+
+  if (failed > 0) {
+    console.log(`${c.red}${sym.fail} ${c.bold}${failed} failure${failed > 1 ? "s" : ""} found${c.reset}`);
+  } else if (warnings > 0) {
+    console.log(`${c.yellow}${sym.warn} ${c.bold}${warnings} warning${warnings > 1 ? "s" : ""} found${c.reset}`);
+  } else {
+    console.log(`${c.green}${sym.pass} ${c.bold}All checks passed${c.reset}`);
+  }
+  console.log("");
+}
+
+function printGroupedChecks(groups: GroupedChecks[]): void {
+  for (const group of groups) {
+    const { symbol, color } = getStatusIcon(group.overallStatus);
+    const categoryLabel = group.category;
+
+    // Category header with overall status
+    console.log(`${color}${symbol} ${c.bold}${categoryLabel}:${c.reset}`);
+
+    // Print each check in the group
+    for (const check of group.checks) {
+      const { symbol: checkSymbol, color: checkColor } = getStatusIcon(check.status);
+      const checkName = check.name.replace(/_/g, " ");
+
+      if (check.status === "PASS") {
+        console.log(`  ${checkColor}${checkSymbol}${c.reset} ${checkName}`);
+      } else {
+        console.log(`  ${checkColor}${checkSymbol}${c.reset} ${checkName}`);
+        console.log(`    ${c.dim}${check.details}${c.reset}`);
+
+        if (check.suggestion) {
+          console.log(`    ${c.cyan}Fix: ${check.suggestion}${c.reset}`);
+        }
+      }
+    }
+    console.log("");
+  }
+}
+
+function printSuggestions(checks: DoctorCheck[]): void {
+  const suggestions = checks
+    .filter((check) => check.suggestion && check.status !== "PASS")
+    .map((check) => ({ check, suggestion: check.suggestion! }));
+
+  if (suggestions.length === 0) {
+    return;
+  }
+
+  console.log(`${c.bold}Suggestions:${c.reset}`);
+  for (const { check, suggestion } of suggestions) {
+    const checkName = check.name.replace(/_/g, " ");
+    console.log(`  ${c.yellow}${sym.warn}${c.reset} ${c.bold}${checkName}${c.reset}`);
+    console.log(`    ${c.cyan}${suggestion}${c.reset}`);
+  }
+  console.log("");
+}
+
+function groupChecksByCategory(checks: DoctorCheck[]): GroupedChecks[] {
+  const groups: Record<string, GroupedChecks> = {
+    OpenClaw: { category: "OpenClaw", checks: [], overallStatus: "PASS" },
+    Database: { category: "Database", checks: [], overallStatus: "PASS" },
+    Gateway: { category: "Gateway", checks: [], overallStatus: "PASS" },
+  };
+
+  for (const check of checks) {
+    groups[check.category].checks.push(check);
+  }
+
+  for (const group of Object.values(groups)) {
+    if (group.checks.length === 0) {
+      group.overallStatus = "WARN";
+    } else if (group.checks.some((c) => c.status === "FAIL")) {
+      group.overallStatus = "FAIL";
+    } else if (group.checks.some((c) => c.status === "WARN")) {
+      group.overallStatus = "WARN";
+    } else {
+      group.overallStatus = "PASS";
+    }
+  }
+
+  return Object.values(groups);
 }
 
 export function registerDoctorCommand(program: Command): void {
@@ -79,8 +201,7 @@ export function registerDoctorCommand(program: Command): void {
         execFileSync("openclaw", ["--version"], { encoding: "utf-8", timeout: 5000 });
         openclawInstalled = true;
         openclawVersion = "found";
-      } catch (err) {
-        // Try with which
+      } catch {
         try {
           const whichResult = execFileSync("which", ["openclaw"], { encoding: "utf-8", timeout: 5000 });
           if (whichResult.trim()) {
@@ -100,6 +221,7 @@ export function registerDoctorCommand(program: Command): void {
         suggestion: openclawInstalled
           ? undefined
           : "Install OpenClaw CLI: npm install -g openclaw or brew install openclaw",
+        category: "OpenClaw",
       });
 
       // 2. Config file exists
@@ -113,6 +235,7 @@ export function registerDoctorCommand(program: Command): void {
         suggestion: configExists
           ? undefined
           : `Run 'leclaw configure' to create a config file at ${CONFIG_FILE}`,
+        category: "OpenClaw",
       });
 
       // 3. Config JSON valid
@@ -124,6 +247,7 @@ export function registerDoctorCommand(program: Command): void {
             name: "config_valid_json",
             status: "PASS",
             details: "Config file contains valid JSON",
+            category: "OpenClaw",
           });
         } catch (err) {
           checks.push({
@@ -131,6 +255,7 @@ export function registerDoctorCommand(program: Command): void {
             status: "FAIL",
             details: `Config file contains invalid JSON: ${err instanceof Error ? err.message : String(err)}`,
             suggestion: `Open ${CONFIG_FILE} and fix the JSON syntax error`,
+            category: "OpenClaw",
           });
         }
       }
@@ -147,12 +272,14 @@ export function registerDoctorCommand(program: Command): void {
               ? `OpenClaw directory exists: ${config.openclaw.dir}`
               : `OpenClaw directory not found: ${config.openclaw.dir}`,
             suggestion: dirExists ? undefined : `Verify the openclaw.dir path in ${CONFIG_FILE} or create the directory`,
+            category: "OpenClaw",
           });
         } else {
           checks.push({
             name: "openclaw_dir",
             status: "WARN",
             details: "OpenClaw directory not configured in config file",
+            category: "OpenClaw",
           });
         }
       }
@@ -170,6 +297,7 @@ export function registerDoctorCommand(program: Command): void {
           ? `Database directory exists: ${dbDataDir}`
           : `Database directory not found: ${dbDataDir}`,
         suggestion: dbDirExists ? undefined : `Database will be created at ${dbDataDir} on first run`,
+        category: "Database",
       });
 
       // 6. Database directory writable
@@ -188,6 +316,7 @@ export function registerDoctorCommand(program: Command): void {
             ? `Database directory is writable: ${dbDataDir}`
             : `Database directory is not writable: ${dbDataDir}`,
           suggestion: dbDirWritable ? undefined : `Run 'chmod u+w ${dbDataDir}' to make the directory writable`,
+          category: "Database",
         });
       }
 
@@ -200,9 +329,10 @@ export function registerDoctorCommand(program: Command): void {
           ? `Embedded PostgreSQL is already running (PID: ${pgPid}, Port: ${pgPort})`
           : "Embedded PostgreSQL is not currently running",
         suggestion: pgRunning ? undefined : "Embedded PostgreSQL will be started automatically when needed",
+        category: "Database",
       });
 
-      // 7b. Database initialization status
+      // 8. Database initialization status
       let dbInitialized = false;
       let dbInitError: string | null = null;
       if (dbDirExists) {
@@ -222,7 +352,6 @@ export function registerDoctorCommand(program: Command): void {
           : `Database initialization failed: ${dbInitError ?? "unknown error"}`,
         suggestion: dbInitialized ? undefined : `Try running: rm -rf ${dbDataDir} && leclaw init`,
         fixAction: dbInitialized ? undefined : async () => {
-          // Attempt to reinitialize the database
           const dbPort = config?.database?.embeddedPort ?? DEFAULT_DB_PORT;
           console.log(`Removing database directory ${dbDataDir} and reinitializing...`);
           if (fs.existsSync(dbDataDir)) {
@@ -230,9 +359,10 @@ export function registerDoctorCommand(program: Command): void {
           }
           await initializeDb({ port: dbPort, dataDir: dbDataDir });
         },
+        category: "Database",
       });
 
-      // 8. Database port availability (use config.database.embeddedPort)
+      // 9. Database port availability (use config.database.embeddedPort)
       if (config) {
         const dbPort = config.database?.embeddedPort ?? DEFAULT_DB_PORT;
         const portInUse = await isPortInUse(dbPort);
@@ -245,10 +375,11 @@ export function registerDoctorCommand(program: Command): void {
           suggestion: portInUse
             ? `Stop the other process using port ${dbPort}, or change the database.embeddedPort in ${CONFIG_FILE}`
             : undefined,
+          category: "Database",
         });
       }
 
-      // 9. Gateway connectivity
+      // 10. Gateway connectivity
       if (config?.openclaw?.gatewayUrl) {
         try {
           const controller = new AbortController();
@@ -262,6 +393,7 @@ export function registerDoctorCommand(program: Command): void {
             status: response.ok ? "PASS" : "FAIL",
             details: `Gateway responded with status ${response.status}`,
             suggestion: response.ok ? undefined : "Check if the gateway service is running",
+            category: "Gateway",
           });
         } catch (err) {
           checks.push({
@@ -269,6 +401,7 @@ export function registerDoctorCommand(program: Command): void {
             status: "FAIL",
             details: `Gateway unreachable: ${err instanceof Error ? err.message : String(err)}`,
             suggestion: "Verify the gateway URL in config and ensure the gateway service is accessible",
+            category: "Gateway",
           });
         }
       } else {
@@ -276,6 +409,7 @@ export function registerDoctorCommand(program: Command): void {
           name: "gateway_reachable",
           status: "WARN",
           details: "Gateway URL not configured in config file",
+          category: "Gateway",
         });
       }
 
@@ -286,19 +420,18 @@ export function registerDoctorCommand(program: Command): void {
 
       // Auto-fix if --fix flag is provided and there are fixable failures
       if (opts.fix && fixableFailures.length > 0) {
-        console.log(`\nAttempting to fix ${fixableFailures.length} issue(s)...\n`);
+        console.log(`\n${c.yellow}Attempting to fix ${fixableFailures.length} issue(s)...${c.reset}\n`);
         for (const check of fixableFailures) {
           if (check.fixAction) {
             try {
               await check.fixAction();
-              console.log(`Fixed: ${check.name}`);
+              console.log(`${c.green}${sym.pass} Fixed: ${check.name}${c.reset}`);
             } catch (err) {
-              console.error(`Failed to fix ${check.name}: ${err instanceof Error ? err.message : String(err)}`);
+              console.error(`${c.red}${sym.fail} Failed to fix ${check.name}: ${err instanceof Error ? err.message : String(err)}${c.reset}`);
             }
           }
         }
-        console.log("\nRe-running diagnostics after fix...\n");
-        // Note: We don't re-run the full diagnostics, just report what happened
+        console.log(`\n${c.yellow}Re-running diagnostics after fix...${c.reset}\n`);
         console.log(
           JSON.stringify({
             success: false,
@@ -309,14 +442,18 @@ export function registerDoctorCommand(program: Command): void {
         process.exit(1);
       }
 
-      console.log(
-        JSON.stringify({
-          success: failed === 0,
-          checks,
-          summary: { passed, failed, warnings, total: checks.length },
-          fixableFailures: fixableFailures.length,
-        }, null, 2)
-      );
+      // Print formatted output
+      const groups = groupChecksByCategory(checks);
+      printHeader(passed, failed, warnings);
+      printGroupedChecks(groups);
+      printSuggestions(checks);
+
+      // Footer with summary
+      console.log(`${c.dim}Summary: ${passed} passed, ${failed} failed, ${warnings} warnings${c.reset}`);
+      if (failed > 0 && fixableFailures.length > 0) {
+        console.log(`${c.dim}Run 'leclaw doctor --fix' to attempt automatic repairs.${c.reset}`);
+      }
+      console.log("");
 
       // Exit codes: 0 = all passed, 1 = failures, 2 = warnings only
       process.exit(failed > 0 ? 1 : warnings > 0 ? 2 : 0);
