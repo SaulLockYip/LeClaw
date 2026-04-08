@@ -30,6 +30,9 @@ pnpm install
 
 # Build all packages
 pnpm build
+
+# For global CLI access (optional):
+pnpm link --global packages/cli
 ```
 
 ### 1. Initialize LeClaw
