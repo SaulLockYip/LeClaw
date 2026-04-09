@@ -4,6 +4,8 @@ import { registerInitCommand } from "../commands/init-command.js";
 import { registerConfigCommand } from "../commands/config-command.js";
 import { registerStatusCommand } from "../commands/status-command.js";
 import { registerStartCommand } from "../commands/start-command.js";
+import { registerStopCommand } from "../commands/stop-command.js";
+import { registerRestartCommand } from "../commands/restart-command.js";
 import { registerDoctorCommand } from "../commands/doctor-command.js";
 import { registerAgentsCommand } from "../commands/agents/agents-list.js";
 import { registerAgentCommand } from "../commands/agent/agent-onboard.js";
@@ -28,6 +30,8 @@ export function buildProgram(): Command {
   registerStatusCommand(program);
   registerDoctorCommand(program);
   registerStartCommand(program);
+  registerStopCommand(program);
+  registerRestartCommand(program);
   registerAgentsCommand(program);
   registerAgentCommand(program);
   registerIssueCommand(program);

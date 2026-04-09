@@ -1,22 +1,112 @@
 import { Command } from "commander";
 import path from "path";
 import os from "os";
-import { fork } from "child_process";
 import fs from "fs";
-import { loadConfig } from "@leclaw/shared";
+import { execSync } from "child_process";
+import { fork } from "child_process";
+import { loadConfig, type LeClawConfig } from "@leclaw/shared";
 import { initializeDb } from "@leclaw/db";
 
-const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 const PID_FILE = path.join(os.homedir(), ".leclaw", "server.pid");
 
-export function registerStartCommand(program: Command): void {
+function getServerPort(config: LeClawConfig): number {
+  return config.server?.port ?? 4396;
+}
+
+function killProcessByPid(pid: number): boolean {
+  try {
+    process.kill(pid, "SIGINT");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function killProcessOnPort(port: number): boolean {
+  try {
+    const output = execSync(`lsof -ti:${port}`, { encoding: "utf-8" }).trim();
+    if (!output) return false;
+    const pids = output.split("\n").filter(Boolean);
+    for (const pid of pids) {
+      try {
+        process.kill(parseInt(pid, 10), "SIGINT");
+      } catch {
+        // Process may have already exited
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function stopServer(): Promise<boolean> {
+  let stopped = false;
+
+  // Try PID file first
+  if (fs.existsSync(PID_FILE)) {
+    try {
+      const pid = parseInt(fs.readFileSync(PID_FILE, "utf-8").trim(), 10);
+      if (!isNaN(pid) && pid > 0) {
+        stopped = killProcessByPid(pid);
+      }
+    } catch {
+      // Ignore
+    }
+    try {
+      fs.unlinkSync(PID_FILE);
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+
+  // Fallback to port-based kill
+  if (!stopped) {
+    const configPath = path.join(os.homedir(), ".leclaw", "config.json");
+    if (fs.existsSync(configPath)) {
+      const config = loadConfig({ configPath });
+      const port = getServerPort(config);
+      stopped = killProcessOnPort(port);
+    }
+  }
+
+  // Stop embedded postgres
+  const dbConfigPath = path.join(os.homedir(), ".leclaw", "config.json");
+  if (fs.existsSync(dbConfigPath)) {
+    const config = loadConfig({ configPath: dbConfigPath });
+    try {
+      const db = await initializeDb({
+        dataDir: config.database?.embeddedDataDir,
+        port: config.database?.embeddedPort,
+      });
+      if (db.started) {
+        await db.stop();
+      }
+    } catch {
+      // Postgres may not be running
+    }
+  }
+
+  return stopped;
+}
+
+export function registerRestartCommand(program: Command): void {
   program
-    .command("start")
-    .description("Start LeClaw server")
+    .command("restart")
+    .description("Restart LeClaw server")
     .option("--port <port>", "Server port")
     .option("--host <host>", "Server host", "0.0.0.0")
     .action(async (opts) => {
       try {
+        const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
+
+        // First stop the server
+        console.log("Stopping server...");
+        await stopServer();
+
+        // Wait for clean shutdown
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         if (!fs.existsSync(CONFIG_FILE)) {
           console.error(
             JSON.stringify({
@@ -32,7 +122,7 @@ export function registerStartCommand(program: Command): void {
         const port = opts.port ?? String(config.server?.port ?? 4396);
         const host = opts.host;
 
-        // Start embedded postgres FIRST, then run migrations, then start server
+        // Start embedded postgres
         console.log("Starting embedded postgres...");
         const db = await initializeDb({
           dataDir: config.database?.embeddedDataDir,
@@ -40,7 +130,7 @@ export function registerStartCommand(program: Command): void {
         });
         console.log(`Embedded postgres started on ${db.source} (started=${db.started})`);
 
-        // Fork server process - need to go up 3 levels: dist/commands -> dist -> cli -> repo root
+        // Fork server process
         const serverDistPath = path.resolve(import.meta.dirname, "..", "..", "..", "server", "dist", "index.js");
 
         if (!fs.existsSync(serverDistPath)) {
@@ -54,6 +144,7 @@ export function registerStartCommand(program: Command): void {
           process.exit(1);
         }
 
+        // Write PID file
         const serverProcess = fork(serverDistPath, {
           env: {
             ...process.env,
@@ -64,7 +155,7 @@ export function registerStartCommand(program: Command): void {
           stdio: ["inherit", "pipe", "pipe", "ipc"],
         });
 
-        // Write PID file
+        // Write PID to file
         fs.writeFileSync(PID_FILE, String(serverProcess.pid));
 
         serverProcess.stdout?.on("data", (data) => process.stdout.write(data));
@@ -99,12 +190,14 @@ export function registerStartCommand(program: Command): void {
 
         process.on("SIGINT", shutdown);
         process.on("SIGTERM", shutdown);
+
+        console.log(JSON.stringify({ success: true, message: `Server restarted on ${host}:${port}` }));
       } catch (err) {
         console.error(
           JSON.stringify({
             success: false,
             error: err instanceof Error ? err.message : String(err),
-            code: "START_ERROR",
+            code: "RESTART_ERROR",
           })
         );
         process.exit(1);
