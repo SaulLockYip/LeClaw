@@ -41,12 +41,28 @@ async function getConnectionString(): Promise<string> {
   return `postgres://${user}:${password}@${host}:${port}/leclaw`;
 }
 
+let migrationPromise: Promise<void> | null = null;
+
 export async function getDb(): Promise<ReturnType<typeof drizzle<typeof schema>>> {
   if (dbPromise) {
     return dbPromise;
   }
 
   const connectionString = await getConnectionString();
+
+  // Ensure migrations run only once
+  if (!migrationPromise) {
+    migrationPromise = (async () => {
+      try {
+        await applyPendingMigrations(connectionString);
+      } catch (err) {
+        console.error("Migration error:", err);
+        // Don't throw - let the app continue and handle migration errors at query time
+      }
+    })();
+  }
+
+  await migrationPromise;
   sqlPromise = postgres(connectionString);
   dbPromise = drizzle(sqlPromise, { schema });
   return dbPromise;
