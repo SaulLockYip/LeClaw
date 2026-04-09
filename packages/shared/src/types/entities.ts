@@ -26,6 +26,7 @@ export interface Agent {
   companyId: string;
   departmentId?: string; // CEO agents have no department
   name: string;
+  title?: string; // Optional title/position for the agent
   role: AgentRole;
   openClawAgentId?: string; // External OpenClaw agent identifier
   openClawAgentWorkspace?: string; // OpenClaw workspace path

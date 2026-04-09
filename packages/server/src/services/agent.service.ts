@@ -6,6 +6,7 @@ import type { Agent, AgentRole } from "@leclaw/shared";
 
 export interface CreateAgentInput {
   name: string;
+  title?: string;
   role: "CEO" | "Manager" | "Staff";
   departmentId?: string;
   openClawAgentId?: string;
@@ -15,6 +16,7 @@ export interface CreateAgentInput {
 
 export interface UpdateAgentInput {
   name?: string;
+  title?: string;
 }
 
 export interface CreateAgentResult {
@@ -31,6 +33,7 @@ export async function createAgent(
   const [agent] = await db.insert(agents).values({
     companyId,
     name: input.name,
+    title: input.title,
     role: input.role,
     departmentId: input.departmentId || null,
     openClawAgentId: input.openClawAgentId,
@@ -78,7 +81,7 @@ export async function updateAgent(
 ): Promise<Agent | null> {
   const db = await getDb();
   const [agent] = await db.update(agents)
-    .set({ name: input.name, updatedAt: new Date() } as any)
+    .set({ name: input.name, title: input.title, updatedAt: new Date() } as any)
     .where(and(eq(agents.id, id), eq(agents.companyId, companyId)))
     .returning();
 

@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Bot, ChevronRight, Crown, User, Building2, X } from 'lucide-react'
+import { Plus, Bot, ChevronRight, Crown, User, Building2, X, UserPlus } from 'lucide-react'
 import { useCompany } from '../hooks/useCompany'
 import type { Agent } from '../lib/api'
+import AgentInviteModal from '../components/AgentInviteModal'
 
 function AgentsPage() {
   const { selectedCompany, agents, departments, isLoading } = useCompany()
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
     name: '',
+    title: '',
     role: 'Staff' as 'CEO' | 'Manager' | 'Staff',
     departmentId: '',
   })
@@ -35,6 +38,7 @@ function AgentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
+          title: formData.title || null,
           role: formData.role,
           departmentId: formData.role === 'CEO' ? null : formData.departmentId || null,
         }),
@@ -51,7 +55,7 @@ function AgentsPage() {
     } finally {
       setIsCreating(false)
       setShowAddModal(false)
-      setFormData({ name: '', role: 'Staff', departmentId: '' })
+      setFormData({ name: '', title: '', role: 'Staff', departmentId: '' })
     }
   }
 
@@ -103,13 +107,22 @@ function AgentsPage() {
           <h1 className="text-2xl font-bold text-slate-800">Agents</h1>
           <p className="text-slate-500 text-sm mt-1">{selectedCompany.name}</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          New Agent
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Invite Agent
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            New Agent
+          </button>
+        </div>
       </div>
 
       {/* Agents Grid */}
@@ -209,6 +222,18 @@ function AgentsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Title (optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. Senior Engineer, Product Manager"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Role
                 </label>
                 <select
@@ -260,6 +285,16 @@ function AgentsPage() {
           </div>
         </div>
       )}
+
+      {/* Invite Agent Modal */}
+      {selectedCompany && (
+        <AgentInviteModal
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          companyId={selectedCompany.id}
+          departments={departments}
+        />
+      )}
     </div>
   )
 }
@@ -288,7 +323,10 @@ function AgentCard({ agent, department, getStatusColor, getRoleIcon, getRoleBgCo
             <h3 className="font-semibold text-slate-800 flex items-center gap-2">
               {agent.name}
             </h3>
-            <p className="text-sm text-slate-500 flex items-center gap-1">
+            {agent.title && (
+              <p className="text-sm text-slate-500">{agent.title}</p>
+            )}
+            <p className="text-sm text-slate-400 flex items-center gap-1">
               {getRoleIcon(agent.role)}
               {agent.role}
             </p>

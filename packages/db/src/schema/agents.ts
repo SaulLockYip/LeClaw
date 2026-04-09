@@ -11,6 +11,7 @@ export const agents = pgTable(
     companyId: uuid("company_id").notNull().references(() => companies.id),
     departmentId: uuid("department_id").references(() => departments.id), // CEO agents have no department
     name: text("name").notNull(),
+    title: text("title"), // Optional title/position for the agent
     role: text("role").notNull().default("Staff"), // "CEO" | "Manager" | "Staff"
     openClawAgentId: text("openclaw_agent_id"), // External OpenClaw agent identifier
     openClawAgentWorkspace: text("openclaw_agent_workspace"), // OpenClaw workspace path

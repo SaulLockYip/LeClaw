@@ -24,6 +24,7 @@ export interface Department {
 export interface Agent {
   id: string
   name: string
+  title?: string
   role: 'CEO' | 'Manager' | 'Staff'
   openClawAgentId: string
   openClawAgentWorkspace: string
@@ -93,8 +94,8 @@ export interface Approval {
   updatedAt: string
 }
 
-async function fetchApi<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${endpoint}`)
+async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE}${endpoint}`, options)
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${response.statusText}`)
   }
@@ -174,4 +175,20 @@ export const approvalApi = {
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}`),
   update: (companyId: string, approvalId: string, data: { status: 'Approved' | 'Rejected'; rejectMessage?: string }) =>
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}`),
+}
+
+// Agent Invite API
+export interface AgentInvite {
+  inviteKey: string
+  expiresAt: string
+  prompt: string
+}
+
+export const agentInviteApi = {
+  create: (companyId: string, data: { name: string; role: 'CEO' | 'Manager' | 'Staff'; title: string; departmentId?: string }) =>
+    fetchApi<AgentInvite>(`/companies/${companyId}/agent-invites`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
 }

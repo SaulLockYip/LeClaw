@@ -10,4 +10,5 @@ export { goals } from "./goals.js";
 export { projects } from "./projects.js";
 export { approvals } from "./approvals.js";
 export { agentApiKeys } from "./agent-api-keys.js";
+export { agentInvites } from "./agent-invites.js";
 export { auditLogs } from "./audit-logs.js";

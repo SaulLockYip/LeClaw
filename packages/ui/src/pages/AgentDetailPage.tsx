@@ -98,6 +98,12 @@ function AgentDetailPage() {
             <label className="text-xs uppercase text-slate-500 tracking-wider">Name</label>
             <p className="text-slate-900 mt-1 font-medium">{agent.name}</p>
           </div>
+          {agent.title && (
+            <div>
+              <label className="text-xs uppercase text-slate-500 tracking-wider">Title</label>
+              <p className="text-slate-900 mt-1 font-medium">{agent.title}</p>
+            </div>
+          )}
           <div>
             <label className="text-xs uppercase text-slate-500 tracking-wider">Role</label>
             <p className="text-slate-900 mt-1 flex items-center gap-2">

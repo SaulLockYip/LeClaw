@@ -15,6 +15,7 @@ export interface NavItem {
 export interface Agent {
   id: string
   name: string
+  title?: string
   role: 'CEO' | 'Manager' | 'Staff'
   department: string
   company: string

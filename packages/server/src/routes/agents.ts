@@ -24,6 +24,7 @@ agentsRouter.post("/", async (req: Request, res: Response) => {
     const companyId = (req as any).companyId;
     const result = await agentService.createAgent(companyId, {
       name: req.body.name,
+      title: req.body.title,
       role: req.body.role,
       departmentId: req.body.departmentId,
       openClawAgentId: req.body.openClawAgentId,
@@ -79,6 +80,7 @@ agentsRouter.put("/:id", async (req: Request, res: Response) => {
     const companyId = (req as any).companyId;
     const agent = await agentService.updateAgent(req.params.id, companyId, {
       name: req.body.name,
+      title: req.body.title,
     });
     if (!agent) {
       return res.status(404).json({ error: { code: "NOT_FOUND", message: `Agent ${req.params.id} not found` } });
