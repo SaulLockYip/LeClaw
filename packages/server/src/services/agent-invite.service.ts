@@ -219,6 +219,7 @@ export async function claimInvite(inviteKey: string): Promise<ClaimInviteResult>
 
   // Get available OpenClaw agents
   const scanResult = scanOpenClawAgents();
+  console.log('[DEBUG claimInvite] scanResult:', JSON.stringify(scanResult));
   if (scanResult.agents.length === 0) {
     return { success: false, error: "No OpenClaw agents found. Please ensure OpenClaw is running." };
   }
@@ -230,8 +231,11 @@ export async function claimInvite(inviteKey: string): Promise<ClaimInviteResult>
     .from(agents)
     .where(isNotNull(agents.openClawAgentId));
 
+  console.log('[DEBUG claimInvite] boundAgentIds from DB:', JSON.stringify(boundAgentIds));
   const boundIds = new Set(boundAgentIds.map(a => a.openClawAgentId));
+  console.log('[DEBUG claimInvite] boundIds Set:', Array.from(boundIds));
   const availableAgent = scanResult.agents.find(a => !boundIds.has(a.id));
+  console.log('[DEBUG claimInvite] availableAgent:', JSON.stringify(availableAgent));
 
   if (!availableAgent) {
     return { success: false, error: "No available OpenClaw agents found. All agents are already bound to a company." };
@@ -243,8 +247,16 @@ export async function claimInvite(inviteKey: string): Promise<ClaimInviteResult>
   try {
     const now = new Date();
 
-    // DEBUG: Log what we're about to insert
-    console.log(`[DEBUG claimInvite] invite.departmentId=${JSON.stringify(invite.departmentId)}, invite.title=${JSON.stringify(invite.title)}, invite.name=${JSON.stringify(invite.name)}, invite.role=${JSON.stringify(invite.role)}`);
+    // DEBUG: Log all values being inserted into agents table
+    console.log('[DEBUG claimInvite] About to insert into agents table:');
+    console.log('  companyId:', invite.companyId, typeof invite.companyId);
+    console.log('  departmentId:', invite.departmentId, typeof invite.departmentId);
+    console.log('  name:', invite.name, typeof invite.name);
+    console.log('  role:', invite.role, typeof invite.role);
+    console.log('  title:', invite.title, typeof invite.title);
+    console.log('  openClawAgentId:', openClawAgentId, typeof openClawAgentId);
+    console.log('  openClawAgent?.workspace:', openClawAgent?.workspace, typeof openClawAgent?.workspace);
+    console.log('  openClawAgent:', JSON.stringify(openClawAgent));
 
     // Create the agent record - convert undefined to null for drizzle
     const [agent] = await db.insert(agents as any).values({
@@ -260,10 +272,22 @@ export async function claimInvite(inviteKey: string): Promise<ClaimInviteResult>
       updatedAt: now,
     } as any).returning();
 
+    console.log('[DEBUG claimInvite] Agent inserted, agent.id:', agent.id, typeof agent.id);
+
     // Generate API key
+    console.log('[DEBUG claimInvite] Calling generateApiKey with agent.id:', agent.id);
     const apiKey = generateApiKey(agent.id);
+    console.log('[DEBUG claimInvite] API key generated:', { fullKey: apiKey.fullKey ? '[REDACTED]' : 'undefined', keyHash: apiKey.keyHash, agentId: apiKey.agentId });
 
     // Create the API key record
+    console.log('[DEBUG claimInvite] About to insert into agentApiKeys table:');
+    console.log('  agentId:', agent.id, typeof agent.id);
+    console.log('  companyId:', invite.companyId, typeof invite.companyId);
+    console.log('  name:', invite.name, typeof invite.name);
+    console.log('  key:', apiKey.fullKey ? '[REDACTED]' : 'undefined');
+    console.log('  keyHash:', apiKey.keyHash, typeof apiKey.keyHash);
+    console.log('  createdAt:', now);
+
     await db.insert(agentApiKeys as any).values({
       agentId: agent.id,
       companyId: invite.companyId,
