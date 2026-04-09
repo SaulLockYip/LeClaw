@@ -243,13 +243,16 @@ export async function claimInvite(inviteKey: string): Promise<ClaimInviteResult>
   try {
     const now = new Date();
 
-    // Create the agent record
+    // DEBUG: Log what we're about to insert
+    console.log(`[DEBUG claimInvite] invite.departmentId=${JSON.stringify(invite.departmentId)}, invite.title=${JSON.stringify(invite.title)}, invite.name=${JSON.stringify(invite.name)}, invite.role=${JSON.stringify(invite.role)}`);
+
+    // Create the agent record - convert undefined to null for drizzle
     const [agent] = await db.insert(agents as any).values({
       companyId: invite.companyId,
-      departmentId: invite.departmentId,
+      departmentId: invite.departmentId ?? null,
       name: invite.name,
       role: invite.role as AgentRole,
-      title: invite.title,
+      title: invite.title ?? null,
       openClawAgentId,
       openClawAgentWorkspace: openClawAgent?.workspace ?? "",
       openClawAgentDir: openClawAgent?.workspace ?? "",
