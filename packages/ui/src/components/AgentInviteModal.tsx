@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Copy, Check, UserPlus } from 'lucide-react'
+import { X, Copy, Check, UserPlus, AlertCircle } from 'lucide-react'
 import { agentInviteApi } from '../lib/api'
 import type { Department } from '../lib/api'
 
@@ -45,7 +45,14 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
       })
       setInviteResult(result)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create invite')
+      let errorMessage = err instanceof Error ? err.message : 'Failed to create invite'
+
+      // Make "already has a CEO" error more user-friendly
+      if (errorMessage.includes("already has a CEO")) {
+        errorMessage = 'This company already has a CEO. Please select a different role or company.'
+      }
+
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -177,8 +184,9 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           {error && (
-            <div className="px-3 py-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-              {error}
+            <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 

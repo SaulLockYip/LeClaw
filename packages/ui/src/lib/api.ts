@@ -97,7 +97,17 @@ export interface Approval {
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${endpoint}`, options)
   if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`)
+    // Try to parse error message from response body
+    let errorMessage = `API error: ${response.status} ${response.statusText}`
+    try {
+      const errorJson = await response.json()
+      if (errorJson?.error?.message) {
+        errorMessage = errorJson.error.message
+      }
+    } catch {
+      // Ignore JSON parse errors, use default message
+    }
+    throw new Error(errorMessage)
   }
   const json = await response.json()
   // Unwrap { success: true, data: ... } response format
