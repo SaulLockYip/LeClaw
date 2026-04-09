@@ -144,6 +144,25 @@ async function fixLibrarySymlinks(): Promise<void> {
   }
 }
 
+/**
+ * Check if a database exists in PostgreSQL
+ */
+async function checkDatabaseExists(sql: ReturnType<typeof postgres>, dbName: string): Promise<boolean> {
+  const result = await sql<{ exists: boolean }>`
+    SELECT EXISTS (
+      SELECT 1 FROM pg_database WHERE datname = ${dbName}
+    ) AS exists
+  `;
+  return result[0]?.exists ?? false;
+}
+
+/**
+ * Create a new database in PostgreSQL
+ */
+async function createDatabase(sql: ReturnType<typeof postgres>, dbName: string): Promise<void> {
+  await sql`CREATE DATABASE ${sql.unsafe(dbName)}`;
+}
+
 export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
   const dataDir = config?.dataDir ?? path.join(os.homedir(), ".leclaw", "db");
   const user = config?.user ?? "postgres";
@@ -226,10 +245,9 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
 
   // Create the "leclaw" database if it doesn't exist
   const maintenanceConn = postgres(`postgres://${user}:${password}@127.0.0.1:${selectedPort}/postgres`, { max: 1 });
-  try {
-    await maintenanceConn.unsafe(`CREATE DATABASE leclaw`);
-  } catch {
-    // Database might already exist, ignore error
+  const dbName = "leclaw";
+  if (!(await checkDatabaseExists(maintenanceConn, dbName))) {
+    await createDatabase(maintenanceConn, dbName);
   }
   await maintenanceConn.end();
 
