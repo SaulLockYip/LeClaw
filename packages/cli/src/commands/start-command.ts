@@ -37,7 +37,7 @@ export function registerStartCommand(program: Command): void {
           dataDir: config.database?.embeddedDataDir,
           port: config.database?.embeddedPort,
         });
-        console.log(`Embedded postgres started on ${db.source}`);
+        console.log(`Embedded postgres started on ${db.source} (started=${db.started})`);
 
         // Fork server process - need to go up 3 levels: dist/commands -> dist -> cli -> repo root
         const serverDistPath = path.resolve(import.meta.dirname, "..", "..", "..", "server", "dist", "index.js");
@@ -71,11 +71,15 @@ export function registerStartCommand(program: Command): void {
           if (shuttingDown) return;
           shuttingDown = true;
           serverProcess.kill("SIGINT");
-          await db.stop();
+          if (db.started) {
+            await db.stop();
+          }
         };
 
         serverProcess.on("exit", async (code) => {
-          await db.stop();
+          if (db.started) {
+            await db.stop();
+          }
           process.exit(code ?? 1);
         });
 

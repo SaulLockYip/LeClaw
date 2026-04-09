@@ -10,6 +10,7 @@ type EmbeddedPostgresInstance = {
   initialise(): Promise<void>;
   start(): Promise<void>;
   stop(): Promise<void>;
+  isRunning(): Promise<boolean>;
 };
 
 type EmbeddedPostgresCtor = new (opts: {
@@ -34,6 +35,7 @@ export interface DbConnection {
   connectionString: string;
   source: string;
   stop: () => Promise<void>;
+  started: boolean; // true if WE started postgres, false if reusing existing
 }
 
 function readRunningPostmasterPid(postmasterPidFile: string): number | null {
@@ -190,6 +192,7 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
         connectionString,
         source: `embedded-postgres@${runningPort}`,
         stop: async () => {},
+        started: false,
       };
     }
     // Stale postmaster.pid - postgres not actually running, clean up
@@ -259,6 +262,7 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
     stop: async () => {
       await instance.stop();
     },
+    started: true,
   };
 }
 
