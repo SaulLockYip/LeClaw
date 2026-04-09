@@ -11,11 +11,15 @@ import type { AgentRole } from "@leclaw/shared";
 const INVITE_EXPIRY_MINUTES = 30;
 
 /**
- * Generate a unique invite key in format: sk-invite-{32-hex}
+ * Generate a unique invite key: 6 uppercase alphanumeric chars (A-Z, 0-9)
  */
 function generateInviteKey(): string {
-  const hex = randomBytes(16).toString("hex");
-  return `sk-invite-${hex}`;
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let key = "";
+  for (let i = 0; i < 6; i++) {
+    key += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return key;
 }
 
 export interface CreateInviteInput {

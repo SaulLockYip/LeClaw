@@ -1,5 +1,5 @@
 // Agent Invite schema - Invitation flow for agent onboarding
-// Format: sk-invite-{32-hex} - one-time use invite keys
+// Format: 6-char alphanumeric (A-Z, 0-9) - one-time use invite keys
 
 import { pgTable, uuid, text, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { companies } from "./companies.js";
@@ -9,7 +9,7 @@ export const agentInvites = pgTable(
   "agent_invites",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    inviteKey: text("invite_key").notNull(), // sk-invite-{32-hex}
+    inviteKey: text("invite_key").notNull(), // 6-char alphanumeric
     companyId: uuid("company_id").notNull().references(() => companies.id),
     departmentId: uuid("department_id").references(() => departments.id), // Optional for CEO
     name: text("name").notNull(), // Agent name

@@ -118,76 +118,11 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
   }
 }
 
-/**
- * Legacy onboard method (direct company binding without invite)
- */
-export async function onboardAgent(
-  companyId: string,
-  openClawAgentId: string,
-  role: AgentRole,
-  agentName: string,
-  departmentId?: string,
-): Promise<OnboardResult> {
-  // This is a simplified validation - full validation should be done via API
-  // Get openclaw agent workspace info
-
-  // Get openclaw agent workspace info
-  const scanResult = scanOpenClawAgents();
-  const openClawAgent = scanResult.agents.find(a => a.id === openClawAgentId);
-
-  // Generate API key
-  const apiKey = generateApiKey(openClawAgentId);
-
-  try {
-    const now = new Date();
-
-    // Insert into agents table
-    await db.insert(agents as any).values({
-      companyId,
-      departmentId: role === "CEO" ? null : departmentId,
-      name: agentName,
-      role,
-      openClawAgentId,
-      openClawAgentWorkspace: openClawAgent?.workspace ?? "",
-      openClawAgentDir: openClawAgent?.workspace ?? "",
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    // Insert into agent_api_keys table
-    await db.insert(agentApiKeys as any).values({
-      agentId: openClawAgentId,
-      companyId,
-      name: agentName,
-      key: apiKey.fullKey,
-      keyHash: apiKey.keyHash,
-      createdAt: now,
-    });
-
-    // Write key to agent local storage
-    const agentKeysDir = join(homedir(), ".leclaw", "agent-keys");
-    if (!existsSync(agentKeysDir)) {
-      mkdirSync(agentKeysDir, { recursive: true });
-    }
-    const keyFile = join(agentKeysDir, openClawAgentId);
-    writeFileSync(keyFile, apiKey.fullKey, { mode: 0o600 });
-
-    return {
-      success: true,
-      agentId: openClawAgentId,
-      apiKey: apiKey.fullKey,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { success: false, error: message };
-  }
-}
-
 export function registerAgentCommand(program: Command): void {
   program
     .command("agent onboard")
     .description("Onboard an OpenClaw agent to LeClaw")
-    .option("--invite-key <key>", "Invite key (sk-invite-*)")
+    .option("--invite-key <key>", "6-char invite key (e.g. A3B7K9)")
     .option("--company-id <id>", "Company ID to bind the agent to (legacy)")
     .option("--agent-id <id>", "OpenClaw agent ID to onboard (legacy)")
     .option("--name <name>", "Agent display name (legacy)")

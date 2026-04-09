@@ -107,12 +107,12 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
               Share the following command with the agent to onboard them:
             </p>
 
-            {/* Invite Key */}
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">
+            {/* Invite Key - Large, centered display */}
+            <div className="text-center py-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border-2 border-dashed border-slate-300">
+              <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">
                 Invite Key
               </label>
-              <div className="px-3 py-2 bg-slate-100 rounded font-mono text-sm text-slate-800 break-all">
+              <div className="font-mono text-3xl font-bold text-slate-800 tracking-widest">
                 {inviteResult.inviteKey}
               </div>
             </div>
