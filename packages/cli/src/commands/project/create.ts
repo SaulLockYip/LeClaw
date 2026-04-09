@@ -14,7 +14,7 @@ export function registerProjectCreateCommand(program: Command): void {
     .description("Create a project for a company")
     .requiredOption("--company-id <id>", "Company ID")
     .requiredOption("--title <title>", "Project title")
-    .requiredOption("--description <desc>", "Project description")
+    .option("--description <desc>", "Project description")
     .action(async (options) => {
       const { companyId, title, description } = options;
 
@@ -31,7 +31,7 @@ export function registerProjectCreateCommand(program: Command): void {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ title, description }),
+          body: JSON.stringify({ title, ...(description ? { description } : {}) }),
         });
 
         if (!response.ok) {

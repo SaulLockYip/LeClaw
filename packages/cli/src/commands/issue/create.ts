@@ -22,7 +22,7 @@ export function registerCreateCommand(program: Command): void {
     .requiredOption("--company-id <id>", "Company ID")
     .requiredOption("--department-id <id>", "Department ID")
     .requiredOption("--title <title>", "Issue title")
-    .requiredOption("--description <desc>", "Issue description")
+    .option("--description <desc>", "Issue description")
     .option("--api-key <key>", "Agent API key (for authentication)")
     .action(async (options) => {
       const { companyId, departmentId, title, description, apiKey } = options;
@@ -37,8 +37,8 @@ export function registerCreateCommand(program: Command): void {
           },
           body: JSON.stringify({
             title,
-            description,
             departmentId,
+            ...(description ? { description } : {}),
           }),
         });
 
