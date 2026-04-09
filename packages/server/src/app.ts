@@ -35,5 +35,10 @@ export function createApp(): Express {
   // Serve UI static files (serves index.html for SPA at root)
   app.use(express.static(uiDistPath));
 
+  // Catch-all route for SPA (must be last)
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(uiDistPath, "index.html"));
+  });
+
   return app;
 }
