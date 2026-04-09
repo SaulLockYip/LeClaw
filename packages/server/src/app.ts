@@ -36,7 +36,7 @@ export function createApp(): Express {
   app.use(express.static(uiDistPath));
 
   // Catch-all route for SPA (must be last)
-  app.get("(.*)", (_req, res) => {
+  app.get(/.*/, (_req, res) => {
     res.sendFile(path.join(uiDistPath, "index.html"));
   });
 
