@@ -3,12 +3,11 @@
 
 import { Command } from "commander";
 import { db, agentInvites, agents, agentApiKeys } from "@leclaw/db";
-import { eq, isNotNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { generateApiKey } from "@leclaw/shared/api-key";
-import { scanOpenClawAgents } from "@leclaw/shared/openclaw-scanner";
 import { auditLog } from "../../helpers/audit-log.js";
 
 export interface OnboardResult {
@@ -21,6 +20,7 @@ export interface OnboardResult {
 
 /**
  * Claim an invite and onboard the agent
+ * Uses the pre-stored openClawAgentId, workspace, and dir from invite creation
  */
 export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardResult> {
   // Find the invite
@@ -42,26 +42,12 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
     return { success: false, error: "Invite has expired" };
   }
 
-  // Get available OpenClaw agents
-  const scanResult = scanOpenClawAgents();
-  if (scanResult.agents.length === 0) {
-    return { success: false, error: "No OpenClaw agents found. Please ensure OpenClaw is running." };
+  // Use the pre-stored OpenClaw agent info from invite
+  const { openClawAgentId, openClawAgentWorkspace, openClawAgentDir } = invite;
+
+  if (!openClawAgentId) {
+    return { success: false, error: "Invite does not have an OpenClaw agent assigned. Please recreate the invite with an agent selected." };
   }
-
-  // Find an unbound agent
-  const boundAgentIds = await db.select({ openClawAgentId: agents.openClawAgentId })
-    .from(agents)
-    .where(isNotNull(agents.openClawAgentId));
-
-  const boundIds = new Set(boundAgentIds.map(a => a.openClawAgentId));
-  const availableAgent = scanResult.agents.find(a => !boundIds.has(a.id));
-
-  if (!availableAgent) {
-    return { success: false, error: "No available OpenClaw agents found. All agents are already bound to a company." };
-  }
-
-  const openClawAgentId = availableAgent.id;
-  const openClawAgent = scanResult.agents.find(a => a.id === openClawAgentId);
 
   try {
     const now = new Date();
@@ -73,8 +59,8 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
       name: invite.name,
       role: invite.role,
       openClawAgentId,
-      openClawAgentWorkspace: openClawAgent?.workspace ?? "",
-      openClawAgentDir: openClawAgent?.workspace ?? "",
+      openClawAgentWorkspace: openClawAgentWorkspace ?? "",
+      openClawAgentDir: openClawAgentDir ?? "",
       createdAt: now,
       updatedAt: now,
     });
@@ -138,7 +124,6 @@ export function registerAgentCommand(program: Command): void {
 
         console.log(JSON.stringify({
           success: true,
-          agentId: result.agentId,
           apiKey: result.apiKey,
           message: "Agent onboarded successfully via invite. Store the API key securely.",
         }, null, 2));

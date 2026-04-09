@@ -18,6 +18,10 @@ export const agentInvites = pgTable(
     status: text("status").notNull().default("pending"), // "pending" | "accepted" | "expired"
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), // 30 min after creation
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // OpenClaw agent info - set when human selects an agent in UI during invite creation
+    openClawAgentId: text("openclaw_agent_id"), // nullable until agent is selected
+    openClawAgentWorkspace: text("openclaw_agent_workspace"),
+    openClawAgentDir: text("openclaw_agent_dir"),
   },
   (table) => ({
     // Unique index on inviteKey for fast lookup

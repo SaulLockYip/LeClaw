@@ -45,6 +45,9 @@ agentInvitesRouter.post("/", async (req: Request, res: Response) => {
       name,
       role: roleStr as "CEO" | "Manager" | "Staff",
       title,
+      openClawAgentId: req.body.openClawAgentId,
+      openClawAgentWorkspace: req.body.openClawAgentWorkspace,
+      openClawAgentDir: req.body.openClawAgentDir,
     });
 
     if (!result.success) {
