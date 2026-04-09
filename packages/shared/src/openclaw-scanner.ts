@@ -12,11 +12,14 @@ export interface OpenClawAgent {
 }
 
 export interface OpenClawConfig {
-  agents?: Array<{
-    id: string;
-    name?: string;
-    workspace: string;
-  }>;
+  agents?: {
+    defaults?: Record<string, unknown>;
+    list?: Array<{
+      id: string;
+      name?: string;
+      workspace?: string;
+    }>;
+  };
 }
 
 export interface ScanResult {
@@ -45,12 +48,12 @@ export function scanOpenClawAgents(configPath?: string): ScanResult {
     const raw = readFileSync(configFile, "utf-8");
     const parsed = JSON.parse(raw) as OpenClawConfig;
 
-    if (!parsed.agents || !Array.isArray(parsed.agents)) {
-      errors.push("openclaw.json does not contain an agents array");
+    if (!parsed.agents?.list || !Array.isArray(parsed.agents.list)) {
+      errors.push("openclaw.json does not contain an agents.list array");
       return { agents, errors };
     }
 
-    for (const agent of parsed.agents) {
+    for (const agent of parsed.agents.list) {
       if (!agent.id) {
         errors.push(`Agent missing required field 'id': ${JSON.stringify(agent)}`);
         continue;
