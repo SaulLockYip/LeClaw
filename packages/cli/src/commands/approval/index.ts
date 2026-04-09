@@ -1,4 +1,4 @@
-// Approval Commands - List, approve, or reject approvals
+// Approval Commands - List and request approvals
 
 import { Command } from "commander";
 import path from "path";
@@ -61,28 +61,31 @@ export function registerApprovalCommand(program: Command): void {
       }
     });
 
-  // approval approve
+  // approval request
   approvalCommand
-    .command("approve")
-    .description("Approve an approval request")
+    .command("request")
+    .description("Submit an approval request (for AI agents)")
     .requiredOption("--company-id <id>", "Company ID")
-    .requiredOption("--id <id>", "Approval ID")
+    .requiredOption("--title <title>", "Approval request title")
+    .requiredOption("--description <desc>", "Approval request description")
+    .option("--requester <agent-id>", "Requester agent ID")
     .option("--api-key <key>", "Agent API key (for authentication)")
     .action(async (options) => {
-      const { companyId, id, apiKey } = options;
+      const { companyId, title, description, requester, apiKey } = options;
 
       try {
         const serverUrl = await getServerUrl();
 
-        // Update the approval status to approved
-        const response = await fetch(`${serverUrl}/api/companies/${companyId}/approvals/${id}`, {
-          method: "PUT",
+        const response = await fetch(`${serverUrl}/api/companies/${companyId}/approvals`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
           },
           body: JSON.stringify({
-            status: "approved",
+            title,
+            description,
+            ...(requester ? { requester } : {}),
           }),
         });
 
@@ -92,59 +95,7 @@ export function registerApprovalCommand(program: Command): void {
           console.error(JSON.stringify({
             success: false,
             error: data.error?.message || `HTTP ${response.status}`,
-            code: data.error?.code || "APPROVE_FAILED",
-          }, null, 2));
-          process.exit(1);
-        }
-
-        console.log(JSON.stringify({
-          success: true,
-          approval: data.data,
-        }, null, 2));
-      } catch (err) {
-        console.error(JSON.stringify({
-          success: false,
-          error: err instanceof Error ? err.message : String(err),
-          code: "REQUEST_FAILED",
-        }, null, 2));
-        process.exit(1);
-      }
-    });
-
-  // approval reject
-  approvalCommand
-    .command("reject")
-    .description("Reject an approval request")
-    .requiredOption("--company-id <id>", "Company ID")
-    .requiredOption("--id <id>", "Approval ID")
-    .requiredOption("--message <message>", "Rejection message")
-    .option("--api-key <key>", "Agent API key (for authentication)")
-    .action(async (options) => {
-      const { companyId, id, message, apiKey } = options;
-
-      try {
-        const serverUrl = await getServerUrl();
-
-        // Update the approval status to rejected
-        const response = await fetch(`${serverUrl}/api/companies/${companyId}/approvals/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-          },
-          body: JSON.stringify({
-            status: "rejected",
-            rejectMessage: message,
-          }),
-        });
-
-        const data = await response.json() as { error?: { message?: string; code?: string }; data?: unknown };
-
-        if (!response.ok) {
-          console.error(JSON.stringify({
-            success: false,
-            error: data.error?.message || `HTTP ${response.status}`,
-            code: data.error?.code || "REJECT_FAILED",
+            code: data.error?.code || "REQUEST_FAILED",
           }, null, 2));
           process.exit(1);
         }
