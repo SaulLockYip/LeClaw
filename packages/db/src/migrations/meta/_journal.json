@@ -8,6 +8,20 @@
       "when": 1775550155124,
       "tag": "0000_busy_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775550155125,
+      "tag": "0001_add_agents_title",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775550155126,
+      "tag": "0002_add_agent_invites",
+      "breakpoints": true
     }
   ]
 }
