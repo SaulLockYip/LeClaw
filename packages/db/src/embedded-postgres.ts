@@ -10,7 +10,6 @@ type EmbeddedPostgresInstance = {
   initialise(): Promise<void>;
   start(): Promise<void>;
   stop(): Promise<void>;
-  isRunning(): Promise<boolean>;
 };
 
 type EmbeddedPostgresCtor = new (opts: {
@@ -36,6 +35,7 @@ export interface DbConnection {
   source: string;
   stop: () => Promise<void>;
   started: boolean; // true if WE started postgres, false if reusing existing
+  isRunning: () => Promise<boolean>; // check if postgres is still alive via process.kill(pid, 0)
 }
 
 function readRunningPostmasterPid(postmasterPidFile: string): number | null {
@@ -187,12 +187,17 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
   if (runningPort) {
     const isResponsive = await checkPostgresResponsive(runningPort);
     if (isResponsive) {
-      const connectionString = `postgres://${user}:${password}@127.0.0.1:${runningPort}/leclaw`;
+      const reusedPort = runningPort;
+      const connectionString = `postgres://${user}:${password}@127.0.0.1:${reusedPort}/leclaw`;
       return {
         connectionString,
-        source: `embedded-postgres@${runningPort}`,
+        source: `embedded-postgres@${reusedPort}`,
         stop: async () => {},
         started: false,
+        isRunning: async () => {
+          const pid = readRunningPostmasterPid(postmasterPidFile);
+          return pid !== null;
+        },
       };
     }
     // Stale postmaster.pid - postgres not actually running, clean up
@@ -263,6 +268,10 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
       await instance.stop();
     },
     started: true,
+    isRunning: async () => {
+      const pid = readRunningPostmasterPid(postmasterPidFile);
+      return pid !== null;
+    },
   };
 }
 
