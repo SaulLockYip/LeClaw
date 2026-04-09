@@ -150,11 +150,11 @@ async function fixLibrarySymlinks(): Promise<void> {
  * Check if a database exists in PostgreSQL
  */
 async function checkDatabaseExists(sql: ReturnType<typeof postgres>, dbName: string): Promise<boolean> {
-  const result = await sql<{ exists: boolean }>`
+  const result = await sql`
     SELECT EXISTS (
       SELECT 1 FROM pg_database WHERE datname = ${dbName}
     ) AS exists
-  `;
+  ` as [{ exists: boolean }];
   return result[0]?.exists ?? false;
 }
 

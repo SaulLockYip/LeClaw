@@ -11,12 +11,15 @@ if (DATABASE_URL) {
   configureDatabase({ connectionString: DATABASE_URL });
 }
 
-// Run migrations on startup
-await runMigrations();
-
 const app = createApp();
 
-app.listen(PORT, HOST, () => {
+// Start server and run migrations only at runtime, not during build
+app.listen(PORT, HOST, async () => {
+  // Run migrations when server starts (not during tsc --build)
+  if (DATABASE_URL) {
+    await runMigrations();
+  }
+
   console.log(
     JSON.stringify({
       success: true,

@@ -16,6 +16,20 @@ export function createApp(): Express {
   app.use(cors());
   app.use(express.json());
 
+  // Root route - API info
+  app.get("/", (_req, res) => {
+    res.json({
+      name: "LeClaw",
+      version: "1.0.0",
+      status: "running",
+      endpoints: {
+        health: "/health",
+        api: "/api/*",
+        events: "/api/events",
+      },
+    });
+  });
+
   // Health check
   app.use("/health", healthRouter);
 
