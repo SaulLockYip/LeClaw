@@ -1,6 +1,7 @@
 import { eq, and } from "drizzle-orm";
-import { agents } from "@leclaw/db/schema";
+import { agents, agentApiKeys } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
+import { generateApiKey } from "@leclaw/shared/api-key";
 import type { Agent, AgentRole } from "@leclaw/shared";
 
 export interface CreateAgentInput {
@@ -16,11 +17,17 @@ export interface UpdateAgentInput {
   name?: string;
 }
 
+export interface CreateAgentResult {
+  agent: Agent;
+  apiKey: string; // The plaintext API key (only returned once)
+}
+
 export async function createAgent(
   companyId: string,
   input: CreateAgentInput
-): Promise<Agent> {
+): Promise<CreateAgentResult> {
   const db = await getDb();
+
   const [agent] = await db.insert(agents).values({
     companyId,
     name: input.name,
@@ -31,7 +38,23 @@ export async function createAgent(
     openClawAgentDir: input.openClawAgentDir,
   } as any).returning();
 
-  return { ...agent, role: agent.role as AgentRole };
+  // Generate API key using the agent's UUID id
+  const apiKey = generateApiKey(agent.id);
+
+  // Create the API key record
+  await db.insert(agentApiKeys).values({
+    agentId: agent.id,
+    companyId,
+    name: input.name,
+    key: apiKey.fullKey,
+    keyHash: apiKey.keyHash,
+    createdAt: new Date(),
+  } as any);
+
+  return {
+    agent: { ...agent, role: agent.role as AgentRole },
+    apiKey: apiKey.fullKey,
+  };
 }
 
 export async function listAgentsByCompany(companyId: string): Promise<Agent[]> {

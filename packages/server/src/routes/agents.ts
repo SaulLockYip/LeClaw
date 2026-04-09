@@ -22,7 +22,7 @@ agentsRouter.use(requireCompanyId);
 agentsRouter.post("/", async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
-    const agent = await agentService.createAgent(companyId, {
+    const result = await agentService.createAgent(companyId, {
       name: req.body.name,
       role: req.body.role,
       departmentId: req.body.departmentId,
@@ -31,9 +31,15 @@ agentsRouter.post("/", async (req: Request, res: Response) => {
       openClawAgentDir: req.body.openClawAgentDir,
     });
 
-    broadcastEvent({ type: "agent_created", payload: agent as unknown as Record<string, unknown> });
+    broadcastEvent({ type: "agent_created", payload: result.agent as unknown as Record<string, unknown> });
 
-    res.status(201).json({ success: true, data: agent });
+    // Return the agent AND the API key (only time it's returned)
+    res.status(201).json({
+      success: true,
+      data: result.agent,
+      apiKey: result.apiKey,
+      message: "Agent created. Store the API key securely - it cannot be recovered."
+    });
   } catch (error) {
     console.error("Error creating agent:", error);
     res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create agent" } });

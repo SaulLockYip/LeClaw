@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Crown,
   User,
+  Bot,
 } from 'lucide-react'
 import { useCompany } from '../hooks/useCompany'
 
@@ -108,6 +109,22 @@ function Sidebar() {
         >
           <Building2 className="w-4 h-4" />
           <span>Departments</span>
+        </NavLink>
+      </div>
+
+      {/* Agents Link */}
+      <div className="px-2 pb-2">
+        <NavLink
+          to="/agents"
+          className={`flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
+            isPathActive('/agents')
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+          }`
+          }
+        >
+          <Bot className="w-4 h-4" />
+          <span>Agents</span>
         </NavLink>
       </div>
 

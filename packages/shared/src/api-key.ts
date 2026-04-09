@@ -1,54 +1,61 @@
 // API Key Generation and Management
-// Format: {agentId}:{randomSecret}
-// Secret: 12 char alphanumeric
+// Format: sk-{32-hex-chars}
+// The full key is returned once on creation and cannot be recovered.
+// Only a hash is stored for verification.
 
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 
-const SECRET_LENGTH = 12;
-const ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+const KEY_PREFIX = "sk-";
+const KEY_LENGTH = 32; // 16 bytes = 32 hex chars
 
 export interface ApiKey {
-  fullKey: string; // Plaintext key to return to agent
+  fullKey: string; // Plaintext key (sk-xxx), returned once on creation
+  keyHash: string; // SHA256 hash of the full key (stored in DB)
   agentId: string;
-  secret: string;
 }
 
 /**
  * Generate a new API key for an agent
- * Format: {agentId}:{12-char-alphanumeric-secret}
+ * Format: sk-{32-hex-chars}
  */
 export function generateApiKey(agentId: string): ApiKey {
-  const secret = generateSecret(SECRET_LENGTH);
+  const hexChars = randomBytes(16).toString("hex");
+  const fullKey = `${KEY_PREFIX}${hexChars}`;
+  const keyHash = hashApiKey(fullKey);
+
   return {
-    fullKey: `${agentId}:${secret}`,
+    fullKey,
+    keyHash,
     agentId,
-    secret,
   };
 }
 
 /**
- * Extract agentId and secret from a full API key
+ * Hash an API key using SHA256
+ * Returns first 16 chars of the hex-encoded hash
  */
-export function parseApiKey(fullKey: string): { agentId: string; secret: string } | null {
-  const parts = fullKey.split(":");
-  if (parts.length !== 2) {
-    return null;
-  }
-  const [agentId, secret] = parts;
-  if (!agentId || !secret) {
-    return null;
-  }
-  return { agentId, secret };
+export function hashApiKey(key: string): string {
+  return createHash("sha256").update(key).digest("hex").slice(0, 16);
 }
 
 /**
- * Generate a random alphanumeric secret
+ * Extract the key part from a full API key (sk-xxx -> xxx)
  */
-function generateSecret(length: number): string {
-  const bytes = randomBytes(length);
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += ALPHANUMERIC[bytes[i] % ALPHANUMERIC.length];
+export function parseApiKey(fullKey: string): { key: string; prefix: string } | null {
+  if (!fullKey.startsWith(KEY_PREFIX)) {
+    return null;
   }
-  return result;
+  const key = fullKey.slice(KEY_PREFIX.length);
+  if (key.length !== KEY_LENGTH) {
+    return null;
+  }
+  return { key, prefix: KEY_PREFIX };
+}
+
+/**
+ * Verify a plain key against a stored hash
+ */
+export function verifyApiKey(fullKey: string, keyHash: string): boolean {
+  const computedHash = hashApiKey(fullKey);
+  return computedHash === keyHash;
 }

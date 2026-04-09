@@ -136,7 +136,10 @@ export async function onboardAgent(
     // Insert into agent_api_keys table
     await db.insert(agentApiKeys as any).values({
       agentId: openClawAgentId,
-      keyHash: apiKey.secret,
+      companyId,
+      name: agentName,
+      key: apiKey.fullKey,
+      keyHash: apiKey.keyHash,
       createdAt: now,
     });
 

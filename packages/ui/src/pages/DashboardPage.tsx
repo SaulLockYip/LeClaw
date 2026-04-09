@@ -4,6 +4,7 @@ import { Building2, Bot, Clock, Users, AlertCircle, ArrowRight, CheckCircle } fr
 import { useCompany } from '../hooks/useCompany'
 import { issueApi } from '../lib/api'
 import type { Issue } from '../lib/api'
+import { useNavigate } from 'react-router-dom'
 
 function DashboardPage() {
   const { selectedCompany, departments, agents, isLoading } = useCompany()
@@ -193,7 +194,9 @@ function DashboardPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${getStatusColor(agent.status || 'offline')}`}></div>
-                    <span className="text-sm font-medium text-slate-800">{agent.name}</span>
+                    <Link to={`/agents/${agent.id}`} className="text-sm font-medium text-slate-800 hover:text-blue-600">
+                      {agent.name}
+                    </Link>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">{agent.role}</td>
