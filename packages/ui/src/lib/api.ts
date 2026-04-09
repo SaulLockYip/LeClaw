@@ -187,6 +187,17 @@ export const approvalApi = {
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}`),
 }
 
+// OpenClaw Agent API
+export interface OpenClawAgent {
+  id: string
+  name?: string
+  workspace: string
+}
+
+export const openclawAgentsApi = {
+  list: () => fetchApi<{ agents: OpenClawAgent[]; errors: string[] }>('/openclaw/agents'),
+}
+
 // Agent Invite API
 export interface AgentInvite {
   inviteKey: string
@@ -195,7 +206,7 @@ export interface AgentInvite {
 }
 
 export const agentInviteApi = {
-  create: (companyId: string, data: { name: string; role: 'CEO' | 'Manager' | 'Staff'; title: string; departmentId?: string }) =>
+  create: (companyId: string, data: { name: string; role: 'CEO' | 'Manager' | 'Staff'; title: string; departmentId?: string; openClawAgentId?: string; openClawAgentWorkspace?: string; openClawAgentDir?: string }) =>
     fetchApi<AgentInvite>(`/companies/${companyId}/agent-invites`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

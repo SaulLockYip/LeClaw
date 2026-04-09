@@ -12,6 +12,7 @@ import { goalsRouter } from "./routes/goals.js";
 import { projectsRouter } from "./routes/projects.js";
 import { approvalsRouter } from "./routes/approvals.js";
 import { eventsRouter } from "./routes/events.js";
+import { openclawAgentsRouter } from "./routes/openclaw-agents.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uiDistPath = path.resolve(__dirname, "../../ui/dist");
@@ -34,6 +35,7 @@ export function createApp(): Express {
   app.use("/api/companies/:companyId/goals", goalsRouter);
   app.use("/api/companies/:companyId/projects", projectsRouter);
   app.use("/api/companies/:companyId/approvals", approvalsRouter);
+  app.use("/api/openclaw", openclawAgentsRouter);
 
   // Serve UI static files (serves index.html for SPA at root)
   app.use(express.static(uiDistPath));

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Copy, Check, UserPlus, AlertCircle } from 'lucide-react'
-import { agentInviteApi } from '../lib/api'
+import { agentInviteApi, openclawAgentsApi, type OpenClawAgent } from '../lib/api'
 import type { Department } from '../lib/api'
 
 interface AgentInviteModalProps {
@@ -22,11 +22,34 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
     title: '',
     role: 'Staff' as 'CEO' | 'Manager' | 'Staff',
     departmentId: '',
+    openClawAgentId: '',
+    openClawAgentWorkspace: '',
+    openClawAgentDir: '',
   })
+  const [openClawAgents, setOpenClawAgents] = useState<OpenClawAgent[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inviteResult, setInviteResult] = useState<InviteResult | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Fetch OpenClaw agents when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      openclawAgentsApi.list()
+        .then(({ agents }) => setOpenClawAgents(agents))
+        .catch(() => setOpenClawAgents([]))
+    }
+  }, [isOpen])
+
+  const handleOpenClawAgentChange = (agentId: string) => {
+    const agent = openClawAgents.find(a => a.id === agentId)
+    setFormData(prev => ({
+      ...prev,
+      openClawAgentId: agentId,
+      openClawAgentWorkspace: agent?.workspace || '',
+      openClawAgentDir: agent?.workspace || '',
+    }))
+  }
 
   if (!isOpen) return null
 
@@ -42,6 +65,9 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
         title: formData.title.trim(),
         role: formData.role,
         departmentId: formData.role === 'CEO' ? undefined : formData.departmentId || undefined,
+        openClawAgentId: formData.openClawAgentId || undefined,
+        openClawAgentWorkspace: formData.openClawAgentWorkspace || undefined,
+        openClawAgentDir: formData.openClawAgentDir || undefined,
       })
       setInviteResult(result)
     } catch (err) {
@@ -68,7 +94,7 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
 
   const handleClose = () => {
     setInviteResult(null)
-    setFormData({ name: '', title: '', role: 'Staff', departmentId: '' })
+    setFormData({ name: '', title: '', role: 'Staff', departmentId: '', openClawAgentId: '', openClawAgentWorkspace: '', openClawAgentDir: '' })
     setError(null)
     onClose()
   }
@@ -259,6 +285,26 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
               </select>
             </div>
           )}
+
+          <div>
+            <label htmlFor="openclaw-agent" className="block text-sm font-medium text-slate-700 mb-1">
+              OpenClaw Agent
+            </label>
+            <select
+              id="openclaw-agent"
+              value={formData.openClawAgentId}
+              onChange={(e) => handleOpenClawAgentChange(e.target.value)}
+              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={isSubmitting}
+            >
+              <option value="">Select an agent (optional)</option>
+              {openClawAgents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name || agent.id} - {agent.workspace}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
