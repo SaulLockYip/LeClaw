@@ -3,15 +3,13 @@
 
 import { Command } from "commander";
 import { db, agentInvites, agents, agentApiKeys } from "@leclaw/db";
-import { eq, and, lt, isNotNull } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { generateApiKey } from "@leclaw/shared/api-key";
 import { scanOpenClawAgents } from "@leclaw/shared/openclaw-scanner";
 import { auditLog } from "../../helpers/audit-log.js";
-
-export type AgentRole = "CEO" | "Manager" | "Staff";
 
 export interface OnboardResult {
   success: boolean;
@@ -121,104 +119,44 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
 export function registerAgentCommand(program: Command): void {
   program
     .command("agent onboard")
-    .description("Onboard an OpenClaw agent to LeClaw")
-    .option("--invite-key <key>", "6-char invite key (e.g. A3B7K9)")
-    .option("--company-id <id>", "Company ID to bind the agent to (legacy)")
-    .option("--agent-id <id>", "OpenClaw agent ID to onboard (legacy)")
-    .option("--name <name>", "Agent display name (legacy)")
-    .option("--role <role>", "Agent role CEO|Manager|Staff (legacy)")
-    .option("--department-id <id>", "Department ID (required for Manager/Staff, legacy)")
+    .description("Onboard an OpenClaw agent to LeClaw via invite key")
+    .requiredOption("--invite-key <key>", "6-char invite key (e.g. A3B7K9)")
     .action(async (options) => {
-      const { inviteKey, companyId, agentId, name, role, departmentId } = options;
+      const { inviteKey } = options;
 
-      let result: OnboardResult;
+      const result = await claimInviteAndOnboard(inviteKey);
 
-      if (inviteKey) {
-        // Use invite-based onboarding
-        result = await claimInviteAndOnboard(inviteKey);
+      const auditArgs = { inviteKey };
+      if (result.success) {
+        await auditLog({
+          agentId: result.agentId ?? "unknown",
+          command: "agent onboard",
+          args: auditArgs,
+          result: "success",
+          output: `Agent onboarded via invite: ${inviteKey}`,
+        });
 
-        const auditArgs = { inviteKey, method: "invite" };
-        if (result.success) {
-          await auditLog({
-            agentId: result.agentId ?? "unknown",
-            command: "agent onboard",
-            args: auditArgs,
-            result: "success",
-            output: `Agent onboarded via invite: ${inviteKey}`,
-          });
-
-          console.log(JSON.stringify({
-            success: true,
-            agentId: result.agentId,
-            apiKey: result.apiKey,
-            message: "Agent onboarded successfully via invite. Store the API key securely.",
-          }, null, 2));
-        } else {
-          await auditLog({
-            agentId: "unknown",
-            command: "agent onboard",
-            args: auditArgs,
-            result: "failure",
-            output: result.error ?? result.validationErrors?.join("; ") ?? "Unknown error",
-          });
-
-          console.error(JSON.stringify({
-            success: false,
-            error: result.error,
-            validationErrors: result.validationErrors,
-          }, null, 2));
-          process.exit(1);
-        }
+        console.log(JSON.stringify({
+          success: true,
+          agentId: result.agentId,
+          apiKey: result.apiKey,
+          message: "Agent onboarded successfully via invite. Store the API key securely.",
+        }, null, 2));
       } else {
-        // Legacy direct onboarding
-        if (!companyId || !agentId || !name || !role) {
-          console.error(JSON.stringify({
-            success: false,
-            error: "Missing required options for legacy onboarding: --company-id --agent-id --name --role",
-          }, null, 2));
-          process.exit(1);
-        }
+        await auditLog({
+          agentId: "unknown",
+          command: "agent onboard",
+          args: auditArgs,
+          result: "failure",
+          output: result.error ?? result.validationErrors?.join("; ") ?? "Unknown error",
+        });
 
-        result = await onboardAgent(
-          companyId,
-          agentId,
-          role as AgentRole,
-          name,
-          departmentId,
-        );
-
-        const auditArgs = { companyId, openClawAgentId: agentId, role, name, departmentId, method: "legacy" };
-        if (result.success) {
-          await auditLog({
-            agentId,
-            command: "agent onboard",
-            args: auditArgs,
-            result: "success",
-            output: `Agent onboarded: ${name} (${agentId}) as ${role}`,
-          });
-
-          console.log(JSON.stringify({
-            success: true,
-            agentId: result.agentId,
-            apiKey: result.apiKey,
-            message: "Agent onboarded successfully. Store the API key securely.",
-          }, null, 2));
-        } else {
-          await auditLog({
-            agentId,
-            command: "agent onboard",
-            args: auditArgs,
-            result: "failure",
-            output: result.error ?? result.validationErrors?.join("; ") ?? "Unknown error",
-          });
-
-          console.error(JSON.stringify({
-            success: false,
-            error: result.error,
-            validationErrors: result.validationErrors,
-          }, null, 2));
-          process.exit(1);
-        }
+        console.error(JSON.stringify({
+          success: false,
+          error: result.error,
+          validationErrors: result.validationErrors,
+        }, null, 2));
+        process.exit(1);
       }
     });
 }
