@@ -1,5 +1,7 @@
 import express, { Express } from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { healthRouter } from "./routes/health.js";
 import { companiesRouter } from "./routes/companies.js";
 import { departmentsRouter } from "./routes/departments.js";
@@ -10,42 +12,28 @@ import { projectsRouter } from "./routes/projects.js";
 import { approvalsRouter } from "./routes/approvals.js";
 import { eventsRouter } from "./routes/events.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uiDistPath = path.resolve(__dirname, "../../ui/dist");
+
 export function createApp(): Express {
   const app = express();
 
   app.use(cors());
   app.use(express.json());
 
-  // Root route - API info
-  app.get("/", (_req, res) => {
-    res.json({
-      name: "LeClaw",
-      version: "1.0.0",
-      status: "running",
-      endpoints: {
-        health: "/health",
-        api: "/api/*",
-        events: "/api/events",
-      },
-    });
-  });
-
-  // Health check
+  // API routes FIRST (must be before static middleware)
   app.use("/health", healthRouter);
-
-  // SSE endpoint
   app.use("/api/events", eventsRouter);
-
-  // Company routes (no company filter needed)
   app.use("/api/companies", companiesRouter);
-
-  // Nested routes with company filter middleware
   app.use("/api/companies/:companyId/departments", departmentsRouter);
   app.use("/api/companies/:companyId/agents", agentsRouter);
   app.use("/api/companies/:companyId/issues", issuesRouter);
   app.use("/api/companies/:companyId/goals", goalsRouter);
   app.use("/api/companies/:companyId/projects", projectsRouter);
   app.use("/api/companies/:companyId/approvals", approvalsRouter);
+
+  // Serve UI static files (serves index.html for SPA at root)
+  app.use(express.static(uiDistPath));
 
   return app;
 }
