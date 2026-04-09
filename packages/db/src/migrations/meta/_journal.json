@@ -36,6 +36,13 @@
       "when": 1744300800000,
       "tag": "0004_add_openclaw_fields_to_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1744300800001,
+      "tag": "0005_add_name_to_agent_api_keys",
+      "breakpoints": true
     }
   ]
 }
