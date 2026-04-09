@@ -15,28 +15,7 @@
     "format": "pnpm oxfmt"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "-",
-      "/",
-      "4",
-      "6",
-      "@",
-      "@embedded-postgres/darwin-arm64",
-      "a",
-      "b",
-      "d",
-      "e",
-      "g",
-      "i",
-      "m",
-      "n",
-      "o",
-      "p",
-      "r",
-      "s",
-      "t",
-      "w"
-    ]
+    "onlyBuiltDependencies": ["@embedded-postgres/darwin-arm64"]
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
