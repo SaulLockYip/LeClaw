@@ -55,7 +55,10 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name.trim() || !formData.title.trim()) return
+    if (!formData.name.trim() || !formData.title.trim() || !formData.openClawAgentId) {
+      setError('Please fill in all required fields and select an OpenClaw agent.')
+      return
+    }
 
     setIsSubmitting(true)
     setError(null)
@@ -288,7 +291,7 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
 
           <div>
             <label htmlFor="openclaw-agent" className="block text-sm font-medium text-slate-700 mb-1">
-              OpenClaw Agent
+              OpenClaw Agent <span className="text-red-500">*</span>
             </label>
             <select
               id="openclaw-agent"
@@ -297,7 +300,7 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
               className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             >
-              <option value="">Select an agent (optional)</option>
+              <option value="">Select an agent</option>
               {openClawAgents.map((agent) => (
                 <option key={agent.id} value={agent.id}>
                   {agent.name || agent.id} - {agent.workspace}
@@ -318,7 +321,7 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
             </button>
             <button
               type="submit"
-              disabled={!formData.name.trim() || !formData.title.trim() || isSubmitting}
+              disabled={!formData.name.trim() || !formData.title.trim() || !formData.openClawAgentId || isSubmitting}
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Creating...' : 'Create Invite'}

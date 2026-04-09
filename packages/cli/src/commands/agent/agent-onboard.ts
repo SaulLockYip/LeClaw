@@ -55,12 +55,12 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
     // Create the agent record
     await db.insert(agents as any).values({
       companyId: invite.companyId,
-      departmentId: invite.departmentId,
+      departmentId: invite.departmentId ?? null,
       name: invite.name,
       role: invite.role,
-      openClawAgentId,
-      openClawAgentWorkspace: openClawAgentWorkspace ?? "",
-      openClawAgentDir: openClawAgentDir ?? "",
+      openClawAgentId: openClawAgentId ?? null,
+      openClawAgentWorkspace: openClawAgentWorkspace ?? null,
+      openClawAgentDir: openClawAgentDir ?? null,
       createdAt: now,
       updatedAt: now,
     });
@@ -70,7 +70,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
 
     // Create the API key record
     await db.insert(agentApiKeys as any).values({
-      agentId: openClawAgentId,
+      agentId: openClawAgentId ?? null,
       companyId: invite.companyId,
       name: invite.name,
       key: apiKey.fullKey,
