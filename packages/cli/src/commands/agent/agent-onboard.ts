@@ -53,7 +53,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
     const now = new Date();
 
     // Create the agent record
-    await db.insert(agents as any).values({
+    const [newAgent] = await db.insert(agents as any).values({
       companyId: invite.companyId,
       departmentId: invite.departmentId ?? null,
       name: invite.name,
@@ -63,14 +63,14 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
       openClawAgentDir: openClawAgentDir ?? null,
       createdAt: now,
       updatedAt: now,
-    });
+    }).returning();
 
     // Generate API key
-    const apiKey = generateApiKey(openClawAgentId);
+    const apiKey = generateApiKey(newAgent.id);
 
     // Create the API key record
     await db.insert(agentApiKeys as any).values({
-      agentId: openClawAgentId ?? null,
+      agentId: newAgent.id,
       companyId: invite.companyId,
       name: invite.name,
       key: apiKey.fullKey,
@@ -93,7 +93,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
 
     return {
       success: true,
-      agentId: openClawAgentId,
+      agentId: newAgent.id,
       apiKey: apiKey.fullKey,
     };
   } catch (err) {

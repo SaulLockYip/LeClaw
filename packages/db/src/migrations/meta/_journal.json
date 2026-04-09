@@ -43,6 +43,13 @@
       "when": 1744300800001,
       "tag": "0005_add_name_to_agent_api_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1744300800002,
+      "tag": "0006_add_key_to_agent_api_keys",
+      "breakpoints": true
     }
   ]
 }
