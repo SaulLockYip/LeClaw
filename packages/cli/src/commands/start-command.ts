@@ -4,6 +4,7 @@ import os from "os";
 import { fork } from "child_process";
 import fs from "fs";
 import { loadConfig } from "@leclaw/shared";
+import { initializeDb } from "@leclaw/db";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
@@ -30,6 +31,14 @@ export function registerStartCommand(program: Command): void {
         const port = opts.port ?? String(config.server?.port ?? 4396);
         const host = opts.host;
 
+        // Start embedded postgres FIRST, then run migrations, then start server
+        console.log("Starting embedded postgres...");
+        const db = await initializeDb({
+          dataDir: config.database?.embeddedDataDir,
+          port: config.database?.embeddedPort,
+        });
+        console.log(`Embedded postgres started on ${db.source}`);
+
         // Fork server process - need to go up 3 levels: dist/commands -> dist -> cli -> repo root
         const serverDistPath = path.resolve(import.meta.dirname, "..", "..", "..", "server", "dist", "index.js");
 
@@ -49,7 +58,7 @@ export function registerStartCommand(program: Command): void {
             ...process.env,
             PORT: port,
             HOST: host,
-            DATABASE_URL: config.database?.connectionString ?? "",
+            DATABASE_URL: db.connectionString,
           },
           stdio: ["inherit", "pipe", "pipe", "ipc"],
         });
@@ -57,11 +66,21 @@ export function registerStartCommand(program: Command): void {
         serverProcess.stdout?.on("data", (data) => process.stdout.write(data));
         serverProcess.stderr?.on("data", (data) => process.stderr.write(data));
 
-        serverProcess.on("exit", (code) => process.exit(code ?? 1));
-
-        process.on("SIGINT", () => {
+        let shuttingDown = false;
+        const shutdown = async () => {
+          if (shuttingDown) return;
+          shuttingDown = true;
           serverProcess.kill("SIGINT");
+          await db.stop();
+        };
+
+        serverProcess.on("exit", async (code) => {
+          await db.stop();
+          process.exit(code ?? 1);
         });
+
+        process.on("SIGINT", shutdown);
+        process.on("SIGTERM", shutdown);
       } catch (err) {
         console.error(
           JSON.stringify({
