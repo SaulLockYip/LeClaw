@@ -30,10 +30,12 @@ agentInvitesRouter.post("/", async (req: Request, res: Response) => {
       });
     }
 
-    // Validate role
-    if (!["CEO", "Manager", "Staff"].includes(role)) {
+    // Validate role - ensure it's exactly one of the valid values
+    const validRoles = ["CEO", "Manager", "Staff"] as const;
+    const roleStr = String(role);
+    if (!validRoles.includes(roleStr as typeof validRoles[number])) {
       return res.status(400).json({
-        error: { code: "VALIDATION_ERROR", message: "Invalid role. Must be one of: CEO, Manager, Staff" }
+        error: { code: "VALIDATION_ERROR", message: `Invalid role '${roleStr}'. Must be one of: ${validRoles.join(", ")}` }
       });
     }
 
@@ -41,7 +43,7 @@ agentInvitesRouter.post("/", async (req: Request, res: Response) => {
       companyId,
       departmentId,
       name,
-      role,
+      role: roleStr as "CEO" | "Manager" | "Staff",
       title,
     });
 

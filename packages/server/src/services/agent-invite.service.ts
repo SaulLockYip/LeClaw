@@ -60,6 +60,17 @@ export async function validateCreateInvite(
   const errors: string[] = [];
   const db = await getDb();
 
+  // DEBUG: Log the incoming role for debugging
+  console.log(`[DEBUG validateCreateInvite] companyId=${companyId}, role=${role}, departmentId=${departmentId}`);
+  console.log(`[DEBUG validateCreateInvite] role type=${typeof role}, role repr=${JSON.stringify(role)}`);
+
+  // Validate role is one of the expected values (defensive check)
+  const validRoles = ["CEO", "Manager", "Staff"] as const;
+  if (!validRoles.includes(role)) {
+    errors.push(`Invalid role '${role}'. Must be one of: ${validRoles.join(", ")}`);
+    return errors;
+  }
+
   // Rule 1: Company must exist
   const company = await db.select({ id: companies.id })
     .from(companies)
@@ -90,7 +101,10 @@ export async function validateCreateInvite(
   }
 
   // Rule 3: If role = CEO, Company must NOT already have a CEO
+  // Only check CEO EXPLICITLY - not for Manager or Staff
+  console.log(`[DEBUG validateCreateInvite] About to check CEO condition: role === "CEO" is ${role === "CEO"}`);
   if (role === "CEO") {
+    console.log(`[DEBUG validateCreateInvite] CEO check running for companyId=${companyId}`);
     const existingCeo = await db.select({ id: agents.id })
       .from(agents)
       .where(and(
@@ -100,6 +114,7 @@ export async function validateCreateInvite(
       .limit(1);
 
     if (existingCeo.length > 0) {
+      console.log(`[DEBUG validateCreateInvite] Found existing CEO for companyId=${companyId}`);
       errors.push(`Company '${companyId}' already has a CEO`);
     }
   }
