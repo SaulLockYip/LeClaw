@@ -8,6 +8,11 @@ import { registerDoctorCommand } from "../commands/doctor-command.js";
 import { registerAgentsCommand } from "../commands/agents/agents-list.js";
 import { registerAgentCommand } from "../commands/agent/agent-onboard.js";
 import { registerIssueCommand } from "../commands/issue/index.js";
+import { registerGoalCommand } from "../commands/goal/index.js";
+import { registerProjectCommand } from "../commands/project/index.js";
+import { registerCompanyCommand } from "../commands/company/index.js";
+import { registerDepartmentCommand } from "../commands/department/index.js";
+import { registerApprovalCommand } from "../commands/approval/index.js";
 
 export function buildProgram(): Command {
   const program = new Command();
@@ -26,6 +31,11 @@ export function buildProgram(): Command {
   registerAgentsCommand(program);
   registerAgentCommand(program);
   registerIssueCommand(program);
+  registerGoalCommand(program);
+  registerProjectCommand(program);
+  registerCompanyCommand(program);
+  registerDepartmentCommand(program);
+  registerApprovalCommand(program);
 
   return program;
 }
