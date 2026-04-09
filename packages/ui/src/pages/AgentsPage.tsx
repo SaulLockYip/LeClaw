@@ -1,23 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Bot, ChevronRight, Crown, User, Building2, X, UserPlus } from 'lucide-react'
+import { ChevronRight, Crown, User, Building2, UserPlus } from 'lucide-react'
 import { useCompany } from '../hooks/useCompany'
 import type { Agent } from '../lib/api'
 import AgentInviteModal from '../components/AgentInviteModal'
 
 function AgentsPage() {
   const { selectedCompany, agents, departments, isLoading } = useCompany()
-  const [showAddModal, setShowAddModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
-
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    title: '',
-    role: 'Staff' as 'CEO' | 'Manager' | 'Staff',
-    departmentId: '',
-  })
 
   if (!selectedCompany) {
     return (
@@ -25,38 +15,6 @@ function AgentsPage() {
         <p className="text-slate-500">Select a company to view agents</p>
       </div>
     )
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.name.trim()) return
-
-    setIsCreating(true)
-    try {
-      const response = await fetch(`http://localhost:4396/api/companies/${selectedCompany.id}/agents`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          title: formData.title || null,
-          role: formData.role,
-          departmentId: formData.role === 'CEO' ? null : formData.departmentId || null,
-        }),
-      })
-
-      if (response.ok) {
-        // Refresh agents list
-        window.location.reload()
-      } else {
-        console.error('Failed to create agent')
-      }
-    } catch (err) {
-      console.error('Failed to create agent:', err)
-    } finally {
-      setIsCreating(false)
-      setShowAddModal(false)
-      setFormData({ name: '', title: '', role: 'Staff', departmentId: '' })
-    }
   }
 
   const getStatusColor = (status?: string) => {
@@ -114,13 +72,6 @@ function AgentsPage() {
           >
             <UserPlus className="w-4 h-4" />
             Invite Agent
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Agent
           </button>
         </div>
       </div>
@@ -190,99 +141,6 @@ function AgentsPage() {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Add Agent Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">Add New Agent</h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter agent name"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Title (optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g. Senior Engineer, Product Manager"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Role
-                </label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as 'CEO' | 'Manager' | 'Staff' })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Staff">Staff</option>
-                  <option value="Manager">Manager</option>
-                  <option value="CEO">CEO</option>
-                </select>
-              </div>
-              {formData.role !== 'CEO' && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Department (optional)
-                  </label>
-                  <select
-                    value={formData.departmentId}
-                    onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">No department</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:text-slate-800 text-sm font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {isCreating ? 'Creating...' : 'Create Agent'}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
 

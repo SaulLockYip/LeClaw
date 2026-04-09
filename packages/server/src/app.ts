@@ -26,9 +26,9 @@ export function createApp(): Express {
   app.use("/health", healthRouter);
   app.use("/api/events", eventsRouter);
   app.use("/api/companies", companiesRouter);
+  app.use("/api/companies/:companyId/agent-invites", agentInvitesRouter);
   app.use("/api/companies/:companyId/departments", departmentsRouter);
   app.use("/api/companies/:companyId/agents", agentsRouter);
-  app.use("/api/companies/:companyId/agent-invites", agentInvitesRouter);
   app.use("/api/agent-invites", claimInviteRouter);
   app.use("/api/companies/:companyId/issues", issuesRouter);
   app.use("/api/companies/:companyId/goals", goalsRouter);
