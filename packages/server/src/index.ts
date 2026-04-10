@@ -1,14 +1,25 @@
 import { createApp } from "./app.js";
 import { configureDatabase } from "@leclaw/db/client";
 import { runMigrations } from "@leclaw/db/migrate";
+import { initializeDb } from "@leclaw/db/embedded-postgres.js";
 
 const PORT = parseInt(process.env.PORT ?? "4396", 10);
 const HOST = process.env.HOST ?? "0.0.0.0";
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 
+let dbConnection: { connectionString: string; stop: () => Promise<void> } | null = null;
+
 // Configure database connection
 if (DATABASE_URL) {
   configureDatabase({ connectionString: DATABASE_URL });
+} else {
+  // Initialize embedded postgres when DATABASE_URL is not provided
+  try {
+    dbConnection = await initializeDb();
+    configureDatabase({ connectionString: dbConnection.connectionString });
+  } catch (err) {
+    console.error("Failed to initialize embedded postgres:", err);
+  }
 }
 
 const app = createApp();
@@ -24,7 +35,22 @@ app.listen(PORT, HOST, async () => {
     JSON.stringify({
       success: true,
       server: { port: PORT, host: HOST },
-      database: DATABASE_URL ? "configured" : "not configured",
+      database: DATABASE_URL ? "configured" : (dbConnection ? `embedded-postgres@${dbConnection.connectionString.split("@")[1]?.split("/")[0] || "unknown"}` : "not configured"),
     })
   );
+});
+
+// Graceful shutdown to stop embedded postgres
+process.on("SIGINT", async () => {
+  if (dbConnection) {
+    await dbConnection.stop();
+  }
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  if (dbConnection) {
+    await dbConnection.stop();
+  }
+  process.exit(0);
 });
