@@ -208,14 +208,32 @@ export const openclawAgentsApi = {
 
 // Agent Invite API
 export interface AgentInvite {
+  id: string
+  inviteKey: string
+  companyId: string
+  departmentId?: string
+  name: string
+  role: 'CEO' | 'Manager' | 'Staff'
+  title: string
+  status: 'pending' | 'accepted' | 'expired'
+  expiresAt: string
+  createdAt: string
+  openClawAgentId?: string
+  openClawAgentWorkspace?: string
+  openClawAgentDir?: string
+}
+
+export interface AgentInviteResult {
   inviteKey: string
   expiresAt: string
   prompt: string
 }
 
 export const agentInviteApi = {
+  list: (companyId: string) =>
+    fetchApi<AgentInvite[]>(`/companies/${companyId}/agent-invites`),
   create: (companyId: string, data: { name: string; role: 'CEO' | 'Manager' | 'Staff'; title: string; departmentId?: string; openClawAgentId?: string; openClawAgentWorkspace?: string; openClawAgentDir?: string }) =>
-    fetchApi<AgentInvite>(`/companies/${companyId}/agent-invites`, {
+    fetchApi<AgentInviteResult>(`/companies/${companyId}/agent-invites`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

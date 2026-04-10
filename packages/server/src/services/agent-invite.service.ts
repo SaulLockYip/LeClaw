@@ -160,6 +160,31 @@ export async function createInvite(input: CreateInviteInput): Promise<CreateInvi
 }
 
 /**
+ * List all invites for a company
+ */
+export async function listInvites(companyId: string) {
+  const db = await getDb();
+  const result = await db.select({
+    id: agentInvites.id,
+    inviteKey: agentInvites.inviteKey,
+    companyId: agentInvites.companyId,
+    departmentId: agentInvites.departmentId,
+    name: agentInvites.name,
+    role: agentInvites.role,
+    title: agentInvites.title,
+    status: agentInvites.status,
+    expiresAt: agentInvites.expiresAt,
+    createdAt: agentInvites.createdAt,
+    openClawAgentId: agentInvites.openClawAgentId,
+    openClawAgentWorkspace: agentInvites.openClawAgentWorkspace,
+    openClawAgentDir: agentInvites.openClawAgentDir,
+  })
+    .from(agentInvites)
+    .where(eq(agentInvites.companyId, companyId));
+  return result;
+}
+
+/**
  * Expire old invites (called by background job or on claim attempt)
  */
 export async function expireOldInvites(): Promise<number> {

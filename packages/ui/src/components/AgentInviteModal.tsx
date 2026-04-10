@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Copy, Check, UserPlus, AlertCircle } from 'lucide-react'
-import { agentInviteApi, openclawAgentsApi, type OpenClawAgent } from '../lib/api'
+import { agentInviteApi, agentApi, openclawAgentsApi, type OpenClawAgent, type AgentInvite } from '../lib/api'
 import type { Department } from '../lib/api'
 
 interface AgentInviteModalProps {
@@ -27,19 +27,44 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
     openClawAgentDir: '',
   })
   const [openClawAgents, setOpenClawAgents] = useState<OpenClawAgent[]>([])
+  const [usedOpenClawAgentIds, setUsedOpenClawAgentIds] = useState<Set<string>>(new Set())
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inviteResult, setInviteResult] = useState<InviteResult | null>(null)
   const [copied, setCopied] = useState(false)
 
-  // Fetch OpenClaw agents when modal opens
+  // Fetch OpenClaw agents, onboarded agents, and pending invites when modal opens
   useEffect(() => {
     if (isOpen) {
-      openclawAgentsApi.list()
-        .then(({ agents }) => setOpenClawAgents(agents))
-        .catch(() => setOpenClawAgents([]))
+      Promise.all([
+        openclawAgentsApi.list(),
+        agentApi.listByCompany(companyId),
+        agentInviteApi.list(companyId),
+      ])
+        .then(([{ agents }, onboardedAgents, pendingInvites]) => {
+          setOpenClawAgents(agents)
+
+          // Compute set of used OpenClaw agent IDs
+          const usedIds = new Set<string>()
+
+          // Add onboarded agents' openClawAgentIds
+          onboardedAgents
+            .filter(a => a.openClawAgentId)
+            .forEach(a => usedIds.add(a.openClawAgentId))
+
+          // Add pending invites' openClawAgentIds
+          pendingInvites
+            .filter(i => i.status === 'pending' && i.openClawAgentId)
+            .forEach(i => usedIds.add(i.openClawAgentId))
+
+          setUsedOpenClawAgentIds(usedIds)
+        })
+        .catch(() => {
+          setOpenClawAgents([])
+          setUsedOpenClawAgentIds(new Set())
+        })
     }
-  }, [isOpen])
+  }, [isOpen, companyId])
 
   const handleOpenClawAgentChange = (agentId: string) => {
     const agent = openClawAgents.find(a => a.id === agentId)
@@ -301,11 +326,13 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
               disabled={isSubmitting}
             >
               <option value="">Select an agent</option>
-              {openClawAgents.map((agent) => (
-                <option key={agent.id} value={agent.id}>
-                  {agent.name || agent.id} - {agent.workspace}
-                </option>
-              ))}
+              {openClawAgents
+                .filter(agent => !usedOpenClawAgentIds.has(agent.id))
+                .map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name || agent.id} - {agent.workspace}
+                  </option>
+                ))}
             </select>
           </div>
 

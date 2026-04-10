@@ -17,6 +17,21 @@ function requireCompanyId(req: Request, res: Response, next: () => void) {
 
 agentInvitesRouter.use(requireCompanyId);
 
+// GET /api/companies/:companyId/agent-invites - List invites
+agentInvitesRouter.get("/", async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).companyId;
+    const invites = await agentInviteService.listInvites(companyId);
+    res.json({
+      success: true,
+      data: invites,
+    });
+  } catch (error) {
+    console.error("Error listing agent invites:", error);
+    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list agent invites" } });
+  }
+});
+
 // POST /api/companies/:companyId/agent-invites - Create invite
 agentInvitesRouter.post("/", async (req: Request, res: Response) => {
   try {
