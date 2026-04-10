@@ -32,8 +32,8 @@ function applyConfigToEnv(): void {
   if (!config) return;
 
   // Set database port from config
-  if (config.database?.port) {
-    process.env.DB_PORT = String(config.database.port);
+  if (config.database?.embeddedPort) {
+    process.env.DB_PORT = String(config.database.embeddedPort);
   }
   if (config.database?.path) {
     process.env.DB_PATH = config.database.path;
