@@ -41,8 +41,6 @@ async function getConnectionString(): Promise<string> {
   return `postgres://${user}:${password}@${host}:${port}/leclaw`;
 }
 
-let migrationPromise: Promise<void> | null = null;
-
 export async function getDb(): Promise<ReturnType<typeof drizzle<typeof schema>>> {
   if (dbPromise) {
     return dbPromise;
@@ -50,19 +48,9 @@ export async function getDb(): Promise<ReturnType<typeof drizzle<typeof schema>>
 
   const connectionString = await getConnectionString();
 
-  // Ensure migrations run only once
-  if (!migrationPromise) {
-    migrationPromise = (async () => {
-      try {
-        await applyPendingMigrations(connectionString);
-      } catch (err) {
-        console.error("Migration error:", err);
-        // Don't throw - let the app continue and handle migration errors at query time
-      }
-    })();
-  }
-
-  await migrationPromise;
+  // Note: Migrations are NOT run here. They should be run explicitly via
+  // applyPendingMigrations() before the first query, or via runMigrations()
+  // in server startup. This avoids connection errors when DB doesn't exist yet.
   sqlPromise = postgres(connectionString);
   dbPromise = drizzle(sqlPromise, { schema });
   return dbPromise;

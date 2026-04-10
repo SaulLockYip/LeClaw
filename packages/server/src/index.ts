@@ -1,5 +1,5 @@
 import { createApp } from "./app.js";
-import { configureDatabase } from "@leclaw/db/client";
+import { configureDatabase, applyPendingMigrations } from "@leclaw/db/client";
 import { runMigrations } from "@leclaw/db/migrate";
 import { initializeDb } from "@leclaw/db/embedded-postgres";
 import { readFileSync, existsSync } from "node:fs";
@@ -44,6 +44,8 @@ if (DATABASE_URL) {
       port: config?.database?.embeddedPort,
     });
     configureDatabase({ connectionString: dbConnection.connectionString });
+    // Run migrations for embedded postgres after initialization
+    await applyPendingMigrations(dbConnection.connectionString);
   } catch (err) {
     console.error("Failed to initialize embedded postgres:", err);
   }
