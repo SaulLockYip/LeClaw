@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Building2, ChevronRight, Crown, User } from 'lucide-react'
 import { useCompany } from '../hooks/useCompany'
+import CreateDepartmentModal from '../components/CreateDepartmentModal'
 
 function DepartmentsPage() {
   const { selectedCompany, departments, agents, isLoading } = useCompany()
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   if (!selectedCompany) {
     return (
@@ -22,9 +25,8 @@ function DepartmentsPage() {
           <p className="text-slate-500 text-sm mt-1">{selectedCompany.name}</p>
         </div>
         <button
-          className="px-4 py-2 bg-slate-300 text-slate-500 rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2"
-          disabled
-          title="Web UI is read-only. Create departments via CLI."
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           New Department
@@ -92,6 +94,14 @@ function DepartmentsPage() {
           })}
         </div>
       )}
+
+      {/* Create Department Modal */}
+      <CreateDepartmentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => setIsModalOpen(false)}
+        companyId={selectedCompany.id}
+      />
     </div>
   )
 }
