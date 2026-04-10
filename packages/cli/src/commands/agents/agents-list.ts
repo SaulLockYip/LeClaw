@@ -25,7 +25,8 @@ export interface AgentsListOutput {
  * Get all agents from the database (bound agents)
  */
 async function getBoundAgents() {
-  const boundAgents = await db.select({
+  const database = await db;
+  const boundAgents = await database.select({
     id: agents.id,
     openClawAgentId: agents.openClawAgentId,
     name: agents.name,

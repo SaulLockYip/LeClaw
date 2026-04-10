@@ -23,8 +23,11 @@ export interface OnboardResult {
  * Uses the pre-stored openClawAgentId, workspace, and dir from invite creation
  */
 export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardResult> {
+  // Unwrap db promise to get the actual drizzle instance for method chaining
+  const database = await db;
+
   // Find the invite
-  const [invite] = await db.select().from(agentInvites)
+  const [invite] = await database.select().from(agentInvites)
     .where(eq(agentInvites.inviteKey, inviteKey))
     .limit(1);
 
@@ -53,7 +56,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
     const now = new Date();
 
     // Create the agent record
-    const [newAgent] = await db.insert(agents as any).values({
+    const [newAgent] = await database.insert(agents as any).values({
       companyId: invite.companyId,
       departmentId: invite.departmentId ?? null,
       name: invite.name,
@@ -70,7 +73,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
     const apiKey = generateApiKey(newAgent.id);
 
     // Create the API key record
-    await db.insert(agentApiKeys as any).values({
+    await database.insert(agentApiKeys as any).values({
       agentId: newAgent.id,
       companyId: invite.companyId,
       name: invite.name,
@@ -80,7 +83,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
     });
 
     // Mark invite as accepted
-    await db.update(agentInvites as any)
+    await database.update(agentInvites as any)
       .set({ status: "accepted" } as any)
       .where(eq(agentInvites.inviteKey, inviteKey));
 
