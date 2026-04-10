@@ -122,7 +122,11 @@ export const companyApi = {
   list: () => fetchApi<Company[]>('/companies'),
   get: (id: string) => fetchApi<Company>(`/companies/${id}`),
   create: (data: Omit<Company, 'id' | 'createdAt' | 'updatedAt'>) =>
-    fetchApi<Company>('/companies'),
+    fetchApi<Company>('/companies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
   update: (id: string, data: Partial<Company>) =>
     fetchApi<Company>(`/companies/${id}`),
   delete: (id: string) => fetchApi<void>(`/companies/${id}`),
@@ -135,7 +139,11 @@ export const departmentApi = {
   get: (companyId: string, departmentId: string) =>
     fetchApi<Department>(`/companies/${companyId}/departments/${departmentId}`),
   create: (companyId: string, data: Omit<Department, 'id' | 'companyId' | 'createdAt' | 'updatedAt'>) =>
-    fetchApi<Department>(`/companies/${companyId}/departments`),
+    fetchApi<Department>(`/companies/${companyId}/departments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
   update: (companyId: string, departmentId: string, data: Partial<Department>) =>
     fetchApi<Department>(`/companies/${companyId}/departments/${departmentId}`),
   delete: (companyId: string, departmentId: string) =>
