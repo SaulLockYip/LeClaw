@@ -1,7 +1,7 @@
 import { createApp } from "./app.js";
 import { configureDatabase } from "@leclaw/db/client";
 import { runMigrations } from "@leclaw/db/migrate";
-import { initializeDb } from "@leclaw/db/embedded-postgres.js";
+import { initializeDb } from "@leclaw/db/embedded-postgres";
 
 const PORT = parseInt(process.env.PORT ?? "4396", 10);
 const HOST = process.env.HOST ?? "0.0.0.0";
