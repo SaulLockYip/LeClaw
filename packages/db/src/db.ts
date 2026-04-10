@@ -6,7 +6,8 @@ import { agents, agentApiKeys, approvals, companies, departments, goals, issues,
 import { applyPendingMigrations } from "./client.js";
 
 // Use environment or defaults
-const connectionString = process.env.DATABASE_URL ?? "postgres://postgres:postgres@127.0.0.1:65432/leclaw";
+const dbPort = process.env.DB_PORT ?? "65432";
+const connectionString = process.env.DATABASE_URL ?? `postgres://postgres:postgres@127.0.0.1:${dbPort}/leclaw`;
 
 // Create singleton instances
 const sql = postgres(connectionString);
