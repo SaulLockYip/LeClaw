@@ -2,10 +2,8 @@
 
 import { randomBytes } from "node:crypto";
 import { eq, and, lt, isNotNull } from "drizzle-orm";
-import { agentInvites, agents, agentApiKeys, companies, departments } from "@leclaw/db/schema";
+import { agentInvites, agents, companies, departments } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
-import { generateApiKey } from "@leclaw/shared/api-key";
-import type { AgentRole } from "@leclaw/shared";
 
 const INVITE_EXPIRY_MINUTES = 30;
 
@@ -37,20 +35,6 @@ export interface CreateInviteResult {
   inviteKey?: string;
   prompt?: string;
   expiresAt?: Date;
-  error?: string;
-  validationErrors?: string[];
-}
-
-export interface ClaimInviteResult {
-  success: boolean;
-  agent?: {
-    id: string;
-    companyId: string;
-    departmentId: string | null;
-    name: string;
-    role: string;
-  };
-  apiKey?: string;
   error?: string;
   validationErrors?: string[];
 }
@@ -168,113 +152,6 @@ export async function createInvite(input: CreateInviteInput): Promise<CreateInvi
       inviteKey,
       prompt,
       expiresAt,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return { success: false, error: message };
-  }
-}
-
-/**
- * Validate that an invite can be claimed
- */
-export async function validateClaimInvite(inviteKey: string): Promise<{ valid: boolean; error?: string }> {
-  const db = await getDb();
-
-  // Find the invite
-  const invite = await db.select().from(agentInvites)
-    .where(eq(agentInvites.inviteKey, inviteKey))
-    .limit(1);
-
-  if (invite.length === 0) {
-    return { valid: false, error: "Invalid invite key" };
-  }
-
-  const inviteRecord = invite[0];
-
-  // Check if already accepted
-  if (inviteRecord.status === "accepted") {
-    return { valid: false, error: "Invite has already been used" };
-  }
-
-  // Check if expired
-  if (inviteRecord.status === "expired" || new Date() > inviteRecord.expiresAt) {
-    return { valid: false, error: "Invite has expired" };
-  }
-
-  return { valid: true };
-}
-
-/**
- * Claim an invite and create the agent
- * Uses the pre-stored openClawAgentId, workspace, and dir from invite creation
- */
-export async function claimInvite(inviteKey: string): Promise<ClaimInviteResult> {
-  // Validate the invite first
-  const validation = await validateClaimInvite(inviteKey);
-  if (!validation.valid) {
-    return { success: false, error: validation.error };
-  }
-
-  const db = await getDb();
-
-  // Get the invite record
-  const [invite] = await db.select().from(agentInvites)
-    .where(eq(agentInvites.inviteKey, inviteKey))
-    .limit(1);
-
-  // Use the pre-stored OpenClaw agent info from invite
-  const { openClawAgentId, openClawAgentWorkspace, openClawAgentDir } = invite;
-
-  if (!openClawAgentId) {
-    return { success: false, error: "Invite does not have an OpenClaw agent assigned. Please recreate the invite with an agent selected." };
-  }
-
-  try {
-    const now = new Date();
-
-    // Create the agent record - convert undefined to null for drizzle
-    const [agent] = await db.insert(agents as any).values({
-      companyId: invite.companyId,
-      departmentId: invite.departmentId ?? null,
-      name: invite.name,
-      role: invite.role as AgentRole,
-      title: invite.title ?? null,
-      openClawAgentId,
-      openClawAgentWorkspace: openClawAgentWorkspace ?? "",
-      openClawAgentDir: openClawAgentDir ?? "",
-      createdAt: now,
-      updatedAt: now,
-    } as any).returning();
-
-    // Generate API key
-    const apiKey = generateApiKey(openClawAgentId);
-
-    // Create the API key record
-    await db.insert(agentApiKeys as any).values({
-      agentId: openClawAgentId,
-      companyId: invite.companyId,
-      name: invite.name,
-      key: apiKey.fullKey,
-      keyHash: apiKey.keyHash,
-      createdAt: now,
-    } as any);
-
-    // Mark invite as accepted
-    await db.update(agentInvites as any)
-      .set({ status: "accepted" } as any)
-      .where(eq(agentInvites.inviteKey, inviteKey));
-
-    return {
-      success: true,
-      agent: {
-        id: agent.id,
-        companyId: agent.companyId,
-        departmentId: agent.departmentId,
-        name: agent.name,
-        role: agent.role,
-      },
-      apiKey: apiKey.fullKey,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

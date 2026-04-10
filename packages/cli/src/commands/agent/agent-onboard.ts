@@ -58,6 +58,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
       departmentId: invite.departmentId ?? null,
       name: invite.name,
       role: invite.role,
+      title: invite.title ?? null,
       openClawAgentId: openClawAgentId ?? null,
       openClawAgentWorkspace: openClawAgentWorkspace ?? null,
       openClawAgentDir: openClawAgentDir ?? null,
