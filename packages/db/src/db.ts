@@ -1,24 +1,13 @@
-// Singleton db instance for synchronous use
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+// Lazy db instance - only initialized when first accessed
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { agents, agentApiKeys, approvals, companies, departments, goals, issues, issueComments, projects, auditLogs, agentInvites } from "./schema/index.js";
-import { applyPendingMigrations } from "./client.js";
+import { getDb } from "./client.js";
 
-// Use environment or defaults
-const dbPort = process.env.DB_PORT ?? "65432";
-const connectionString = process.env.DATABASE_URL ?? `postgres://postgres:postgres@127.0.0.1:${dbPort}/leclaw`;
+// Re-export schema tables for convenience
+export { agents, agentApiKeys, approvals, companies, departments, goals, issues, issueComments, projects, auditLogs, agentInvites };
 
-// Create singleton instances
-const sql = postgres(connectionString);
-
-// Run migrations on initialization
-applyPendingMigrations(connectionString).catch((err) => {
-  console.error("Failed to run migrations on startup:", err);
-});
-
-// Export db with explicit type annotation including all tables
-export const db = drizzle(sql, { schema: { agents, agentApiKeys, approvals, companies, departments, goals, issues, issueComments, projects, auditLogs, agentInvites } }) as PostgresJsDatabase<{
+// Type for the database with all our tables
+export type LeClawDb = PostgresJsDatabase<{
   agents: typeof agents;
   agentApiKeys: typeof agentApiKeys;
   approvals: typeof approvals;
@@ -31,3 +20,28 @@ export const db = drizzle(sql, { schema: { agents, agentApiKeys, approvals, comp
   auditLogs: typeof auditLogs;
   agentInvites: typeof agentInvites;
 }>;
+
+// Lazy db - a thenable that can be awaited OR used directly for method calls
+// This defers the actual connection until configureDatabase() has been called
+// and DB_PORT/DATABASE_URL env vars have been read
+const dbPromise = getDb() as Promise<LeClawDb>;
+
+// Create a thenable that also forwards method calls to the resolved db
+// This allows both: await db  AND  db.select()  patterns to work
+export const db: LeClawDb & Promise<LeClawDb> = new Proxy({} as LeClawDb & Promise<LeClawDb>, {
+  get(_target, prop) {
+    // Forward 'then' to the promise for await compatibility
+    if (prop === "then") {
+      return dbPromise.then.bind(dbPromise);
+    }
+    // Forward 'select', 'insert', 'update', etc. to the resolved db
+    return async (...args: unknown[]) => {
+      const resolvedDb = await dbPromise;
+      const method = (resolvedDb as unknown as Record<string, unknown>)[prop as string];
+      if (typeof method === "function") {
+        return (method as (...args: unknown[]) => unknown).call(resolvedDb, ...args);
+      }
+      return method;
+    };
+  },
+});

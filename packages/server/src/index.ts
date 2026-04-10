@@ -2,10 +2,33 @@ import { createApp } from "./app.js";
 import { configureDatabase } from "@leclaw/db/client";
 import { runMigrations } from "@leclaw/db/migrate";
 import { initializeDb } from "@leclaw/db/embedded-postgres";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { homedir } from "node:os";
 
+const CONFIG_FILE = join(homedir(), ".leclaw", "config.json");
 const PORT = parseInt(process.env.PORT ?? "4396", 10);
 const HOST = process.env.HOST ?? "0.0.0.0";
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
+
+interface ServerConfig {
+  database?: {
+    embeddedDataDir?: string;
+    embeddedPort?: number;
+  };
+}
+
+function loadConfig(): ServerConfig | null {
+  try {
+    if (existsSync(CONFIG_FILE)) {
+      const content = readFileSync(CONFIG_FILE, "utf-8");
+      return JSON.parse(content) as ServerConfig;
+    }
+  } catch {
+    // Ignore config read errors
+  }
+  return null;
+}
 
 let dbConnection: { connectionString: string; stop: () => Promise<void> } | null = null;
 
@@ -15,7 +38,11 @@ if (DATABASE_URL) {
 } else {
   // Initialize embedded postgres when DATABASE_URL is not provided
   try {
-    dbConnection = await initializeDb();
+    const config = loadConfig();
+    dbConnection = await initializeDb({
+      dataDir: config?.database?.embeddedDataDir,
+      port: config?.database?.embeddedPort,
+    });
     configureDatabase({ connectionString: dbConnection.connectionString });
   } catch (err) {
     console.error("Failed to initialize embedded postgres:", err);
