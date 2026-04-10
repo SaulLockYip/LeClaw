@@ -5,7 +5,7 @@ import { homedir } from "node:os";
 
 interface LeClawConfig {
   database?: {
-    port?: number;
+    embeddedPort?: number;
     path?: string;
   };
   server?: {
