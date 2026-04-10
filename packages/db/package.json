@@ -8,7 +8,8 @@
     "./schema": "./dist/schema/index.js",
     "./schema/*": "./dist/schema/*.js",
     "./client": "./dist/client.js",
-    "./migrate": "./dist/migrate.js"
+    "./migrate": "./dist/migrate.js",
+    "./embedded-postgres": "./dist/embedded-postgres.js"
   },
   "dependencies": {
     "drizzle-orm": "^0.38.4",
