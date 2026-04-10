@@ -2,7 +2,7 @@
 // Onboards an OpenClaw agent to LeClaw via invite key
 
 import { Command } from "commander";
-import { db, agentInvites, agents, agentApiKeys } from "@leclaw/db";
+import { db, agentInvites, agents, agentApiKeys, closeDb } from "@leclaw/db";
 import { eq } from "drizzle-orm";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -131,6 +131,8 @@ function registerOnboardCommand(agentCommand: Command): void {
           apiKey: result.apiKey,
           message: "Agent onboarded successfully via invite. Store the API key securely.",
         }, null, 2));
+        await closeDb();
+        process.exit(0);
       } else {
         await auditLog({
           agentId: "unknown",
@@ -145,6 +147,7 @@ function registerOnboardCommand(agentCommand: Command): void {
           error: result.error,
           validationErrors: result.validationErrors,
         }, null, 2));
+        await closeDb();
         process.exit(1);
       }
     });
