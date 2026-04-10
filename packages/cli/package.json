@@ -10,7 +10,7 @@
     ".": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build --force",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

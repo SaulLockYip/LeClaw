@@ -23,7 +23,7 @@
     "vitest": "^4.1.2"
   },
   "scripts": {
-    "build": "tsc --build && cp -r src/migrations dist/",
+    "build": "tsc --build --force && cp -r src/migrations dist/",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "generate": "drizzle-kit generate",

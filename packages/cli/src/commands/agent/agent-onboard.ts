@@ -23,10 +23,12 @@ export interface OnboardResult {
  * Uses the pre-stored openClawAgentId, workspace, and dir from invite creation
  */
 export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardResult> {
+  console.error('DEBUG: Looking up invite:', inviteKey);
   // Find the invite
   const [invite] = await db.select().from(agentInvites)
     .where(eq(agentInvites.inviteKey, inviteKey))
     .limit(1);
+  console.error('DEBUG: Invite found, status:', invite?.status);
 
   if (!invite) {
     return { success: false, error: "Invalid invite key" };
@@ -51,6 +53,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
 
   try {
     const now = new Date();
+    console.error('DEBUG: Inserting agent...');
 
     // Create the agent record
     const [newAgent] = await db.insert(agents as any).values({
@@ -64,11 +67,14 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
       createdAt: now,
       updatedAt: now,
     }).returning();
+    console.error('DEBUG: Agent inserted:', newAgent.id);
 
     // Generate API key
     const apiKey = generateApiKey(newAgent.id);
+    console.error('DEBUG: API key generated');
 
     // Create the API key record
+    console.error('DEBUG: About to insert API key...');
     await db.insert(agentApiKeys as any).values({
       agentId: newAgent.id,
       companyId: invite.companyId,
@@ -77,6 +83,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
       keyHash: apiKey.keyHash,
       createdAt: now,
     });
+    console.error('DEBUG: API key inserted');
 
     // Mark invite as accepted
     await db.update(agentInvites as any)
