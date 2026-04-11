@@ -56,7 +56,7 @@ function IssuesPage() {
     ];
     if (isCompanyLoading) {
         return (<div className="flex items-center justify-center h-full">
-        <p className="text-slate-500">Loading...</p>
+        <p className="text-black/50">Loading...</p>
       </div>);
     }
     return (<div className="space-y-0">
