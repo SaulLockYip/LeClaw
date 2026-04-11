@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ChevronLeft, FolderKanban, AlertCircle, FileText, Calendar, Hash } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ChevronLeft, FolderKanban, AlertCircle, FileText, Calendar, Hash, Trash2 } from 'lucide-react'
 import { useCompany } from '../../hooks/useCompany'
 import { projectApi, issueApi } from '../../lib/api'
 import type { Project, Issue } from '../../lib/api'
@@ -12,6 +12,9 @@ function ProjectDetailPage() {
   const [relatedIssues, setRelatedIssues] = useState<Issue[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!selectedCompany || !id) return
@@ -102,6 +105,19 @@ function ProjectDetailPage() {
     )
   }
 
+  const handleDelete = async () => {
+    if (!selectedCompany) return
+    setIsDeleting(true)
+    try {
+      await projectApi.delete(selectedCompany.id, project.id)
+      navigate('/projects')
+    } catch (err) {
+      console.error('Failed to delete project:', err)
+      setIsDeleting(false)
+      setShowConfirm(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -117,6 +133,13 @@ function ProjectDetailPage() {
             {project.status}
           </span>
         </div>
+        <button
+          onClick={() => setShowConfirm(true)}
+          className="px-4 py-2 border border-black text-black hover:bg-black hover:text-white transition-colors flex items-center gap-2"
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete
+        </button>
       </div>
 
       {/* Project Info Card */}
@@ -221,6 +244,34 @@ function ProjectDetailPage() {
           <p className="text-sm text-slate-500">No related issues</p>
         )}
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-black p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-black mb-2">Delete Project?</h3>
+            <p className="text-black/70 mb-6">
+              Are you sure you want to delete <strong>{project.title}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 border border-black/20 text-black hover:bg-black/5 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-black text-black hover:bg-black hover:text-white transition-colors"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -178,6 +178,8 @@ export const issueApi = {
     fetchApi<Issue>(`/companies/${companyId}/issues`),
   update: (companyId: string, issueId: string, data: Partial<Issue>) =>
     fetchApi<Issue>(`/companies/${companyId}/issues/${issueId}`),
+  delete: (companyId: string, issueId: string) =>
+    fetchApi<void>(`/companies/${companyId}/issues/${issueId}`, { method: 'DELETE' }),
 }
 
 // Goal API
@@ -185,6 +187,8 @@ export const goalApi = {
   list: (companyId: string) => fetchApi<Goal[]>(`/companies/${companyId}/goals`),
   get: (companyId: string, goalId: string) =>
     fetchApi<Goal>(`/companies/${companyId}/goals/${goalId}`),
+  delete: (companyId: string, goalId: string) =>
+    fetchApi<void>(`/companies/${companyId}/goals/${goalId}`, { method: 'DELETE' }),
 }
 
 // Project API
@@ -192,6 +196,8 @@ export const projectApi = {
   list: (companyId: string) => fetchApi<Project[]>(`/companies/${companyId}/projects`),
   get: (companyId: string, projectId: string) =>
     fetchApi<Project>(`/companies/${companyId}/projects/${projectId}`),
+  delete: (companyId: string, projectId: string) =>
+    fetchApi<void>(`/companies/${companyId}/projects/${projectId}`, { method: 'DELETE' }),
 }
 
 // Approval API

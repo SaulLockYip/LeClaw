@@ -1,10 +1,15 @@
-import { useParams, Link } from 'react-router-dom'
-import { ChevronLeft, Crown, Users, Building2 } from 'lucide-react'
+import { useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ChevronLeft, Crown, Users, Building2, Trash2 } from 'lucide-react'
 import { useCompany } from '../hooks/useCompany'
+import { departmentApi } from '../lib/api'
 
 function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { departments, agents, isLoading } = useCompany()
+  const { selectedCompany, departments, agents, isLoading } = useCompany()
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const navigate = useNavigate()
 
   const department = departments.find((d) => d.id === id)
   const departmentAgents = agents.filter((a) => a.departmentId === id)
@@ -36,6 +41,19 @@ function DepartmentDetailPage() {
     )
   }
 
+  const handleDelete = async () => {
+    if (!selectedCompany) return
+    setIsDeleting(true)
+    try {
+      await departmentApi.delete(selectedCompany.id, department.id)
+      navigate('/departments')
+    } catch (err) {
+      console.error('Failed to delete department:', err)
+      setIsDeleting(false)
+      setShowConfirm(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -47,6 +65,13 @@ function DepartmentDetailPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-slate-900">{department.name}</h1>
         </div>
+        <button
+          onClick={() => setShowConfirm(true)}
+          className="px-4 py-2 border border-black text-black hover:bg-black hover:text-white transition-colors flex items-center gap-2"
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete
+        </button>
       </div>
 
       {/* Department Info Card */}
@@ -158,6 +183,34 @@ function DepartmentDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-black p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-black mb-2">Delete Department?</h3>
+            <p className="text-black/70 mb-6">
+              Are you sure you want to delete <strong>{department.name}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 border border-black/20 text-black hover:bg-black/5 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-black text-black hover:bg-black hover:text-white transition-colors"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
