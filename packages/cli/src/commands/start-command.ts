@@ -4,8 +4,6 @@ import os from "os";
 import { spawn } from "child_process";
 import fs from "fs";
 import { loadConfig } from "@leclaw/shared";
-import { initializeDb } from "@leclaw/db";
-import { runMigrations } from "@leclaw/db/migrate";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 const PID_FILE = path.join(os.homedir(), ".leclaw", "server.pid");
@@ -33,18 +31,6 @@ export function registerStartCommand(program: Command): void {
         const port = opts.port ?? String(config.server?.port ?? 4396);
         const host = opts.host;
 
-        // Start embedded postgres FIRST, then run migrations, then start server
-        console.log("Starting embedded postgres...");
-        const db = await initializeDb({
-          dataDir: config.database?.embeddedDataDir,
-          port: config.database?.embeddedPort,
-        });
-        console.log(`Embedded postgres started on ${db.source} (started=${db.started})`);
-
-        // Run migrations before starting server
-        process.env.DATABASE_URL = db.connectionString;
-        await runMigrations();
-
         // Server process - need to go up 3 levels: dist/commands -> dist -> cli -> repo root
         const serverDistPath = path.resolve(import.meta.dirname, "..", "..", "..", "server", "dist", "index.js");
 
@@ -65,10 +51,9 @@ export function registerStartCommand(program: Command): void {
             ...process.env,
             PORT: port,
             HOST: host,
-            DATABASE_URL: db.connectionString,
           },
           detached: true,
-          stdio: ["ignore", "ignore", "ignore"],
+          stdio: ["ignore", "inherit", "inherit"],
         });
 
         // Write PID file
