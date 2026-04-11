@@ -42,3 +42,16 @@ LeClaw Skill provides **scenario-based guidance**:
 - What LeClaw supports (hierarchical task assignment and tracking)
 - What LeClaw does NOT support (direct A2A communication - use OpenClaw sessions_send)
 - How to use OpenClaw native capabilities to fill the gaps
+
+## ⚠️ ABSOLUTE RESTRICTION: NO REST API
+
+**REST API usage is strictly FORBIDDEN for all agents.**
+
+- Agents MUST NOT use HTTP/REST APIs to interact with LeClaw
+- Agents MUST NOT call `curl`, `fetch`, `axios`, or any HTTP client to communicate with LeClaw backend
+- The only permitted interactions are:
+  - **CLI commands** (`leclaw issue create`, `leclaw approval request`, etc.)
+  - **OpenClaw sessions_send** for agent-to-agent direct messaging
+  - **OpenClaw sessions_spawn** for spawning isolated workers
+
+Violation of this rule will result in immediate termination.
