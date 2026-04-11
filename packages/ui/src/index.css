@@ -1,1 +1,45 @@
 @import "tailwindcss";
+
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* Minimalist Monochrome Design Tokens */
+@theme {
+  /* Colors */
+  --color-background: #FFFFFF;
+  --color-foreground: #000000;
+  --color-muted: #F5F5F5;
+  --color-mutedForeground: #525252;
+  --color-accent: #000000;
+  --color-accentForeground: #FFFFFF;
+  --color-border: #000000;
+  --color-borderLight: #E5E5E5;
+  --color-card: #FFFFFF;
+  --color-cardForeground: #000000;
+
+  /* Typography */
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "Source Serif 4", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Borders */
+  --border-thin: 1px solid #000000;
+  --border-medium: 2px solid #000000;
+  --border-thick: 4px solid #000000;
+  --radius-none: 0px;
+
+  /* Font families */
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+}
+
+/* Base styles using design tokens */
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+}
+
+* {
+  border-color: var(--color-border);
+}
