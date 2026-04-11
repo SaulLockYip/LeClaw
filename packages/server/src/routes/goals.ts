@@ -17,15 +17,16 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// Middleware to extract and validate API key
+// Middleware to extract and validate API key (optional - for CLI auth, web-ui can omit)
 async function requireApiKey(req: Request, res: Response, next: NextFunction) {
   const apiKey = req.headers.authorization?.replace(/^Bearer /, "");
+
+  // If no API key provided, allow request to proceed (web-ui mode without auth)
   if (!apiKey) {
-    return res.status(401).json({
-      error: { code: "MISSING_API_KEY", message: "Missing required api-key" }
-    });
+    return next();
   }
 
+  // If API key is provided, verify it
   try {
     const agentInfo = await agentService.verifyApiKey(apiKey);
     (req as any).agentInfo = agentInfo;

@@ -20,15 +20,16 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// Middleware to extract and validate API key
+// Middleware to extract and validate API key (optional - for CLI auth, web-ui can omit)
 async function requireApiKey(req: Request, res: Response, next: NextFunction) {
   const apiKey = req.headers.authorization?.replace(/^Bearer /, "");
+
+  // If no API key provided, allow request to proceed (web-ui mode without auth)
   if (!apiKey) {
-    return res.status(401).json({
-      error: { code: "MISSING_API_KEY", message: "Missing required api-key" }
-    });
+    return next();
   }
 
+  // If API key is provided, verify it
   try {
     const agentInfo = await agentService.verifyApiKey(apiKey);
     (req as any).agentInfo = agentInfo;
@@ -52,8 +53,16 @@ function requireCeo(req: Request, res: Response, next: NextFunction) {
 }
 
 // Middleware to filter by role: CEO sees all, Manager/Staff sees their department only
+// For web-ui (no auth), allows full access
 async function requireRoleForIssueAccess(req: Request, res: Response, next: NextFunction) {
-  const { role, agentId } = (req as any).agentInfo;
+  const agentInfo = (req as any).agentInfo;
+
+  // If no auth (web-ui mode), allow full access
+  if (!agentInfo) {
+    return next();
+  }
+
+  const { role, agentId } = agentInfo;
   const companyId = (req as any).companyId;
 
   if (role === "CEO") {
@@ -81,12 +90,21 @@ issuesRouter.use(requireApiKey);
 
 // GET /api/companies/:companyId/issues - List issues
 // CEO: all issues, Manager/Staff: department-filtered
+// For web-ui (no auth), returns all issues
 issuesRouter.get("/", requireRoleForIssueAccess, async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
-    const role = (req as any).agentInfo.role;
+    const agentInfo = (req as any).agentInfo;
     const agentDepartmentId = (req as any).agentDepartmentId;
     const departmentId = req.query.departmentId as string | undefined;
+
+    // If no auth (web-ui mode), return all issues for company
+    if (!agentInfo) {
+      const issues = await issueService.listIssuesByCompany(companyId);
+      return res.json({ success: true, data: issues });
+    }
+
+    const role = agentInfo.role;
 
     // Manager/Staff can only see their department's issues unless CEO
     if (role !== "CEO" && departmentId && departmentId !== agentDepartmentId) {

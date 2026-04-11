@@ -41,7 +41,7 @@ function CompanyRail({ companies, selectedCompanyId, onCompanySelect }: CompanyR
         {/* Create Company Button */}
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-black/40 hover:text-white hover:bg-black/70 transition-all"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-all border border-white/40"
           title="Create Company"
         >
           <Plus className="w-5 h-5" />
