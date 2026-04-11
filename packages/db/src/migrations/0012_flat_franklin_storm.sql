@@ -38,14 +38,14 @@ ALTER TABLE "issues" DROP CONSTRAINT IF EXISTS "issues_assignee_agent_id_agents_
 --> statement-breakpoint
 DROP INDEX IF EXISTS "issues_company_assignee_status_idx";--> statement-breakpoint
 ALTER TABLE "issues" ALTER COLUMN "department_id" SET NOT NULL;--> statement-breakpoint
-ALTER TABLE "agent_api_keys" ADD COLUMN "company_id" uuid NOT NULL;--> statement-breakpoint
-ALTER TABLE "agent_api_keys" ADD COLUMN "name" text NOT NULL;--> statement-breakpoint
-ALTER TABLE "agent_api_keys" ADD COLUMN "key" text NOT NULL;--> statement-breakpoint
-ALTER TABLE "agent_api_keys" ADD COLUMN "last_used_at" timestamp with time zone;--> statement-breakpoint
-ALTER TABLE "agents" ADD COLUMN "title" text;--> statement-breakpoint
-ALTER TABLE "agents" ADD COLUMN "agent_api_key" text;--> statement-breakpoint
-ALTER TABLE "approvals" ADD COLUMN "type" text DEFAULT 'human_approve' NOT NULL;--> statement-breakpoint
-ALTER TABLE "approvals" ADD COLUMN "approver_id" uuid;--> statement-breakpoint
+ALTER TABLE "agent_api_keys" ADD COLUMN IF NOT EXISTS "company_id" uuid NOT NULL;--> statement-breakpoint
+ALTER TABLE "agent_api_keys" ADD COLUMN IF NOT EXISTS "name" text NOT NULL;--> statement-breakpoint
+ALTER TABLE "agent_api_keys" ADD COLUMN IF NOT EXISTS "key" text NOT NULL;--> statement-breakpoint
+ALTER TABLE "agent_api_keys" ADD COLUMN IF NOT EXISTS "last_used_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "agents" ADD COLUMN IF NOT EXISTS "title" text;--> statement-breakpoint
+ALTER TABLE "agents" ADD COLUMN IF NOT EXISTS "agent_api_key" text;--> statement-breakpoint
+ALTER TABLE "approvals" ADD COLUMN IF NOT EXISTS "type" text DEFAULT 'human_approve' NOT NULL;--> statement-breakpoint
+ALTER TABLE "approvals" ADD COLUMN IF NOT EXISTS "approver_id" uuid;--> statement-breakpoint
 ALTER TABLE "agent_invites" ADD CONSTRAINT "agent_invites_company_id_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "agent_invites" ADD CONSTRAINT "agent_invites_department_id_departments_id_fk" FOREIGN KEY ("department_id") REFERENCES "public"."departments"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sub_issues" ADD CONSTRAINT "sub_issues_parent_issue_id_issues_id_fk" FOREIGN KEY ("parent_issue_id") REFERENCES "public"."issues"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
