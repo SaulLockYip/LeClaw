@@ -181,11 +181,12 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
   const postmasterPidFile = path.resolve(dataDir, "postmaster.pid");
   const runningPid = readRunningPostmasterPid(postmasterPidFile);
   const runningPort = readPidFilePort(postmasterPidFile);
+  const dbName = "leclaw";
   const logBuffer: string[] = [];
 
   // Check if we can connect to an existing postgres on the configured port
   if (runningPort) {
-    const isResponsive = await checkPostgresResponsive(runningPort);
+    const isResponsive = await checkPostgresResponsive(runningPort, user, password, dbName);
     if (isResponsive) {
       const reusedPort = runningPort;
       const connectionString = `postgres://${user}:${password}@127.0.0.1:${reusedPort}/leclaw`;
@@ -253,7 +254,6 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
 
   // Create the "leclaw" database if it doesn't exist
   const maintenanceConn = postgres(`postgres://${user}:${password}@127.0.0.1:${selectedPort}/postgres`, { max: 1 });
-  const dbName = "leclaw";
   if (!(await checkDatabaseExists(maintenanceConn, dbName))) {
     await createDatabase(maintenanceConn, dbName);
   }
@@ -276,26 +276,35 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
 }
 
 /**
- * Check if a postgres process is actually responsive on the given port
+ * Check if a postgres process is actually responsive and is our embedded postgres.
+ * This performs a real connection check with credentials and verifies the leclaw database exists.
+ * This ensures we're not accidentally connecting to a different postgres using the same port.
  */
-async function checkPostgresResponsive(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = new net.Socket();
-    const timeout = setTimeout(() => {
-      socket.destroy();
-      resolve(false);
-    }, 2000);
-
-    socket.connect(port, "127.0.0.1", () => {
-      clearTimeout(timeout);
-      socket.destroy();
-      resolve(true);
+async function checkPostgresResponsive(
+  port: number,
+  user: string,
+  password: string,
+  dbName: string,
+): Promise<boolean> {
+  try {
+    const sql = postgres(`postgres://${user}:${password}@127.0.0.1:${port}/postgres`, {
+      max: 1,
+      connect_timeout: 3,
     });
 
-    socket.on("error", () => {
-      clearTimeout(timeout);
-      socket.destroy();
-      resolve(false);
-    });
-  });
+    // Verify the leclaw database exists
+    const result = await sql`
+      SELECT EXISTS (
+        SELECT 1 FROM pg_database WHERE datname = ${dbName}
+      ) AS exists
+    ` as [{ exists: boolean }];
+
+    await sql.end();
+
+    return result[0]?.exists ?? false;
+  } catch {
+    // Connection failed, credentials wrong, or database doesn't exist
+    // Either way, this isn't our usable postgres instance
+    return false;
+  }
 }

@@ -1,4 +1,4 @@
-CREATE TABLE "agent_invites" (
+CREATE TABLE IF NOT EXISTS "agent_invites" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"invite_key" text NOT NULL,
 	"company_id" uuid NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "agent_invites" (
 	"openclaw_agent_dir" text
 );
 --> statement-breakpoint
-CREATE TABLE "audit_logs" (
+CREATE TABLE IF NOT EXISTS "audit_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"agent_id" text NOT NULL,
 	"command" text NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE "audit_logs" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "sub_issues" (
+CREATE TABLE IF NOT EXISTS "sub_issues" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"parent_issue_id" uuid NOT NULL,
 	"title" text NOT NULL,
@@ -50,13 +50,13 @@ ALTER TABLE "agent_invites" ADD CONSTRAINT "agent_invites_company_id_companies_i
 ALTER TABLE "agent_invites" ADD CONSTRAINT "agent_invites_department_id_departments_id_fk" FOREIGN KEY ("department_id") REFERENCES "public"."departments"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sub_issues" ADD CONSTRAINT "sub_issues_parent_issue_id_issues_id_fk" FOREIGN KEY ("parent_issue_id") REFERENCES "public"."issues"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sub_issues" ADD CONSTRAINT "sub_issues_assignee_agent_id_agents_id_fk" FOREIGN KEY ("assignee_agent_id") REFERENCES "public"."agents"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "agent_invites_invite_key_idx" ON "agent_invites" USING btree ("invite_key");--> statement-breakpoint
-CREATE INDEX "agent_invites_company_idx" ON "agent_invites" USING btree ("company_id");--> statement-breakpoint
-CREATE INDEX "agent_invites_status_expires_idx" ON "agent_invites" USING btree ("status","expires_at");--> statement-breakpoint
-CREATE INDEX "audit_logs_agent_timestamp_idx" ON "audit_logs" USING btree ("agent_id","created_at");--> statement-breakpoint
-CREATE INDEX "audit_logs_command_timestamp_idx" ON "audit_logs" USING btree ("command","created_at");--> statement-breakpoint
-CREATE INDEX "sub_issues_parent_idx" ON "sub_issues" USING btree ("parent_issue_id");--> statement-breakpoint
-CREATE INDEX "sub_issues_assignee_idx" ON "sub_issues" USING btree ("assignee_agent_id");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "agent_invites_invite_key_idx" ON "agent_invites" USING btree ("invite_key");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "agent_invites_company_idx" ON "agent_invites" USING btree ("company_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "agent_invites_status_expires_idx" ON "agent_invites" USING btree ("status","expires_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_logs_agent_timestamp_idx" ON "audit_logs" USING btree ("agent_id","created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_logs_command_timestamp_idx" ON "audit_logs" USING btree ("command","created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "sub_issues_parent_idx" ON "sub_issues" USING btree ("parent_issue_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "sub_issues_assignee_idx" ON "sub_issues" USING btree ("assignee_agent_id");--> statement-breakpoint
 ALTER TABLE "agent_api_keys" ADD CONSTRAINT "agent_api_keys_company_id_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "approvals" ADD CONSTRAINT "approvals_approver_id_agents_id_fk" FOREIGN KEY ("approver_id") REFERENCES "public"."agents"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "agents_agent_api_key_idx" ON "agents" USING btree ("agent_api_key") WHERE "agents"."agent_api_key" IS NOT NULL;--> statement-breakpoint
