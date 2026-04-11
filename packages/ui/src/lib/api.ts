@@ -137,7 +137,7 @@ export const companyApi = {
     }),
   update: (id: string, data: Partial<Company>) =>
     fetchApi<Company>(`/companies/${id}`),
-  delete: (id: string) => fetchApi<void>(`/companies/${id}`),
+  delete: (id: string) => fetchApi<void>(`/companies/${id}`, { method: 'DELETE' }),
 }
 
 // Department API
@@ -155,7 +155,7 @@ export const departmentApi = {
   update: (companyId: string, departmentId: string, data: Partial<Department>) =>
     fetchApi<Department>(`/companies/${companyId}/departments/${departmentId}`),
   delete: (companyId: string, departmentId: string) =>
-    fetchApi<void>(`/companies/${companyId}/departments/${departmentId}`),
+    fetchApi<void>(`/companies/${companyId}/departments/${departmentId}`, { method: 'DELETE' }),
 }
 
 // Agent API
