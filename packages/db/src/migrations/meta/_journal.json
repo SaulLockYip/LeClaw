@@ -64,6 +64,27 @@
       "when": 1744300800004,
       "tag": "0008_create_audit_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1744300800005,
+      "tag": "0009_create_sub_issues",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1744300800006,
+      "tag": "0010_modify_issues_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1744300800007,
+      "tag": "0011_modify_approvals_table",
+      "breakpoints": true
     }
   ]
 }

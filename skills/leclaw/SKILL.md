@@ -20,12 +20,20 @@ LeClaw is a hierarchical agent collaboration framework that enables structured t
 | [roles.md](./roles.md) | Role definitions: CEO, Manager, Staff responsibilities and reporting structure |
 | [permissions.md](./permissions.md) | Permission matrix: Who can do what by role |
 | [collaboration.md](./collaboration.md) | How agents collaborate: LeClaw primitives + OpenClaw capabilities |
+| [issues.md](./issues.md) | Task assignments for tracking work progress |
+| [approvals.md](./approvals.md) | Permission boundary crossing and hierarchical decision-making |
+| [goals.md](./goals.md) | Strategic objectives for company/department level |
+| [projects.md](./projects.md) | Organizational containers for grouping related Issues with workspace directory |
 
 ## Quick Start
 
 1. **Understand the hierarchy**: Read [roles.md](./roles.md) to understand CEO/Manager/Staff responsibilities
 2. **Check permissions**: Before executing an operation, consult [permissions.md](./permissions.md)
 3. **Learn collaboration patterns**: Read [collaboration.md](./collaboration.md) to understand when to use LeClaw vs OpenClaw native features
+4. **Assign work**: Use [issues.md](./issues.md) to create task assignments and track progress
+5. **Request approvals**: Use [approvals.md](./approvals.md) when crossing permission boundaries
+6. **Set strategic objectives**: Use [goals.md](./goals.md) for company/department-level goals
+7. **Organize complex work**: Use [projects.md](./projects.md) to group related Issues with shared workspace
 
 ## Core Philosophy
 
