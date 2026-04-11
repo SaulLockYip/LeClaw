@@ -38,6 +38,17 @@ export interface Agent {
 // Issue status types
 export type IssueStatus = "Open" | "InProgress" | "Blocked" | "Done" | "Cancelled";
 
+// Sub-Issue entity - Child issue belonging to a parent Issue
+export interface SubIssue {
+  id: string;
+  parentIssueId: string;
+  title: string;
+  description?: string;
+  status: IssueStatus;
+  assigneeAgentId: string;
+  createdAt: Date;
+}
+
 // Issue entity - Core work unit in LeClaw, belongs to a Department
 export interface Issue {
   id: string;
@@ -45,8 +56,7 @@ export interface Issue {
   title: string;
   description?: string;
   status: IssueStatus;
-  assigneeAgentId?: string;
-  departmentId?: string;
+  departmentId: string;
   subIssues: string[]; // Issue UUIDs
   report?: string; // Markdown text content
   projectId?: string;
@@ -101,6 +111,9 @@ export interface Project {
 // Approval status types
 export type ApprovalStatus = "Pending" | "Approved" | "Rejected";
 
+// Approval type - human_approve (UI) or agent_approve (Manager/CEO)
+export type ApprovalType = "human_approve" | "agent_approve";
+
 // Approval entity - Human-agent interaction for sensitive operations
 export interface Approval {
   id: string;
@@ -108,6 +121,8 @@ export interface Approval {
   title: string;
   description?: string;
   requester?: string; // Agent who initiated the approval request
+  type: ApprovalType;
+  approverId?: string; // Actual approver (for agent_approve type)
   status: ApprovalStatus;
   rejectMessage?: string; // Reason for rejection
   createdAt: Date;

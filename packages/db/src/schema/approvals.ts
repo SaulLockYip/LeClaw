@@ -12,6 +12,8 @@ export const approvals = pgTable(
     title: text("title").notNull(),
     description: text("description"),
     requester: uuid("requester").references(() => agents.id), // Agent who initiated the approval request
+    type: text("type").notNull().default("human_approve"), // "human_approve" | "agent_approve"
+    approverId: uuid("approver_id").references(() => agents.id), // Actual approver (for agent_approve type)
     status: text("status").notNull().default("Pending"), // "Pending" | "Approved" | "Rejected"
     rejectMessage: text("reject_message"), // Reason for rejection (filled when rejected)
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

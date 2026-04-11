@@ -15,6 +15,7 @@ import { registerProjectCommand } from "../commands/project/index.js";
 import { registerCompanyCommand } from "../commands/company/index.js";
 import { registerDepartmentCommand } from "../commands/department/index.js";
 import { registerApprovalCommand } from "../commands/approval/index.js";
+import { registerTodoCommand } from "../commands/todo.js";
 
 export function buildProgram(): Command {
   const program = new Command();
@@ -40,6 +41,7 @@ export function buildProgram(): Command {
   registerCompanyCommand(program);
   registerDepartmentCommand(program);
   registerApprovalCommand(program);
+  registerTodoCommand(program);
 
   return program;
 }

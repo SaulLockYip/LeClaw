@@ -1,4 +1,4 @@
-// Project Create Command - Create a project for a company (CEO or Manager)
+// Project Update Command - Update a project (CEO or Manager)
 
 import { Command } from "commander";
 import * as path from "path";
@@ -9,27 +9,28 @@ import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
-export function registerProjectCreateCommand(program: Command): void {
+export function registerProjectUpdateCommand(program: Command): void {
   program
-    .command("create")
-    .description("Create a project for a company (CEO or Manager)")
-    .requiredOption("--title <title>", "Project title")
-    .option("--description <desc>", "Project description (outputs, specs, etc.)")
+    .command("update")
+    .description("Update a project (CEO or Manager)")
+    .requiredOption("--project-id <id>", "Project ID")
+    .option("--title <title>", "Project title")
+    .option("--description <desc>", "Project description")
+    .option("--status <status>", "Project status: Open | InProgress | Done | Archived")
     .option("--project-dir <path>", "Project root directory")
-    .option("--issue-ids <uuid1,uuid2>", "Comma-separated issue UUIDs")
     .requiredOption("--api-key <key>", "Agent API key (for authentication)")
     .action(async (options) => {
-      const { title, description, projectDir, issueIds, apiKey } = options;
+      const { projectId, title, description, status, projectDir, apiKey } = options;
 
       try {
         // Authenticate via API key
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
 
-        // Role guard: only CEO or Manager can create projects
+        // Role guard: only CEO or Manager can update projects
         if (agentInfo.role !== "CEO" && agentInfo.role !== "Manager") {
           console.error(JSON.stringify({
             success: false,
-            error: "Only CEO or Manager can create projects",
+            error: "Only CEO or Manager can update projects",
             code: "FORBIDDEN",
           }, null, 2));
           process.exit(1);
@@ -43,13 +44,16 @@ export function registerProjectCreateCommand(program: Command): void {
           }
         }
 
-        const body: Record<string, unknown> = { title };
-        if (description) body.description = description;
-        if (projectDir) body.projectDir = projectDir;
-        if (issueIds) body.issueIds = issueIds.split(",").map(s => s.trim());
+        const body: Record<string, unknown> = {};
+        if (title !== undefined) body.title = title;
+        if (description !== undefined) body.description = description;
+        if (status !== undefined) body.status = status;
+        if (projectDir !== undefined) body.projectDir = projectDir;
 
-        const response = await fetch(`${gatewayUrl}/api/companies/${agentInfo.companyId}/projects`, {
-          method: "POST",
+        const url = `${gatewayUrl}/api/companies/${agentInfo.companyId}/projects/${projectId}`;
+
+        const response = await fetch(url, {
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${apiKey}`,
@@ -63,7 +67,7 @@ export function registerProjectCreateCommand(program: Command): void {
           console.error(JSON.stringify({
             success: false,
             error: data.error?.message || `HTTP ${response.status}`,
-            code: data.error?.code || "CREATE_FAILED",
+            code: data.error?.code || "UPDATE_FAILED",
           }, null, 2));
           process.exit(1);
         }

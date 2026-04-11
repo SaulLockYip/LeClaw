@@ -1,9 +1,10 @@
-// Issue Comment Command - Add a comment to an issue
+// Issue Comment Command - List and add comments on an issue
 // Access: Agent (write) via CLI, Human read-only via Web UI
 
 import { Command } from "commander";
 import { issueComments } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
+import { eq, desc } from "drizzle-orm";
 import { auditLog } from "../../helpers/audit-log.js";
 import { getAgentIdFromApiKey } from "../../helpers/api-key.js";
 
@@ -11,6 +12,45 @@ export function registerCommentCommand(program: Command): void {
   const commentCommand = new Command("comment")
     .description("Manage issue comments");
 
+  // comment list
+  commentCommand
+    .command("list")
+    .description("List comments on an issue")
+    .requiredOption("--issue-id <id>", "Issue ID")
+    .requiredOption("--api-key <key>", "Agent API key")
+    .action(async (options) => {
+      const { issueId, apiKey } = options;
+
+      try {
+        await getAgentIdFromApiKey(apiKey); // Validate API key
+        const db = await getDb();
+
+        const comments = await db
+          .select({
+            id: issueComments.id,
+            issueId: issueComments.issueId,
+            authorAgentId: issueComments.authorAgentId,
+            message: issueComments.message,
+            timestamp: issueComments.timestamp,
+          })
+          .from(issueComments)
+          .where(eq(issueComments.issueId, issueId))
+          .orderBy(desc(issueComments.timestamp));
+
+        console.log(JSON.stringify({
+          success: true,
+          comments,
+        }, null, 2));
+      } catch (err) {
+        console.error(JSON.stringify({
+          success: false,
+          error: err instanceof Error ? err.message : String(err),
+        }, null, 2));
+        process.exit(1);
+      }
+    });
+
+  // comment add
   commentCommand
     .command("add")
     .description("Add a comment to an issue")

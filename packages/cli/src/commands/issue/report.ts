@@ -1,4 +1,4 @@
-// Issue Report Command - Append to an issue report (append-only, no overwrite)
+// Issue Report Command - Show and append to issue reports
 // Access: Agent (write) via CLI, Human read-only via Web UI
 
 import { Command } from "commander";
@@ -10,8 +10,50 @@ import { getAgentIdFromApiKey } from "../../helpers/api-key.js";
 
 export function registerReportCommand(program: Command): void {
   const reportCommand = new Command("report")
-    .description("Manage issue reports (append-only)");
+    .description("Manage issue reports");
 
+  // report show
+  reportCommand
+    .command("show")
+    .description("Show an issue report")
+    .requiredOption("--issue-id <id>", "Issue ID")
+    .requiredOption("--api-key <key>", "Agent API key")
+    .action(async (options) => {
+      const { issueId, apiKey } = options;
+
+      try {
+        await getAgentIdFromApiKey(apiKey); // Validate API key
+        const db = await getDb();
+
+        const [issue] = await db
+          .select({ id: issues.id, report: issues.report })
+          .from(issues)
+          .where(eq(issues.id, issueId))
+          .limit(1);
+
+        if (!issue) {
+          console.error(JSON.stringify({
+            success: false,
+            error: `Issue not found: ${issueId}`,
+          }, null, 2));
+          process.exit(1);
+        }
+
+        console.log(JSON.stringify({
+          success: true,
+          issueId: issue.id,
+          report: issue.report ?? "",
+        }, null, 2));
+      } catch (err) {
+        console.error(JSON.stringify({
+          success: false,
+          error: err instanceof Error ? err.message : String(err),
+        }, null, 2));
+        process.exit(1);
+      }
+    });
+
+  // report update
   reportCommand
     .command("update")
     .description("Append to an issue report (append-only, no overwrite)")

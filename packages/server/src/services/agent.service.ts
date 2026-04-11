@@ -1,8 +1,14 @@
 import { eq, and } from "drizzle-orm";
 import { agents, agentApiKeys } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
-import { generateApiKey } from "@leclaw/shared/api-key";
+import { generateApiKey, hashApiKey, parseApiKey } from "@leclaw/shared/api-key";
 import type { Agent, AgentRole } from "@leclaw/shared";
+
+export interface VerifyApiKeyResult {
+  agentId: string;
+  companyId: string;
+  role: AgentRole;
+}
 
 export interface CreateAgentInput {
   name: string;
@@ -87,4 +93,53 @@ export async function updateAgent(
 
   if (!agent) return null;
   return { ...agent, role: agent.role as AgentRole };
+}
+
+/**
+ * Verify an API key and return agent info (id, companyId, role)
+ * @param apiKey - The full API key (sk-xxx format)
+ * @returns Agent info if valid, throws if invalid
+ */
+export async function verifyApiKey(apiKey: string): Promise<VerifyApiKeyResult> {
+  const parsed = parseApiKey(apiKey);
+  if (!parsed) {
+    throw new Error("Invalid API key format");
+  }
+
+  const keyHash = hashApiKey(apiKey);
+  const db = await getDb();
+
+  // Look up by keyHash to find the agentId
+  const [keyRecord] = await db
+    .select({ agentId: agentApiKeys.agentId, companyId: agentApiKeys.companyId })
+    .from(agentApiKeys)
+    .where(eq(agentApiKeys.keyHash, keyHash))
+    .limit(1);
+
+  if (!keyRecord) {
+    throw new Error("Invalid API key");
+  }
+
+  // Get agent info (id, companyId, role)
+  const [agentRecord] = await db
+    .select({ id: agents.id, companyId: agents.companyId, role: agents.role })
+    .from(agents)
+    .where(eq(agents.id, keyRecord.agentId))
+    .limit(1);
+
+  if (!agentRecord) {
+    throw new Error("Agent not found");
+  }
+
+  // Update lastUsedAt timestamp
+  await db
+    .update(agentApiKeys)
+    .set({ lastUsedAt: new Date() } as any)
+    .where(eq(agentApiKeys.agentId, keyRecord.agentId));
+
+  return {
+    agentId: agentRecord.id,
+    companyId: agentRecord.companyId,
+    role: agentRecord.role as AgentRole,
+  };
 }

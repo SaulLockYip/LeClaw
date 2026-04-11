@@ -2,66 +2,106 @@
 // Access: Agent (write) via CLI, Human read-only via Web UI
 
 import { Command } from "commander";
-import path from "path";
-import os from "os";
-import { loadConfig } from "@leclaw/shared";
-
-const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
-
-async function getServerUrl(): Promise<string> {
-  const config = loadConfig({ configPath: CONFIG_FILE });
-  const port = config.server?.port ?? 4396;
-  return `http://localhost:${port}`;
-}
+import { issues, agents, departments } from "@leclaw/db/schema";
+import { getDb } from "@leclaw/db/client";
+import { eq } from "drizzle-orm";
+import { auditLog } from "../../helpers/audit-log.js";
+import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
 export function registerCreateCommand(program: Command): void {
   const createCommand = new Command("create")
     .description("Create a new issue");
 
   createCommand
-    .requiredOption("--company-id <id>", "Company ID")
     .requiredOption("--department-id <id>", "Department ID")
     .requiredOption("--title <title>", "Issue title")
     .option("--description <desc>", "Issue description")
-    .option("--api-key <key>", "Agent API key (for authentication)")
+    .requiredOption("--api-key <key>", "Agent API key")
     .action(async (options) => {
-      const { companyId, departmentId, title, description, apiKey } = options;
+      const { departmentId, title, description, apiKey } = options;
+
+      let agentId: string;
+      let result: "success" | "failure" = "success";
+      let output = "";
 
       try {
-        const serverUrl = await getServerUrl();
-        const response = await fetch(`${serverUrl}/api/companies/${companyId}/issues`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-          },
-          body: JSON.stringify({
-            title,
-            departmentId,
-            ...(description ? { description } : {}),
-          }),
-        });
+        const agentInfo = await getAgentInfoFromApiKey(apiKey);
+        agentId = agentInfo.agentId;
+        const db = await getDb();
 
-        const data = await response.json() as { error?: { message?: string; code?: string }; data?: unknown };
+        // Verify department exists and belongs to the company
+        const [department] = await db
+          .select({ id: departments.id, companyId: departments.companyId })
+          .from(departments)
+          .where(eq(departments.id, departmentId))
+          .limit(1);
 
-        if (!response.ok) {
+        if (!department) {
           console.error(JSON.stringify({
             success: false,
-            error: data.error?.message || `HTTP ${response.status}`,
-            code: data.error?.code || "CREATE_FAILED",
+            error: `Department not found: ${departmentId}`,
           }, null, 2));
           process.exit(1);
         }
 
+        // Role guard: Staff/Manager can only create issues in their department
+        if (agentInfo.role !== "CEO") {
+          const [agent] = await db
+            .select({ departmentId: agents.departmentId })
+            .from(agents)
+            .where(eq(agents.id, agentId))
+            .limit(1);
+
+          if (agent?.departmentId !== departmentId) {
+            console.error(JSON.stringify({
+              success: false,
+              error: "Access denied: You can only create issues in your department",
+            }, null, 2));
+            process.exit(1);
+          }
+        }
+
+        // Create the issue
+        const [issue] = await db.insert(issues).values({
+          companyId: department.companyId,
+          departmentId,
+          title,
+          description: description ?? null,
+        } as any).returning();
+
+        output = `Issue ${issue.id} created`;
+
+        await auditLog({
+          agentId,
+          command: "issue create",
+          args: { issueId: issue.id, departmentId, title },
+          result: "success",
+          output,
+        });
+
         console.log(JSON.stringify({
           success: true,
-          issue: data.data,
+          issueId: issue.id,
+          message: output,
         }, null, 2));
       } catch (err) {
+        result = "failure";
+        const error = err instanceof Error ? err : new Error(String(err));
+        output = error.message;
+
+        if (agentId) {
+          await auditLog({
+            agentId,
+            command: "issue create",
+            args: { departmentId, title },
+            result: "failure",
+            output,
+          });
+        }
+
         console.error(JSON.stringify({
           success: false,
-          error: err instanceof Error ? err.message : String(err),
-          code: "REQUEST_FAILED",
+          error: output,
         }, null, 2));
         process.exit(1);
       }

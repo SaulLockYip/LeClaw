@@ -1,10 +1,10 @@
 // Lazy db instance - only initialized when first accessed
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { agents, agentApiKeys, approvals, companies, departments, goals, issues, issueComments, projects, auditLogs, agentInvites } from "./schema/index.js";
+import { agents, agentApiKeys, approvals, companies, departments, goals, issues, issueComments, projects, auditLogs, agentInvites, subIssues } from "./schema/index.js";
 import { getDb } from "./client.js";
 
 // Re-export schema tables for convenience
-export { agents, agentApiKeys, approvals, companies, departments, goals, issues, issueComments, projects, auditLogs, agentInvites };
+export { agents, agentApiKeys, approvals, companies, departments, goals, issues, issueComments, projects, auditLogs, agentInvites, subIssues };
 
 // Type for the database with all our tables
 export type LeClawDb = PostgresJsDatabase<{
@@ -19,6 +19,7 @@ export type LeClawDb = PostgresJsDatabase<{
   projects: typeof projects;
   auditLogs: typeof auditLogs;
   agentInvites: typeof agentInvites;
+  subIssues: typeof subIssues;
 }>;
 
 // Lazy db - a thenable that can be awaited OR used directly for method calls

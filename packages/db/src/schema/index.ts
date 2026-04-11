@@ -5,6 +5,7 @@ export { companies } from "./companies.js";
 export { departments } from "./departments.js";
 export { agents } from "./agents.js";
 export { issues } from "./issues.js";
+export { subIssues } from "./sub-issues.js";
 export { issueComments } from "./issue_comments.js";
 export { goals } from "./goals.js";
 export { projects } from "./projects.js";

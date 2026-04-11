@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 import { generateApiKey } from "@leclaw/shared/api-key";
 import { auditLog } from "../../helpers/audit-log.js";
+import { registerAgentInviteCommand } from "./agent-invite.js";
 
 export interface OnboardResult {
   success: boolean;
@@ -158,6 +159,7 @@ export function registerAgentCommand(program: Command): void {
     .description("Manage agents");
 
   registerOnboardCommand(agentCommand);
+  registerAgentInviteCommand(agentCommand);
 
   program.addCommand(agentCommand);
 }
