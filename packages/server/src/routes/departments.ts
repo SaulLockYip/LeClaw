@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as departmentService from "../services/department.service.js";
+import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
 
 export const departmentsRouter: Router = Router({ mergeParams: true });
 
 // Middleware to extract and validate companyId
 function requireCompanyId(req: Request, res: Response, next: NextFunction) {
-  console.log("[DEBUG] req.params:", JSON.stringify(req.params));
   const companyId = req.params.companyId;
   if (!companyId) {
     return res.status(400).json({
@@ -17,9 +17,68 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Middleware to extract and validate API key
+async function requireApiKey(req: Request, res: Response, next: NextFunction) {
+  const apiKey = req.headers.authorization?.replace(/^Bearer /, "");
+  if (!apiKey) {
+    return res.status(401).json({
+      error: { code: "MISSING_API_KEY", message: "Missing required api-key" }
+    });
+  }
+
+  try {
+    const agentInfo = await agentService.verifyApiKey(apiKey);
+    (req as any).agentInfo = agentInfo;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+    });
+  }
+}
+
+// Middleware to require CEO role
+function requireCeo(req: Request, res: Response, next: NextFunction) {
+  const { role } = (req as any).agentInfo;
+  if (role !== "CEO") {
+    return res.status(403).json({
+      error: { code: "FORBIDDEN", message: "Only CEO can perform this action" }
+    });
+  }
+  next();
+}
+
+// Middleware to require CEO or same department Manager role
+async function requireCeoOrSameDepartmentManager(req: Request, res: Response, next: NextFunction) {
+  const { role, agentId } = (req as any).agentInfo;
+  const departmentId = req.params.id;
+
+  if (role === "CEO") {
+    return next();
+  }
+
+  if (role === "Manager") {
+    // Check if this manager belongs to the department being updated
+    try {
+      const managerDept = await agentService.getAgent(agentId, (req as any).companyId);
+      if (managerDept && managerDept.departmentId === departmentId) {
+        return next();
+      }
+    } catch (error) {
+      // Fall through to forbidden
+    }
+  }
+
+  return res.status(403).json({
+    error: { code: "FORBIDDEN", message: "Only CEO or same department Manager can perform this action" }
+  });
+}
+
 departmentsRouter.use(requireCompanyId);
+departmentsRouter.use(requireApiKey);
 
 // GET /api/companies/:companyId/departments - List departments
+// Uses API key for authentication, no role guard
 departmentsRouter.get("/", async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
@@ -32,7 +91,8 @@ departmentsRouter.get("/", async (req: Request, res: Response) => {
 });
 
 // POST /api/companies/:companyId/departments - Create department
-departmentsRouter.post("/", async (req: Request, res: Response) => {
+// Requires API key + CEO role
+departmentsRouter.post("/", requireCeo, async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
     const department = await departmentService.createDepartment({
@@ -66,7 +126,8 @@ departmentsRouter.get("/:id", async (req: Request, res: Response) => {
 });
 
 // PUT /api/companies/:companyId/departments/:id
-departmentsRouter.put("/:id", async (req: Request, res: Response) => {
+// Requires API key + CEO or same department Manager role
+departmentsRouter.put("/:id", requireCeoOrSameDepartmentManager, async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
     const department = await departmentService.updateDepartment(req.params.id, companyId, {

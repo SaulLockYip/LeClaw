@@ -1,60 +1,85 @@
 // leclaw department create command - Create a new department
+// Access: CEO only
 
 import { Command } from "commander";
-import path from "path";
-import os from "os";
-import fs from "fs";
-import { loadConfig } from "@leclaw/shared";
-
-const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
-
-interface Department {
-  id: string;
-  name: string;
-  companyId: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-async function createDepartment(gatewayUrl: string, companyId: string, name: string, description?: string): Promise<Department> {
-  const response = await fetch(`${gatewayUrl}/api/companies/${companyId}/departments`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, description }),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to create department: ${response.status} ${response.statusText}`);
-  }
-  const json = await response.json() as { data: Department };
-  return json.data;
-}
+import { departments, agents } from "@leclaw/db/schema";
+import { getDb } from "@leclaw/db/client";
+import { eq } from "drizzle-orm";
+import { auditLog } from "../../helpers/audit-log.js";
+import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
 export function registerDepartmentCreateCommand(program: Command): void {
-  program
-    .command("create")
-    .description("Create a new department")
-    .requiredOption("--company-id <id>", "Company ID")
+  const createCommand = new Command("create")
+    .description("Create a new department (CEO only)");
+
+  createCommand
     .requiredOption("--name <name>", "Department name")
     .option("--description <description>", "Department description")
+    .requiredOption("--api-key <key>", "Agent API key")
     .action(async (options) => {
-      try {
-        let gatewayUrl = "http://localhost:4396";
+      let agentId: string;
+      let result: "success" | "failure" = "success";
+      let output = "";
 
-        if (fs.existsSync(CONFIG_FILE)) {
-          const config = loadConfig({ configPath: CONFIG_FILE });
-          if (config.openclaw?.gatewayUrl) {
-            // Normalize ws:// or wss:// to http://
-            gatewayUrl = config.openclaw.gatewayUrl.replace(/^ws:\/\//, "http://").replace(/^wss:\/\//, "https://");
-          }
+      try {
+        const agentInfo = await getAgentInfoFromApiKey(options.apiKey);
+        agentId = agentInfo.agentId;
+
+        // Role guard: Only CEO can create departments
+        if (agentInfo.role !== "CEO") {
+          console.error(JSON.stringify({
+            success: false,
+            error: "Access denied: Only CEO can create departments",
+          }, null, 2));
+          process.exit(1);
         }
 
-        const department = await createDepartment(gatewayUrl, options.companyId, options.name, options.description);
-        console.log(JSON.stringify({ success: true, data: department }, null, 2));
+        const db = await getDb();
+
+        // Create the department
+        const [department] = await db.insert(departments).values({
+          companyId: agentInfo.companyId,
+          name: options.name,
+          description: options.description ?? null,
+        } as any).returning();
+
+        output = `Department ${department.id} created`;
+
+        await auditLog({
+          agentId,
+          command: "department create",
+          args: { departmentId: department.id, name: options.name },
+          result: "success",
+          output,
+        });
+
+        console.log(JSON.stringify({
+          success: true,
+          departmentId: department.id,
+          message: output,
+        }, null, 2));
       } catch (err) {
-        const error = err instanceof Error ? err.message : String(err);
-        console.error(JSON.stringify({ success: false, error }, null, 2));
+        result = "failure";
+        const error = err instanceof Error ? err : new Error(String(err));
+        output = error.message;
+
+        if (agentId) {
+          await auditLog({
+            agentId,
+            command: "department create",
+            args: { name: options.name },
+            result: "failure",
+            output,
+          });
+        }
+
+        console.error(JSON.stringify({
+          success: false,
+          error: output,
+        }, null, 2));
         process.exit(1);
       }
     });
+
+  program.addCommand(createCommand);
 }
