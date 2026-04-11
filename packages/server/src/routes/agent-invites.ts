@@ -56,10 +56,11 @@ agentInvitesRouter.get("/", async (req: Request, res: Response) => {
 });
 
 // POST /api/companies/:companyId/agent-invites - Create invite
+// Web UI (no auth) has full permissions, CLI uses role-based restrictions
 agentInvitesRouter.post("/", async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
-    const { role: agentRole, agentId } = (req as any).agentInfo;
+    const agentInfo = (req as any).agentInfo;
     const { name, role, title, departmentId } = req.body;
 
     // Validate required fields
@@ -78,31 +79,34 @@ agentInvitesRouter.post("/", async (req: Request, res: Response) => {
       });
     }
 
-    // Permission check based on agent role
-    if (agentRole === "CEO") {
-      // CEO can invite Manager or Staff, but not another CEO
-      if (roleStr === "CEO") {
+    // Permission check based on agent role (only for CLI with auth, web-ui skips)
+    if (agentInfo) {
+      const { role: agentRole } = agentInfo;
+      if (agentRole === "CEO") {
+        // CEO can invite Manager or Staff, but not another CEO
+        if (roleStr === "CEO") {
+          return res.status(403).json({
+            error: { code: "FORBIDDEN", message: "Cannot invite another CEO" }
+          });
+        }
+      } else if (agentRole === "Manager") {
+        // Manager can only invite Staff to their own department
+        if (roleStr !== "Staff") {
+          return res.status(403).json({
+            error: { code: "FORBIDDEN", message: "Manager can only invite Staff" }
+          });
+        }
+        if (departmentId !== agentInfo.departmentId) {
+          return res.status(403).json({
+            error: { code: "FORBIDDEN", message: "Manager can only invite Staff to their own department" }
+          });
+        }
+      } else {
+        // Staff cannot invite anyone
         return res.status(403).json({
-          error: { code: "FORBIDDEN", message: "Cannot invite another CEO" }
+          error: { code: "FORBIDDEN", message: "Only CEO or Manager can invite agents" }
         });
       }
-    } else if (agentRole === "Manager") {
-      // Manager can only invite Staff to their own department
-      if (roleStr !== "Staff") {
-        return res.status(403).json({
-          error: { code: "FORBIDDEN", message: "Manager can only invite Staff" }
-        });
-      }
-      if (departmentId !== (req as any).agentInfo.departmentId) {
-        return res.status(403).json({
-          error: { code: "FORBIDDEN", message: "Manager can only invite Staff to their own department" }
-        });
-      }
-    } else {
-      // Staff cannot invite anyone
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Only CEO or Manager can invite agents" }
-      });
     }
 
     // For Staff role, departmentId is required
