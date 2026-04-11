@@ -35,7 +35,7 @@ function Sidebar() {
   if (!selectedCompany) {
     return (
       <div className="w-60 bg-black flex items-center justify-center">
-        <span className="text-black/40 text-sm">No company selected</span>
+        <span className="text-white/40 text-sm">No company selected</span>
       </div>
     )
   }
@@ -43,7 +43,7 @@ function Sidebar() {
   return (
     <div className="w-60 bg-black flex flex-col">
       {/* Company Header */}
-      <div className="p-4 border-b border-black/70">
+      <div className="p-4 border-b border-white/20">
         <div className="flex items-center gap-2">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
@@ -58,11 +58,11 @@ function Sidebar() {
       {/* Search */}
       <div className="p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
           <input
             type="text"
             placeholder="Search..."
-            className="w-full pl-9 pr-3 py-2 bg-black/70 text-white/80 rounded text-sm placeholder-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 bg-white/10 text-white rounded text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
