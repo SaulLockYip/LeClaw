@@ -14,7 +14,7 @@ function AgentsPage() {
   if (!selectedCompany) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-slate-500">Select a company to view agents</p>
+        <p className="text-black/50">Select a company to view agents</p>
       </div>
     )
   }
@@ -26,9 +26,9 @@ function AgentsPage() {
       case 'busy':
         return 'bg-yellow-500'
       case 'offline':
-        return 'bg-slate-400'
+        return 'bg-black/40'
       default:
-        return 'bg-slate-400'
+        return 'bg-black/40'
     }
   }
 
@@ -39,7 +39,7 @@ function AgentsPage() {
       case 'Manager':
         return <Crown className="w-4 h-4 text-blue-500" />
       default:
-        return <User className="w-4 h-4 text-slate-500" />
+        return <User className="w-4 h-4 text-black/50" />
     }
   }
 
@@ -50,7 +50,7 @@ function AgentsPage() {
       case 'Manager':
         return 'bg-blue-500'
       default:
-        return 'bg-slate-400'
+        return 'bg-black/40'
     }
   }
 
@@ -65,7 +65,7 @@ function AgentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Agents</h1>
-          <p className="text-slate-500 text-sm mt-1">{selectedCompany.name}</p>
+          <p className="text-black/50 text-sm mt-1">{selectedCompany.name}</p>
         </div>
         <div className="flex items-center gap-3">
           {canInviteAgent && (
@@ -82,15 +82,15 @@ function AgentsPage() {
 
       {/* Agents Grid */}
       {isLoading ? (
-        <div className="text-center py-12 text-slate-500">Loading...</div>
+        <div className="text-center py-12 text-black/50">Loading...</div>
       ) : agents.length === 0 ? (
-        <div className="text-center py-12 text-slate-500">No agents found</div>
+        <div className="text-center py-12 text-black/50">No agents found</div>
       ) : (
         <div className="space-y-6">
           {/* CEOs */}
           {ceos.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-black/50 uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Crown className="w-4 h-4 text-amber-500" />
                 CEO ({ceos.length})
               </h2>
@@ -105,7 +105,7 @@ function AgentsPage() {
           {/* Managers */}
           {managers.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-black/50 uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Crown className="w-4 h-4 text-blue-500" />
                 Managers ({managers.length})
               </h2>
@@ -127,8 +127,8 @@ function AgentsPage() {
           {/* Staff */}
           {staff.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <User className="w-4 h-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-black/50 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <User className="w-4 h-4 text-black/50" />
                 Staff ({staff.length})
               </h2>
               <div className="grid grid-cols-2 gap-4">
@@ -187,21 +187,21 @@ function AgentCard({ agent, department, getStatusColor, getRoleIcon, getRoleBgCo
               {agent.name}
             </h3>
             {agent.title && (
-              <p className="text-sm text-slate-500">{agent.title}</p>
+              <p className="text-sm text-black/50">{agent.title}</p>
             )}
-            <p className="text-sm text-slate-400 flex items-center gap-1">
+            <p className="text-sm text-black/40 flex items-center gap-1">
               {getRoleIcon(agent.role)}
               {agent.role}
             </p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-slate-400" />
+        <ChevronRight className="w-5 h-5 text-black/40" />
       </div>
 
       {department && (
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-          <Building2 className="w-4 h-4 text-slate-400" />
-          <span className="text-sm text-slate-500">{department.name}</span>
+          <Building2 className="w-4 h-4 text-black/40" />
+          <span className="text-sm text-black/50">{department.name}</span>
         </div>
       )}
 
@@ -210,7 +210,7 @@ function AgentCard({ agent, department, getStatusColor, getRoleIcon, getRoleBgCo
         <span className={`text-xs font-medium ${
           agent.status === 'online' ? 'text-green-700' :
           agent.status === 'busy' ? 'text-yellow-700' :
-          'text-slate-500'
+          'text-black/50'
         }`}>
           {agent.status || 'offline'}
         </span>

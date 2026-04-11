@@ -47,9 +47,9 @@ function GoalDetailPage() {
       case 'Achieved':
         return 'bg-green-100 text-green-700'
       case 'Archived':
-        return 'bg-slate-100 text-slate-700'
+        return 'bg-black/5 text-black/70'
       default:
-        return 'bg-slate-100 text-slate-700'
+        return 'bg-black/5 text-black/70'
     }
   }
 
@@ -64,7 +64,7 @@ function GoalDetailPage() {
       case 'Blocked':
         return 'bg-red-100 text-red-700'
       default:
-        return 'bg-slate-100 text-slate-700'
+        return 'bg-black/5 text-black/70'
     }
   }
 

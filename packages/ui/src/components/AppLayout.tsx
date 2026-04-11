@@ -7,7 +7,7 @@ function AppLayout() {
   const { companies, selectedCompanyId, selectCompany } = useCompany()
 
   return (
-    <div className="flex h-screen bg-slate-100">
+    <div className="flex h-screen bg-black/5">
       <CompanyRail
         companies={companies}
         selectedCompanyId={selectedCompanyId}

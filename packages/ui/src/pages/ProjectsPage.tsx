@@ -44,16 +44,16 @@ function ProjectsPage() {
       case 'Done':
         return 'bg-green-100 text-green-700'
       case 'Archived':
-        return 'bg-slate-100 text-slate-700'
+        return 'bg-black/5 text-black/70'
       default:
-        return 'bg-slate-100 text-slate-700'
+        return 'bg-black/5 text-black/70'
     }
   }
 
   if (isCompanyLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-slate-500">Loading...</p>
+        <p className="text-black/50">Loading...</p>
       </div>
     )
   }
@@ -63,11 +63,11 @@ function ProjectsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Projects</h1>
-          <p className="text-slate-500 text-sm mt-1">{selectedCompany?.name}</p>
+          <h1 className="text-2xl font-bold text-black">Projects</h1>
+          <p className="text-black/50 text-sm mt-1">{selectedCompany?.name}</p>
         </div>
         <button
-          className="px-4 py-2 bg-slate-300 text-slate-500 rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 bg-black/20 text-black/50 rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2"
           disabled
           title="Web UI is read-only. Create projects via CLI."
         >
@@ -77,19 +77,19 @@ function ProjectsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-1 bg-slate-200 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 bg-black/10 rounded-lg p-1 w-fit">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => setActiveFilter(filter)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeFilter === filter
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-600 hover:text-slate-800'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-black/60 hover:text-black'
             }`}
           >
             {filter === 'All' ? 'All' : filter}
-            <span className="ml-2 text-xs text-slate-400">
+            <span className="ml-2 text-xs text-black/40">
               {filter === 'All' ? projects.length : projects.filter((p) => p.status === filter).length}
             </span>
           </button>
@@ -99,38 +99,38 @@ function ProjectsPage() {
       {/* Projects Table */}
       <div className="bg-white rounded-lg shadow-sm">
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-white">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Title</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Description</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Directory</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Issues</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-black/50">Title</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-black/50">Description</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-black/50">Status</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-black/50">Directory</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-black/50">Issues</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-black/5">
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">Loading...</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-black/50">Loading...</td>
               </tr>
             ) : filteredProjects.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">No projects found</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-black/50">No projects found</td>
               </tr>
             ) : (
               filteredProjects.map((project) => (
                 <tr
                   key={project.id}
-                  className="hover:bg-slate-50 cursor-pointer"
+                  className="hover:bg-white cursor-pointer"
                   onClick={() => window.location.href = `/projects/${project.id}`}
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <FolderKanban className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm font-medium text-slate-800">{project.title}</span>
+                      <FolderKanban className="w-4 h-4 text-black/40" />
+                      <span className="text-sm font-medium text-black">{project.title}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">
+                  <td className="px-4 py-3 text-sm text-black/60 max-w-xs truncate">
                     {project.description || '-'}
                   </td>
                   <td className="px-4 py-3">
@@ -138,10 +138,10 @@ function ProjectsPage() {
                       {project.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-500 font-mono">
+                  <td className="px-4 py-3 text-sm text-black/50 font-mono">
                     {project.projectDir || '-'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">
+                  <td className="px-4 py-3 text-sm text-black/60">
                     {project.issueIds?.length || 0}
                   </td>
                 </tr>

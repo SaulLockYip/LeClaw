@@ -14,7 +14,7 @@ function CompanyRail({ companies, selectedCompanyId, onCompanySelect }: CompanyR
 
   return (
     <>
-      <div className="w-[72px] bg-slate-900 flex flex-col items-center py-4 gap-4">
+      <div className="w-[72px] bg-black flex flex-col items-center py-4 gap-4">
         {companies.map((company) => (
           <div
             key={company.id}
@@ -25,7 +25,7 @@ function CompanyRail({ companies, selectedCompanyId, onCompanySelect }: CompanyR
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold transition-all ${
                 selectedCompanyId === company.id
-                  ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900'
+                  ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-black'
                   : ''
               }`}
               style={{ backgroundColor: company.color }}
@@ -33,7 +33,7 @@ function CompanyRail({ companies, selectedCompanyId, onCompanySelect }: CompanyR
               <Building2 className="w-5 h-5" />
             </div>
             {company.online && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900"></div>
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
             )}
           </div>
         ))}
@@ -41,7 +41,7 @@ function CompanyRail({ companies, selectedCompanyId, onCompanySelect }: CompanyR
         {/* Create Company Button */}
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-black/40 hover:text-white hover:bg-black/70 transition-all"
           title="Create Company"
         >
           <Plus className="w-5 h-5" />

@@ -15,9 +15,9 @@ function Dashboard() {
       case 'busy':
         return 'bg-yellow-500'
       case 'offline':
-        return 'bg-slate-400'
+        return 'bg-black/40'
       default:
-        return 'bg-slate-400'
+        return 'bg-black/40'
     }
   }
 
@@ -30,14 +30,14 @@ function Dashboard() {
       case 'low':
         return 'bg-green-100 text-green-700'
       default:
-        return 'bg-slate-100 text-slate-700'
+        return 'bg-black/5 text-black/70'
     }
   }
 
   return (
     <div className="space-y-6">
       {/* Page Title */}
-      <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-black">Dashboard</h1>
 
       {/* Metric Cards */}
       <div className="grid grid-cols-4 gap-4">
@@ -48,8 +48,8 @@ function Dashboard() {
                 {metric.icon}
               </div>
               <div>
-                <div className="text-2xl font-bold text-slate-800">{metric.value}</div>
-                <div className="text-sm text-slate-500">{metric.label}</div>
+                <div className="text-2xl font-bold text-black">{metric.value}</div>
+                <div className="text-sm text-black/50">{metric.label}</div>
               </div>
             </div>
           </div>
@@ -58,40 +58,40 @@ function Dashboard() {
 
       {/* Agent Status Table */}
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="px-4 py-3 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-800">Agent Status</h2>
+        <div className="px-4 py-3 border-b border-black/10">
+          <h2 className="text-lg font-semibold text-black">Agent Status</h2>
         </div>
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-white">
             <tr>
-              <th className="px-4 py-2 text-left text-sm font-medium text-slate-500">Agent</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-slate-500">Role</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-slate-500">Department</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-slate-500">Status</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-slate-500">Last Seen</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-black/50">Agent</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-black/50">Role</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-black/50">Department</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-black/50">Status</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-black/50">Last Seen</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-black/5">
             {agents.map((agent) => (
-              <tr key={agent.id} className="hover:bg-slate-50">
+              <tr key={agent.id} className="hover:bg-white">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${getStatusColor(agent.status)}`}></div>
-                    <span className="text-sm font-medium text-slate-800">{agent.name}</span>
+                    <span className="text-sm font-medium text-black">{agent.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm text-slate-600">{agent.role}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{agent.department}</td>
+                <td className="px-4 py-3 text-sm text-black/60">{agent.role}</td>
+                <td className="px-4 py-3 text-sm text-black/60">{agent.department}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     agent.status === 'online' ? 'bg-green-100 text-green-700' :
                     agent.status === 'busy' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-slate-100 text-slate-600'
+                    'bg-black/5 text-black/60'
                   }`}>
                     {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-slate-500">{agent.lastSeen}</td>
+                <td className="px-4 py-3 text-sm text-black/50">{agent.lastSeen}</td>
               </tr>
             ))}
           </tbody>
@@ -100,15 +100,15 @@ function Dashboard() {
 
       {/* Recent Issues */}
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="px-4 py-3 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-800">Recent Issues</h2>
+        <div className="px-4 py-3 border-b border-black/10">
+          <h2 className="text-lg font-semibold text-black">Recent Issues</h2>
         </div>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-black/5">
           {issues.map((issue) => (
             <div key={issue.id} className="px-4 py-3 flex items-center justify-between">
               <div className="flex-1">
-                <div className="text-sm font-medium text-slate-800">{issue.title}</div>
-                <div className="text-xs text-slate-500 mt-1">
+                <div className="text-sm font-medium text-black">{issue.title}</div>
+                <div className="text-xs text-black/50 mt-1">
                   {issue.id} · Assigned to {issue.assignee} · {issue.createdAt}
                 </div>
               </div>
@@ -117,7 +117,7 @@ function Dashboard() {
                   {issue.priority}
                 </span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  issue.status === 'open' ? 'bg-slate-100 text-slate-600' :
+                  issue.status === 'open' ? 'bg-black/5 text-black/60' :
                   issue.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
                   'bg-green-100 text-green-700'
                 }`}>

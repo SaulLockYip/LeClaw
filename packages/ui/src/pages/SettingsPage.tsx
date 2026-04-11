@@ -6,7 +6,7 @@ function SettingsPage() {
   if (!selectedCompany) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-slate-500">Select a company to view settings</p>
+        <p className="text-black/50">Select a company to view settings</p>
       </div>
     )
   }
@@ -14,13 +14,13 @@ function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
-        <p className="text-slate-500 text-sm mt-1">{selectedCompany.name}</p>
+        <h1 className="text-2xl font-bold text-black">Settings</h1>
+        <p className="text-black/50 text-sm mt-1">{selectedCompany.name}</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-medium text-slate-800 mb-4">Company Settings</h2>
-        <p className="text-slate-500">Settings panel coming soon...</p>
+        <h2 className="text-lg font-medium text-black mb-4">Company Settings</h2>
+        <p className="text-black/50">Settings panel coming soon...</p>
       </div>
     </div>
   )

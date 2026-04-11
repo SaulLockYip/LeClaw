@@ -143,14 +143,14 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
       >
         <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
+            <h2 className="text-lg font-semibold text-black flex items-center gap-2">
               <Check className="w-5 h-5 text-green-500" />
               Invite Created
             </h2>
             <button
               onClick={handleClose}
-              className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors"
+              className="p-1 text-black/40 hover:text-black/60 rounded transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -158,27 +158,27 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
 
           {/* Result Content */}
           <div className="px-6 py-4 space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-black/60">
               Share the following command with the agent to onboard them:
             </p>
 
             {/* Invite Key - Large, centered display */}
-            <div className="text-center py-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border-2 border-dashed border-slate-300">
-              <label className="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">
+            <div className="text-center py-4 bg-gradient-to-r from-white to-black/5 rounded-lg border-2 border-dashed border-black/20">
+              <label className="block text-xs font-medium text-black/50 mb-2 uppercase tracking-wider">
                 Invite Key
               </label>
-              <div className="font-mono text-3xl font-bold text-slate-800 tracking-widest">
+              <div className="font-mono text-3xl font-bold text-black tracking-widest">
                 {inviteResult.inviteKey}
               </div>
             </div>
 
             {/* Onboard Command */}
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">
+              <label className="block text-xs font-medium text-black/50 mb-1 uppercase tracking-wider">
                 Onboard Command
               </label>
               <div className="flex gap-2">
-                <code className="flex-1 px-3 py-2 bg-slate-900 text-slate-100 rounded font-mono text-sm break-all">
+                <code className="flex-1 px-3 py-2 bg-black text-white rounded font-mono text-sm break-all">
                   {inviteResult.prompt}
                 </code>
                 <button
@@ -196,13 +196,13 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
             </div>
 
             {/* Expiry */}
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-black/50">
               This invite expires at: {new Date(inviteResult.expiresAt).toLocaleString()}
             </p>
           </div>
 
           {/* Actions */}
-          <div className="px-6 py-4 border-t border-slate-200 flex justify-end">
+          <div className="px-6 py-4 border-t border-black/10 flex justify-end">
             <button
               onClick={handleClose}
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -223,14 +223,14 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
     >
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10">
+          <h2 className="text-lg font-semibold text-black flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-blue-600" />
             Invite Agent
           </h2>
           <button
             onClick={handleClose}
-            className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors"
+            className="p-1 text-black/40 hover:text-black/60 rounded transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -246,7 +246,7 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
           )}
 
           <div>
-            <label htmlFor="agent-name" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="agent-name" className="block text-sm font-medium text-black/70 mb-1">
               Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -255,14 +255,14 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Enter agent name"
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 bg-white border border-black/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
               autoFocus
             />
           </div>
 
           <div>
-            <label htmlFor="agent-title" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="agent-title" className="block text-sm font-medium text-black/70 mb-1">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -271,20 +271,20 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="e.g. Senior Engineer, Product Manager"
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 bg-white border border-black/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             />
           </div>
 
           <div>
-            <label htmlFor="agent-role" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="agent-role" className="block text-sm font-medium text-black/70 mb-1">
               Role <span className="text-red-500">*</span>
             </label>
             <select
               id="agent-role"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'CEO' | 'Manager' | 'Staff' })}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 bg-white border border-black/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             >
               {/* CEO can invite any role */}
@@ -308,14 +308,14 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
 
           {formData.role !== 'CEO' && (
             <div>
-              <label htmlFor="agent-department" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="agent-department" className="block text-sm font-medium text-black/70 mb-1">
                 Department
               </label>
               <select
                 id="agent-department"
                 value={formData.departmentId}
                 onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 bg-white border border-black/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={isSubmitting}
               >
                 <option value="">No department</option>
@@ -337,14 +337,14 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
           )}
 
           <div>
-            <label htmlFor="openclaw-agent" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="openclaw-agent" className="block text-sm font-medium text-black/70 mb-1">
               OpenClaw Agent <span className="text-red-500">*</span>
             </label>
             <select
               id="openclaw-agent"
               value={formData.openClawAgentId}
               onChange={(e) => handleOpenClawAgentChange(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 bg-white border border-black/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             >
               <option value="">Select an agent</option>
@@ -363,7 +363,7 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-black/60 hover:text-black transition-colors"
               disabled={isSubmitting}
             >
               Cancel

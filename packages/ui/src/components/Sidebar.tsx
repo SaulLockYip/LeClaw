@@ -34,16 +34,16 @@ function Sidebar() {
 
   if (!selectedCompany) {
     return (
-      <div className="w-60 bg-slate-800 flex items-center justify-center">
-        <span className="text-slate-400 text-sm">No company selected</span>
+      <div className="w-60 bg-black flex items-center justify-center">
+        <span className="text-black/40 text-sm">No company selected</span>
       </div>
     )
   }
 
   return (
-    <div className="w-60 bg-slate-800 flex flex-col">
+    <div className="w-60 bg-black flex flex-col">
       {/* Company Header */}
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 border-b border-black/70">
         <div className="flex items-center gap-2">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
@@ -58,11 +58,11 @@ function Sidebar() {
       {/* Search */}
       <div className="p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
           <input
             type="text"
             placeholder="Search..."
-            className="w-full pl-9 pr-3 py-2 bg-slate-700 text-slate-200 rounded text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 bg-black/70 text-white/80 rounded text-sm placeholder-black/40 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -76,7 +76,7 @@ function Sidebar() {
             className={`flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
               isPathActive(item.path)
                 ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                : 'text-black/40 hover:bg-black/70 hover:text-white/80'
             }`
             }
           >
@@ -88,12 +88,12 @@ function Sidebar() {
 
       {/* Divider */}
       <div className="px-4 py-2">
-        <div className="border-t border-slate-700"></div>
+        <div className="border-t border-black/70"></div>
       </div>
 
       {/* COMPANY Section */}
       <div className="px-4 py-2">
-        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</span>
+        <span className="text-xs font-semibold text-black/50 uppercase tracking-wider">Company</span>
       </div>
 
       {/* Departments Link */}
@@ -103,7 +103,7 @@ function Sidebar() {
           className={`flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
             isPathActive('/departments')
               ? 'bg-blue-600 text-white'
-              : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+              : 'text-black/40 hover:bg-black/70 hover:text-white/80'
           }`
           }
         >
@@ -119,7 +119,7 @@ function Sidebar() {
           className={`flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
             isPathActive('/agents')
               ? 'bg-blue-600 text-white'
-              : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+              : 'text-black/40 hover:bg-black/70 hover:text-white/80'
           }`
           }
         >
@@ -140,12 +140,12 @@ function Sidebar() {
             <div key={dept.id} className="mb-3">
               <NavLink
                 to={`/departments/${dept.id}`}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm text-slate-300 hover:bg-slate-700 ${
-                  isPathActive(`/departments/${dept.id}`) ? 'bg-slate-700' : ''
+                className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm text-white/70 hover:bg-black/70 ${
+                  isPathActive(`/departments/${dept.id}`) ? 'bg-black/70' : ''
                 }`
                 }
               >
-                <ChevronDown className="w-3 h-3 text-slate-500" />
+                <ChevronDown className="w-3 h-3 text-black/50" />
                 <Building2 className="w-3.5 h-3.5" />
                 <span className="truncate">{dept.name}</span>
               </NavLink>
@@ -170,7 +170,7 @@ function Sidebar() {
               {staff.length > 0 && (
                 <div className="ml-8 space-y-1">
                   {staff.map((s) => (
-                    <div key={s.id} className="flex items-center gap-2 px-3 py-0.5 text-slate-400 text-xs">
+                    <div key={s.id} className="flex items-center gap-2 px-3 py-0.5 text-black/40 text-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                       <span>{s.name}</span>
                     </div>
@@ -189,7 +189,7 @@ function Sidebar() {
           className={`flex items-center gap-3 px-3 py-2 rounded text-sm mb-1 ${
             isPathActive('/settings')
               ? 'bg-blue-600 text-white'
-              : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+              : 'text-black/40 hover:bg-black/70 hover:text-white/80'
           }`
           }
         >

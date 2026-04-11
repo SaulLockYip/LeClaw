@@ -14,7 +14,7 @@ function AgentDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-slate-500">Loading...</p>
+        <p className="text-black/50">Loading...</p>
       </div>
     )
   }
@@ -23,13 +23,13 @@ function AgentDetailPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link to="/agents" className="flex items-center gap-2 text-slate-500 hover:text-slate-700">
+          <Link to="/agents" className="flex items-center gap-2 text-black/50 hover:text-black/70">
             <ChevronLeft className="w-4 h-4" />
             <span>Back</span>
           </Link>
         </div>
-        <div className="bg-white rounded-lg border border-slate-200 p-6">
-          <p className="text-slate-500">Agent not found</p>
+        <div className="bg-white rounded-lg border border-black/10 p-6">
+          <p className="text-black/50">Agent not found</p>
         </div>
       </div>
     )
@@ -42,9 +42,9 @@ function AgentDetailPage() {
       case 'busy':
         return 'bg-yellow-500'
       case 'offline':
-        return 'bg-slate-400'
+        return 'bg-black/40'
       default:
-        return 'bg-slate-400'
+        return 'bg-black/40'
     }
   }
 
@@ -55,7 +55,7 @@ function AgentDetailPage() {
       case 'Manager':
         return <Crown className="w-4 h-4 text-blue-500" />
       default:
-        return <User className="w-4 h-4 text-slate-500" />
+        return <User className="w-4 h-4 text-black/50" />
     }
   }
 
@@ -66,7 +66,7 @@ function AgentDetailPage() {
       case 'Manager':
         return 'bg-blue-500'
       default:
-        return 'bg-slate-400'
+        return 'bg-black/40'
     }
   }
 
@@ -74,63 +74,63 @@ function AgentDetailPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/agents" className="flex items-center gap-2 text-slate-500 hover:text-slate-700">
+        <Link to="/agents" className="flex items-center gap-2 text-black/50 hover:text-black/70">
           <ChevronLeft className="w-4 h-4" />
           <span>Back</span>
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">{agent.name}</h1>
+          <h1 className="text-2xl font-bold text-black">{agent.name}</h1>
         </div>
         <div className="flex items-center gap-2">
           <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor(agent.status)}`}></div>
-          <span className="text-sm text-slate-500 capitalize">{agent.status || 'offline'}</span>
+          <span className="text-sm text-black/50 capitalize">{agent.status || 'offline'}</span>
         </div>
       </div>
 
       {/* Agent Info Card */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+      <div className="bg-white rounded-lg border border-black/10 p-6">
+        <h2 className="text-lg font-semibold text-black mb-4 flex items-center gap-2">
           {getRoleIcon(agent.role)}
           Agent Information
         </h2>
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Name</label>
-            <p className="text-slate-900 mt-1 font-medium">{agent.name}</p>
+            <label className="text-xs uppercase text-black/50 tracking-wider">Name</label>
+            <p className="text-black mt-1 font-medium">{agent.name}</p>
           </div>
           {agent.title && (
             <div>
-              <label className="text-xs uppercase text-slate-500 tracking-wider">Title</label>
-              <p className="text-slate-900 mt-1 font-medium">{agent.title}</p>
+              <label className="text-xs uppercase text-black/50 tracking-wider">Title</label>
+              <p className="text-black mt-1 font-medium">{agent.title}</p>
             </div>
           )}
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Role</label>
-            <p className="text-slate-900 mt-1 flex items-center gap-2">
+            <label className="text-xs uppercase text-black/50 tracking-wider">Role</label>
+            <p className="text-black mt-1 flex items-center gap-2">
               {getRoleIcon(agent.role)}
               {agent.role}
             </p>
           </div>
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Department</label>
-            <p className="text-slate-900 mt-1 flex items-center gap-2">
+            <label className="text-xs uppercase text-black/50 tracking-wider">Department</label>
+            <p className="text-black mt-1 flex items-center gap-2">
               {department ? (
                 <>
-                  <Building2 className="w-4 h-4 text-slate-400" />
+                  <Building2 className="w-4 h-4 text-black/40" />
                   {department.name}
                 </>
               ) : (
-                <span className="text-slate-400">No department</span>
+                <span className="text-black/40">No department</span>
               )}
             </p>
           </div>
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Status</label>
-            <p className="text-slate-900 mt-1">
+            <label className="text-xs uppercase text-black/50 tracking-wider">Status</label>
+            <p className="text-black mt-1">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 agent.status === 'online' ? 'bg-green-100 text-green-700' :
                 agent.status === 'busy' ? 'bg-yellow-100 text-yellow-700' :
-                'bg-slate-100 text-slate-600'
+                'bg-black/5 text-black/60'
               }`}>
                 {agent.status || 'offline'}
               </span>
@@ -140,26 +140,26 @@ function AgentDetailPage() {
       </div>
 
       {/* OpenClaw Agent Info Card */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">
+      <div className="bg-white rounded-lg border border-black/10 p-6">
+        <h2 className="text-lg font-semibold text-black mb-4">
           OpenClaw Agent Configuration
         </h2>
         <div className="grid grid-cols-1 gap-4">
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Agent ID</label>
-            <p className="text-slate-700 mt-1 font-mono text-sm bg-slate-50 px-3 py-2 rounded">
+            <label className="text-xs uppercase text-black/50 tracking-wider">Agent ID</label>
+            <p className="text-black/70 mt-1 font-mono text-sm bg-white px-3 py-2 rounded">
               {agent.openClawAgentId}
             </p>
           </div>
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Workspace</label>
-            <p className="text-slate-700 mt-1 font-mono text-sm bg-slate-50 px-3 py-2 rounded truncate">
+            <label className="text-xs uppercase text-black/50 tracking-wider">Workspace</label>
+            <p className="text-black/70 mt-1 font-mono text-sm bg-white px-3 py-2 rounded truncate">
               {agent.openClawAgentWorkspace}
             </p>
           </div>
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Agent Directory</label>
-            <p className="text-slate-700 mt-1 font-mono text-sm bg-slate-50 px-3 py-2 rounded truncate">
+            <label className="text-xs uppercase text-black/50 tracking-wider">Agent Directory</label>
+            <p className="text-black/70 mt-1 font-mono text-sm bg-white px-3 py-2 rounded truncate">
               {agent.openClawAgentDir}
             </p>
           </div>
@@ -167,12 +167,12 @@ function AgentDetailPage() {
       </div>
 
       {/* Timestamps */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Activity</h2>
+      <div className="bg-white rounded-lg border border-black/10 p-6">
+        <h2 className="text-lg font-semibold text-black mb-4">Activity</h2>
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Created</label>
-            <p className="text-slate-700 mt-1">
+            <label className="text-xs uppercase text-black/50 tracking-wider">Created</label>
+            <p className="text-black/70 mt-1">
               {new Date(agent.createdAt).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -183,8 +183,8 @@ function AgentDetailPage() {
             </p>
           </div>
           <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Last Updated</label>
-            <p className="text-slate-700 mt-1">
+            <label className="text-xs uppercase text-black/50 tracking-wider">Last Updated</label>
+            <p className="text-black/70 mt-1">
               {new Date(agent.updatedAt).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
