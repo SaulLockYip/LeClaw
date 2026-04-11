@@ -38,18 +38,19 @@ async function getDatabaseUrl(): Promise<string | null> {
   try {
     const config = loadConfig(CONFIG_FILE);
 
-    if (config.database?.connectionString) {
-      // Use connection string from config if available
-      return config.database.connectionString;
-    }
-
-    // Initialize embedded postgres using config settings
+    // Initialize embedded postgres if config specifies it
+    // This handles both connectionString (external postgres) and embedded config
     if (config.database?.embeddedDataDir || config.database?.embeddedPort) {
       const db = await initializeDb({
         dataDir: config.database.embeddedDataDir,
         port: config.database.embeddedPort,
       });
       return db.connectionString;
+    }
+
+    // Fallback: use connection string from config if available
+    if (config.database?.connectionString) {
+      return config.database.connectionString;
     }
   } catch {
     // Config file doesn't exist or embedded postgres initialization failed
