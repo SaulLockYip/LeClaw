@@ -4,6 +4,7 @@ import postgres from "postgres";
 import { readFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as schema from "./schema/index.js";
+import type { LeClawDb } from "./db.js";
 
 const MIGRATIONS_FOLDER = fileURLToPath(new URL("./migrations", import.meta.url));
 const DRIZZLE_MIGRATIONS_TABLE = "__drizzle_migrations";
@@ -41,7 +42,7 @@ async function getConnectionString(): Promise<string> {
   return `postgres://${user}:${password}@${host}:${port}/leclaw`;
 }
 
-export async function getDb(): Promise<ReturnType<typeof drizzle<typeof schema>>> {
+export async function getDb(): Promise<LeClawDb> {
   if (dbPromise) {
     return dbPromise;
   }

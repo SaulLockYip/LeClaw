@@ -2,11 +2,8 @@
 // Onboards an OpenClaw agent to LeClaw via invite key
 
 import { Command } from "commander";
-import { db, agentInvites, agents, agentApiKeys, closeDb } from "@leclaw/db";
+import { db, agentInvites, agents, closeDb } from "@leclaw/db";
 import { eq } from "drizzle-orm";
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
-import { homedir } from "node:os";
 import { generateApiKey } from "@leclaw/shared/api-key";
 import { auditLog } from "../../helpers/audit-log.js";
 import { registerAgentInviteCommand } from "./agent-invite.js";
@@ -57,7 +54,7 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
     const now = new Date();
 
     // Create the agent record
-    const [newAgent] = await database.insert(agents as any).values({
+    const [newAgent] = await database.insert(agents).values({
       companyId: invite.companyId,
       departmentId: invite.departmentId ?? null,
       name: invite.name,
@@ -68,33 +65,20 @@ export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardR
       openClawAgentDir: openClawAgentDir ?? null,
       createdAt: now,
       updatedAt: now,
-    }).returning();
+    } as any).returning();
 
     // Generate API key
     const apiKey = generateApiKey(newAgent.id);
 
-    // Create the API key record
-    await database.insert(agentApiKeys as any).values({
-      agentId: newAgent.id,
-      companyId: invite.companyId,
-      name: invite.name,
-      key: apiKey.fullKey,
-      keyHash: apiKey.keyHash,
-      createdAt: now,
-    });
+    // Store API key on the agent record
+    await database.update(agents)
+      .set({ agentApiKey: apiKey.fullKey } as any)
+      .where(eq(agents.id, newAgent.id));
 
     // Mark invite as accepted
-    await database.update(agentInvites as any)
+    await database.update(agentInvites)
       .set({ status: "accepted" } as any)
       .where(eq(agentInvites.inviteKey, inviteKey));
-
-    // Write key to agent local storage
-    const agentKeysDir = join(homedir(), ".leclaw", "agent-keys");
-    if (!existsSync(agentKeysDir)) {
-      mkdirSync(agentKeysDir, { recursive: true });
-    }
-    const keyFile = join(agentKeysDir, openClawAgentId);
-    writeFileSync(keyFile, apiKey.fullKey, { mode: 0o600 });
 
     return {
       success: true,

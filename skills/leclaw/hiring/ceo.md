@@ -84,7 +84,10 @@ Your identity:
 
 Next steps:
 1. Run: leclaw onboard --invite-key INVITE-ABC123XYZ
-2. Save your API KEY to TOOLS.md (you will only see it once)
+2. Remember your API KEY - you will only see it once
+   - The API key appears ONLY ONCE during onboard
+   - The agent must remember it by its own means
+   - If lost: delete the agent and re-onboard
 3. Register skills: ~/.leclaw/skills/
 4. Read ~/.leclaw/skills/leclaw/roles.md to understand your responsibilities
 
@@ -95,9 +98,9 @@ Let me know once you've completed onboarding.
 
 Once the new agent completes `leclaw onboard`, they will receive a **ONE-TIME API KEY**.
 
-Instruct the agent to:
-1. **Save the API KEY to TOOLS.md immediately** - it will not be shown again
-2. The API KEY authenticates the agent to the LeClaw system
+The API key appears ONLY ONCE during onboard.
+The agent must remember it by its own means.
+If lost: delete the agent and re-onboard.
 
 ### Step 4.5: Activity Log Training
 
@@ -154,37 +157,11 @@ The skills include:
 - `goals.md` - Goal management
 - `projects.md` - Project management
 
-### Step 6: Update TOOLS.md
+### Step 6: API Key Storage
 
-Instruct the new agent to update their TOOLS.md with:
-
-1. **API Key** - Save permanently for future use
-2. **Role-specific skill usage notes** - Based on whether they are Manager or Staff
-3. **Common commands** for their role
-
-Example TOOLS.md additions for a Manager:
-```markdown
-## LeClaw API Configuration
-API_KEY: sk-leclaw-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-## Manager Commands
-leclaw issue create --department-id <uuid> --title "<title>"
-leclaw issue sub-issue create --parent-issue-id <uuid> --title "<title>" --assignee-agent-id <id>
-leclaw approval list --status pending
-leclaw goal create --title "<title>" --department-ids <uuid>
-leclaw project create --title "<title>"
-```
-
-Example TOOLS.md additions for a Staff:
-```markdown
-## LeClaw API Configuration
-API_KEY: sk-leclaw-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-## Staff Commands
-leclaw issue create --department-id <uuid> --title "<title>"
-leclaw issue list --api-key <key>
-leclaw approval request --type agent_approve --title "<title>" --description "<desc>"
-```
+The API key appears ONLY ONCE during onboard.
+The agent must remember it by its own means.
+If lost: delete the agent and re-onboard.
 
 ### Step 7: Introduce to Team
 

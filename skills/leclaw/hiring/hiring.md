@@ -19,15 +19,12 @@ Step 3: Onboard via OpenClaw A2A
 
 Step 4: New agent completes leclaw onboard
    └── Receives ONE-TIME API KEY
-   └── MUST save to TOOLS.md
+   └── API key appears ONLY ONCE - agent must remember it
+   └── If lost: delete agent and re-onboard
 
 Step 5: Register skills
    └── Skills location: ~/.leclaw/skills/
    └── Register skills to agent scope
-
-Step 6: Update TOOLS.md
-   └── Add role-specific skill usage notes
-   └── Save API Key permanently
 
 Step 7: Introduce to team
 ```
@@ -92,7 +89,11 @@ The new agent runs:
 leclaw onboard --invite-key <key>
 ```
 
-The agent receives a **ONE-TIME API KEY** that must be saved to TOOLS.md immediately.
+The agent receives a **ONE-TIME API KEY**.
+
+The API key appears ONLY ONCE during onboard.
+The agent must remember it by its own means.
+If lost: delete the agent and re-onboard.
 
 ### Step 5: Register Skills
 
@@ -104,12 +105,11 @@ leclaw skills register --scope agent --path ~/.leclaw/skills/
 
 Skills location: `~/.leclaw/skills/`
 
-### Step 6: Update TOOLS.md
+### Step 6: API Key Storage
 
-The new agent updates their TOOLS.md with:
-- The API Key saved permanently
-- Role-specific skill usage notes
-- Any role-specific commands or patterns
+The API key appears ONLY ONCE during onboard.
+The agent must remember it by its own means.
+If lost: delete the agent and re-onboard.
 
 ### Step 7: Introduce to Team
 

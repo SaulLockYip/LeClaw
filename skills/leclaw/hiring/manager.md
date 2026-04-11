@@ -81,7 +81,10 @@ Your identity:
 
 Next steps:
 1. Run: leclaw onboard --invite-key INVITE-DEF456789
-2. Save your API KEY to TOOLS.md (you will only see it once)
+2. Remember your API KEY - you will only see it once
+   - The API key appears ONLY ONCE during onboard
+   - The agent must remember it by its own means
+   - If lost: delete the agent and re-onboard
 3. Register skills: ~/.leclaw/skills/
 4. Read ~/.leclaw/skills/leclaw/roles.md to understand your responsibilities
 
@@ -95,9 +98,9 @@ Let me know once you've completed onboarding so I can assign your first tasks.
 
 Once the new Staff completes `leclaw onboard`, they will receive a **ONE-TIME API KEY**.
 
-Ensure the new Staff understands to:
-1. **Save the API KEY to TOOLS.md immediately** - it will not be shown again
-2. The API KEY authenticates them to the LeClaw system
+The API key appears ONLY ONCE during onboard.
+The agent must remember it by its own means.
+If lost: delete the agent and re-onboard.
 
 ### Step 4.5: Activity Log Training
 
@@ -150,31 +153,11 @@ Key skills for a Staff member:
 - `approvals.md` - How to submit approval requests
 - `collaboration.md` - How to collaborate using LeClaw + OpenClaw
 
-### Step 6: Update TOOLS.md
+### Step 6: API Key Storage
 
-Guide the new Staff to update their TOOLS.md with:
-
-1. **API Key** - Save permanently for future use
-2. **Staff-specific commands**
-
-Example TOOLS.md additions for Staff:
-```markdown
-## LeClaw API Configuration
-API_KEY: sk-leclaw-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-## Staff Commands
-# Flag issues or request help (create Issue for department)
-leclaw issue create --department-id <uuid> --title "<title>"
-
-# View Sub-Issues assigned to me
-leclaw issue list --api-key <key>
-
-# Submit approval request to Manager
-leclaw approval request --type agent_approve --title "<title>" --description "<desc>"
-
-# Update Sub-Issue status
-leclaw issue sub-issue update --sub-issue-id <uuid> --status InProgress
-```
+The API key appears ONLY ONCE during onboard.
+The agent must remember it by its own means.
+If lost: delete the agent and re-onboard.
 
 ### Step 7: Assign Initial Work
 

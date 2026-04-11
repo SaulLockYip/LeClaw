@@ -1,11 +1,10 @@
 // API Key Helper - Extract agentId from API key
 // Format: sk-{32-hex-chars}
-// Looks up the key by its hash in the database
+// Looks up the key directly from agents.agentApiKey
 
-import { agentApiKeys, agents } from "@leclaw/db/schema";
+import { agents } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { eq } from "drizzle-orm";
-import { hashApiKey, parseApiKey } from "@leclaw/shared/api-key";
 import type { AgentRole } from "@leclaw/shared";
 
 export interface AgentInfo {
@@ -29,44 +28,18 @@ export async function getAgentIdFromApiKey(apiKey: string): Promise<string> {
  * Throws error if the key is invalid or not found
  */
 export async function getAgentInfoFromApiKey(apiKey: string): Promise<AgentInfo> {
-  const parsed = parseApiKey(apiKey);
-
-  if (!parsed) {
-    throw new Error("Invalid API key format");
-  }
-
-  // Hash the provided key to look it up
-  const keyHash = hashApiKey(apiKey);
-
   const db = await getDb();
 
-  // Look up by keyHash to find the agentId and companyId
-  const [keyRecord] = await db
-    .select({ agentId: agentApiKeys.agentId, companyId: agentApiKeys.companyId })
-    .from(agentApiKeys)
-    .where(eq(agentApiKeys.keyHash, keyHash))
-    .limit(1);
-
-  if (!keyRecord) {
-    throw new Error("Invalid API key");
-  }
-
-  // Get agent role and department
+  // Look up by agentApiKey directly
   const [agentRecord] = await db
     .select({ id: agents.id, companyId: agents.companyId, role: agents.role, departmentId: agents.departmentId })
     .from(agents)
-    .where(eq(agents.id, keyRecord.agentId))
+    .where(eq(agents.agentApiKey, apiKey))
     .limit(1);
 
   if (!agentRecord) {
-    throw new Error("Agent not found");
+    throw new Error("Invalid API key");
   }
-
-  // Update lastUsedAt timestamp
-  await db
-    .update(agentApiKeys)
-    .set({ lastUsedAt: new Date() } as any)
-    .where(eq(agentApiKeys.agentId, keyRecord.agentId));
 
   return {
     agentId: agentRecord.id,

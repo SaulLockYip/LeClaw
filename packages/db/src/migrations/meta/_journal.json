@@ -85,6 +85,13 @@
       "when": 1744300800007,
       "tag": "0011_modify_approvals_table",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1775933104447,
+      "tag": "0012_flat_franklin_storm",
+      "breakpoints": true
     }
   ]
 }

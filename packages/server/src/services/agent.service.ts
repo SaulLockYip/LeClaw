@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
-import { agents, agentApiKeys, agentInvites } from "@leclaw/db/schema";
+import { agents, agentInvites } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
-import { generateApiKey, hashApiKey, parseApiKey } from "@leclaw/shared/api-key";
+import { generateApiKey } from "@leclaw/shared/api-key";
 import type { Agent, AgentRole } from "@leclaw/shared";
 
 export interface VerifyApiKeyResult {
@@ -50,15 +50,8 @@ export async function createAgent(
   // Generate API key using the agent's UUID id
   const apiKey = generateApiKey(agent.id);
 
-  // Create the API key record
-  await db.insert(agentApiKeys).values({
-    agentId: agent.id,
-    companyId,
-    name: input.name,
-    key: apiKey.fullKey,
-    keyHash: apiKey.keyHash,
-    createdAt: new Date(),
-  } as any);
+  // Store API key directly on the agent record
+  await db.update(agents).set({ agentApiKey: apiKey.fullKey } as any).where(eq(agents.id, agent.id));
 
   return {
     agent: { ...agent, role: agent.role as AgentRole },
@@ -133,41 +126,18 @@ export async function deleteAgent(
  * @returns Agent info if valid, throws if invalid
  */
 export async function verifyApiKey(apiKey: string): Promise<VerifyApiKeyResult> {
-  const parsed = parseApiKey(apiKey);
-  if (!parsed) {
-    throw new Error("Invalid API key format");
-  }
-
-  const keyHash = hashApiKey(apiKey);
   const db = await getDb();
 
-  // Look up by keyHash to find the agentId
-  const [keyRecord] = await db
-    .select({ agentId: agentApiKeys.agentId, companyId: agentApiKeys.companyId })
-    .from(agentApiKeys)
-    .where(eq(agentApiKeys.keyHash, keyHash))
-    .limit(1);
-
-  if (!keyRecord) {
-    throw new Error("Invalid API key");
-  }
-
-  // Get agent info (id, companyId, role)
+  // Look up agent directly by agentApiKey
   const [agentRecord] = await db
     .select({ id: agents.id, companyId: agents.companyId, role: agents.role })
     .from(agents)
-    .where(eq(agents.id, keyRecord.agentId))
+    .where(eq(agents.agentApiKey, apiKey))
     .limit(1);
 
   if (!agentRecord) {
-    throw new Error("Agent not found");
+    throw new Error("Invalid API key");
   }
-
-  // Update lastUsedAt timestamp
-  await db
-    .update(agentApiKeys)
-    .set({ lastUsedAt: new Date() } as any)
-    .where(eq(agentApiKeys.agentId, keyRecord.agentId));
 
   return {
     agentId: agentRecord.id,
