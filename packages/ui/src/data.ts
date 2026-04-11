@@ -27,7 +27,7 @@ export interface Issue {
   id: string
   title: string
   priority: 'high' | 'medium' | 'low'
-  status: 'open' | 'in-progress' | 'resolved'
+  status: 'Open' | 'InProgress' | 'Blocked' | 'Done' | 'Cancelled'
   assignee: string
   createdAt: string
 }
@@ -66,10 +66,10 @@ export const agents: Agent[] = [
 ]
 
 export const issues: Issue[] = [
-  { id: '1', title: 'API rate limiting not working', priority: 'high', status: 'open', assignee: 'Frank', createdAt: '2 hours ago' },
-  { id: '2', title: 'Update dashboard analytics', priority: 'medium', status: 'in-progress', assignee: 'Charlie', createdAt: '5 hours ago' },
-  { id: '3', title: 'Fix mobile responsive layout', priority: 'medium', status: 'open', assignee: 'Bob', createdAt: '1 day ago' },
-  { id: '4', title: 'Add user onboarding flow', priority: 'low', status: 'open', assignee: 'Dave', createdAt: '2 days ago' },
+  { id: '1', title: 'API rate limiting not working', priority: 'high', status: 'Open', assignee: 'Frank', createdAt: '2 hours ago' },
+  { id: '2', title: 'Update dashboard analytics', priority: 'medium', status: 'InProgress', assignee: 'Charlie', createdAt: '5 hours ago' },
+  { id: '3', title: 'Fix mobile responsive layout', priority: 'medium', status: 'Open', assignee: 'Bob', createdAt: '1 day ago' },
+  { id: '4', title: 'Add user onboarding flow', priority: 'low', status: 'Open', assignee: 'Dave', createdAt: '2 days ago' },
 ]
 
 export const projects: Project[] = [

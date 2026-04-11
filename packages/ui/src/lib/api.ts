@@ -58,6 +58,12 @@ export interface Comment {
   message: string
 }
 
+export interface SubIssue {
+  id: string
+  title: string
+  status: 'Open' | 'InProgress' | 'Blocked' | 'Done' | 'Cancelled'
+}
+
 export interface Goal {
   id: string
   title: string
@@ -87,9 +93,11 @@ export interface Approval {
   id: string
   title: string
   description: string
+  type: string
   requester: string
   status: 'Pending' | 'Approved' | 'Rejected'
   rejectMessage?: string
+  approverId?: string
   createdAt: string
   updatedAt: string
 }
@@ -191,8 +199,16 @@ export const approvalApi = {
   list: (companyId: string) => fetchApi<Approval[]>(`/companies/${companyId}/approvals`),
   get: (companyId: string, approvalId: string) =>
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}`),
-  update: (companyId: string, approvalId: string, data: { status: 'Approved' | 'Rejected'; rejectMessage?: string }) =>
-    fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}`),
+  approve: (companyId: string, approvalId: string) =>
+    fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}/approve`, {
+      method: 'POST',
+    }),
+  reject: (companyId: string, approvalId: string, rejectMessage: string) =>
+    fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}/reject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rejectMessage }),
+    }),
 }
 
 // OpenClaw Agent API
@@ -238,4 +254,10 @@ export const agentInviteApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }),
+}
+
+// SubIssue API
+export const subIssueApi = {
+  get: (companyId: string, subIssueId: string) =>
+    fetchApi<SubIssue>(`/companies/${companyId}/issues/${subIssueId}`),
 }

@@ -7,7 +7,7 @@ import type { Goal, Issue } from '../../lib/api'
 
 function GoalDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { selectedCompany, isLoading: isCompanyLoading } = useCompany()
+  const { selectedCompany, isLoading: isCompanyLoading, departments } = useCompany()
   const [goal, setGoal] = useState<Goal | null>(null)
   const [relatedIssues, setRelatedIssues] = useState<Issue[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -165,7 +165,9 @@ function GoalDetailPage() {
             <label className="text-xs uppercase text-slate-500 tracking-wider">Departments</label>
             <p className="text-slate-900 mt-1 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-400" />
-              {goal.departmentIds?.length || 0} involved
+              {goal.departmentIds?.length > 0
+                ? goal.departmentIds.map(id => departments.find(d => d.id === id)?.name || id).join(', ')
+                : 'None'}
             </p>
           </div>
           <div>

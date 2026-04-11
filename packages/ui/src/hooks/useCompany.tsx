@@ -9,6 +9,7 @@ interface CompanyContextValue {
   selectedCompany: Company | null
   departments: Department[]
   agents: Agent[]
+  currentAgent: Agent | null
   selectCompany: (companyId: string) => void
   isLoading: boolean
   error: Error | null
@@ -33,6 +34,7 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null)
   const [departments, setDepartments] = useState<Department[]>([])
   const [agents, setAgents] = useState<Agent[]>([])
+  const [currentAgent, setCurrentAgent] = useState<Agent | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
@@ -69,6 +71,11 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
         ])
         setDepartments(depts)
         setAgents(agts)
+        // Set currentAgent to the first CEO if exists, otherwise first Manager, otherwise first Staff
+        const ceo = agts.find((a) => a.role === 'CEO')
+        const manager = agts.find((a) => a.role === 'Manager')
+        const staff = agts[0]
+        setCurrentAgent(ceo || manager || staff || null)
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to load company data'))
       } finally {
@@ -146,6 +153,7 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
         selectedCompany,
         departments,
         agents,
+        currentAgent,
         selectCompany,
         isLoading,
         error,

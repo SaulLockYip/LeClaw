@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { X, Copy, Check, UserPlus, AlertCircle } from 'lucide-react'
 import { agentInviteApi, agentApi, openclawAgentsApi, type OpenClawAgent, type AgentInvite } from '../lib/api'
-import type { Department } from '../lib/api'
+import type { Department, Agent } from '../lib/api'
 
 interface AgentInviteModalProps {
   isOpen: boolean
   onClose: () => void
   companyId: string
   departments: Department[]
+  currentAgent: Agent | null
 }
 
 export interface InviteResult {
@@ -16,7 +17,7 @@ export interface InviteResult {
   prompt: string
 }
 
-function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInviteModalProps) {
+function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgent }: AgentInviteModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     title: '',
@@ -286,9 +287,22 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
               className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             >
-              <option value="Staff">Staff</option>
-              <option value="Manager">Manager</option>
-              <option value="CEO">CEO</option>
+              {/* CEO can invite any role */}
+              {currentAgent?.role === 'CEO' && (
+                <>
+                  <option value="Staff">Staff</option>
+                  <option value="Manager">Manager</option>
+                  <option value="CEO">CEO</option>
+                </>
+              )}
+              {/* Manager can only invite Staff */}
+              {currentAgent?.role === 'Manager' && (
+                <option value="Staff">Staff</option>
+              )}
+              {/* Staff cannot invite anyone */}
+              {(!currentAgent || currentAgent.role === 'Staff') && (
+                <option value="" disabled>No permission to invite agents</option>
+              )}
             </select>
           </div>
 
@@ -305,11 +319,19 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments }: AgentInvi
                 disabled={isSubmitting}
               >
                 <option value="">No department</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </option>
-                ))}
+                {departments
+                  .filter(dept => {
+                    // Manager can only assign to their own department or sub-departments
+                    if (currentAgent?.role === 'Manager') {
+                      return dept.id === currentAgent.departmentId
+                    }
+                    return true
+                  })
+                  .map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
               </select>
             </div>
           )}

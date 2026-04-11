@@ -7,7 +7,6 @@ export interface CreateIssueInput {
   title: string;
   description?: string;
   status?: IssueStatus;
-  assigneeAgentId?: string;
   departmentId?: string;
   subIssues?: string[];
   report?: string;
@@ -20,7 +19,6 @@ export interface UpdateIssueInput {
   title?: string;
   description?: string;
   status?: IssueStatus;
-  assigneeAgentId?: string;
   subIssues?: string[];
   report?: string;
   projectId?: string;
@@ -54,7 +52,6 @@ export async function createIssue(input: CreateIssueInput): Promise<Issue> {
     title: input.title,
     description: input.description ?? null,
     status: input.status ?? "Open",
-    assigneeAgentId: input.assigneeAgentId ?? null,
     departmentId: input.departmentId ?? null,
     subIssues: input.subIssues ?? [],
     report: input.report ?? null,

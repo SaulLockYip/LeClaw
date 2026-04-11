@@ -6,8 +6,10 @@ import type { Agent } from '../lib/api'
 import AgentInviteModal from '../components/AgentInviteModal'
 
 function AgentsPage() {
-  const { selectedCompany, agents, departments, isLoading } = useCompany()
+  const { selectedCompany, agents, departments, isLoading, currentAgent } = useCompany()
   const [showInviteModal, setShowInviteModal] = useState(false)
+
+  const canInviteAgent = currentAgent?.role === 'CEO' || currentAgent?.role === 'Manager'
 
   if (!selectedCompany) {
     return (
@@ -66,13 +68,15 @@ function AgentsPage() {
           <p className="text-slate-500 text-sm mt-1">{selectedCompany.name}</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowInviteModal(true)}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2"
-          >
-            <UserPlus className="w-4 h-4" />
-            Invite Agent
-          </button>
+          {canInviteAgent && (
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center gap-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              Invite Agent
+            </button>
+          )}
         </div>
       </div>
 
@@ -151,6 +155,7 @@ function AgentsPage() {
           onClose={() => setShowInviteModal(false)}
           companyId={selectedCompany.id}
           departments={departments}
+          currentAgent={currentAgent}
         />
       )}
     </div>

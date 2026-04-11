@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ChevronLeft, AlertCircle, MessageSquare, FileText, User, Building2, FolderKanban } from 'lucide-react'
 import { useCompany } from '../../hooks/useCompany'
-import { issueApi } from '../../lib/api'
-import type { Issue, Comment } from '../../lib/api'
+import { issueApi, subIssueApi } from '../../lib/api'
+import type { Issue, Comment, SubIssue } from '../../lib/api'
 
 function IssueDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { selectedCompany, isLoading: isCompanyLoading } = useCompany()
+  const { selectedCompany, isLoading: isCompanyLoading, departments } = useCompany()
   const [issue, setIssue] = useState<Issue | null>(null)
+  const [subIssues, setSubIssues] = useState<SubIssue[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,6 +31,24 @@ function IssueDetailPage() {
     }
     loadIssue()
   }, [selectedCompany, id])
+
+  useEffect(() => {
+    if (!selectedCompany || !issue?.subIssues?.length) return
+
+    async function loadSubIssues() {
+      try {
+        const results = await Promise.all(
+          issue.subIssues.map((subIssueId) =>
+            subIssueApi.get(selectedCompany.id, subIssueId)
+          )
+        )
+        setSubIssues(results)
+      } catch (err) {
+        console.error('Failed to load sub-issues:', err)
+      }
+    }
+    loadSubIssues()
+  }, [selectedCompany, issue?.subIssues])
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -120,7 +139,7 @@ function IssueDetailPage() {
             <label className="text-xs uppercase text-slate-500 tracking-wider">Department</label>
             <p className="text-slate-900 mt-1 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-400" />
-              {issue.departmentId || 'Unknown'}
+              {departments.find(d => d.id === issue.departmentId)?.name || issue.departmentId || 'Unknown'}
             </p>
           </div>
           {issue.projectId && (
@@ -128,7 +147,19 @@ function IssueDetailPage() {
               <label className="text-xs uppercase text-slate-500 tracking-wider">Project</label>
               <p className="text-slate-900 mt-1 flex items-center gap-2">
                 <FolderKanban className="w-4 h-4 text-slate-400" />
-                {issue.projectId}
+                <Link to={`/projects/${issue.projectId}`} className="text-blue-600 hover:text-blue-800">
+                  {issue.projectId}
+                </Link>
+              </p>
+            </div>
+          )}
+          {issue.goalId && (
+            <div>
+              <label className="text-xs uppercase text-slate-500 tracking-wider">Goal</label>
+              <p className="text-slate-900 mt-1 flex items-center gap-2">
+                <Link to={`/goals/${issue.goalId}`} className="text-blue-600 hover:text-blue-800">
+                  {issue.goalId}
+                </Link>
               </p>
             </div>
           )}
@@ -151,14 +182,17 @@ function IssueDetailPage() {
             Sub-Issues ({issue.subIssues.length})
           </h2>
           <div className="space-y-2">
-            {issue.subIssues.map((subIssueId) => (
+            {subIssues.map((subIssue) => (
               <Link
-                key={subIssueId}
-                to={`/issues/${subIssueId}`}
+                key={subIssue.id}
+                to={`/issues/${subIssue.id}`}
                 className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <AlertCircle className="w-4 h-4 text-slate-400" />
-                <span className="text-sm text-slate-700">Issue {subIssueId}</span>
+                <span className="text-sm text-slate-700 flex-1">{subIssue.title}</span>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClass(subIssue.status)}`}>
+                  {subIssue.status}
+                </span>
               </Link>
             ))}
           </div>

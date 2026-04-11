@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as goalService from "../services/goal.service.js";
+import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
 
 export const goalsRouter: Router = Router({ mergeParams: true });
@@ -16,10 +17,43 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Middleware to extract and validate API key
+async function requireApiKey(req: Request, res: Response, next: NextFunction) {
+  const apiKey = req.headers.authorization?.replace(/^Bearer /, "");
+  if (!apiKey) {
+    return res.status(401).json({
+      error: { code: "MISSING_API_KEY", message: "Missing required api-key" }
+    });
+  }
+
+  try {
+    const agentInfo = await agentService.verifyApiKey(apiKey);
+    (req as any).agentInfo = agentInfo;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+    });
+  }
+}
+
+// Middleware to require CEO role
+function requireCeo(req: Request, res: Response, next: NextFunction) {
+  const { role } = (req as any).agentInfo;
+  if (role !== "CEO") {
+    return res.status(403).json({
+      error: { code: "FORBIDDEN", message: "Only CEO can perform this action" }
+    });
+  }
+  next();
+}
+
 goalsRouter.use(requireCompanyId);
+goalsRouter.use(requireApiKey);
 
 // POST /api/companies/:companyId/goals - Create goal
-goalsRouter.post("/", async (req: Request, res: Response) => {
+// Requires API key + CEO role
+goalsRouter.post("/", requireCeo, async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
     const goal = await goalService.createGoal({
@@ -69,7 +103,8 @@ goalsRouter.get("/:id", async (req: Request, res: Response) => {
 });
 
 // PUT /api/companies/:companyId/goals/:id
-goalsRouter.put("/:id", async (req: Request, res: Response) => {
+// Requires API key + CEO role
+goalsRouter.put("/:id", requireCeo, async (req: Request, res: Response) => {
   try {
     const goal = await goalService.updateGoal(req.params.id, {
       title: req.body.title,

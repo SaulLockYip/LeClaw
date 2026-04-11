@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as projectService from "../services/project.service.js";
+import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
 
 export const projectsRouter: Router = Router({ mergeParams: true });
@@ -16,10 +17,43 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Middleware to extract and validate API key
+async function requireApiKey(req: Request, res: Response, next: NextFunction) {
+  const apiKey = req.headers.authorization?.replace(/^Bearer /, "");
+  if (!apiKey) {
+    return res.status(401).json({
+      error: { code: "MISSING_API_KEY", message: "Missing required api-key" }
+    });
+  }
+
+  try {
+    const agentInfo = await agentService.verifyApiKey(apiKey);
+    (req as any).agentInfo = agentInfo;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+    });
+  }
+}
+
+// Middleware to require CEO or Manager role
+function requireCeoOrManager(req: Request, res: Response, next: NextFunction) {
+  const { role } = (req as any).agentInfo;
+  if (role !== "CEO" && role !== "Manager") {
+    return res.status(403).json({
+      error: { code: "FORBIDDEN", message: "Only CEO or Manager can perform this action" }
+    });
+  }
+  next();
+}
+
 projectsRouter.use(requireCompanyId);
+projectsRouter.use(requireApiKey);
 
 // POST /api/companies/:companyId/projects - Create project
-projectsRouter.post("/", async (req: Request, res: Response) => {
+// Requires API key + CEO or Manager role
+projectsRouter.post("/", requireCeoOrManager, async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
     const project = await projectService.createProject(companyId, {
@@ -66,7 +100,8 @@ projectsRouter.get("/:id", async (req: Request, res: Response) => {
 });
 
 // PUT /api/companies/:companyId/projects/:id
-projectsRouter.put("/:id", async (req: Request, res: Response) => {
+// Requires API key + CEO or Manager role
+projectsRouter.put("/:id", requireCeoOrManager, async (req: Request, res: Response) => {
   try {
     const project = await projectService.updateProject(req.params.id, {
       title: req.body.title,

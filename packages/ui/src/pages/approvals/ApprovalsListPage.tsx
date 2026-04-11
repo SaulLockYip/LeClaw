@@ -75,7 +75,7 @@ function ApprovalsListPage() {
     if (!selectedCompany || !selectedApproval) return
     setIsProcessing(true)
     try {
-      await approvalApi.update(selectedCompany.id, selectedApproval.id, { status: 'Approved' })
+      await approvalApi.approve(selectedCompany.id, selectedApproval.id)
       setApprovals((prev) =>
         prev.map((a) => (a.id === selectedApproval.id ? { ...a, status: 'Approved' } : a))
       )
@@ -92,7 +92,7 @@ function ApprovalsListPage() {
     if (!rejectReason.trim()) return
     setIsProcessing(true)
     try {
-      await approvalApi.update(selectedCompany.id, selectedApproval.id, { status: 'Rejected', rejectMessage: rejectReason })
+      await approvalApi.reject(selectedCompany.id, selectedApproval.id, rejectReason)
       setApprovals((prev) =>
         prev.map((a) => (a.id === selectedApproval.id ? { ...a, status: 'Rejected', rejectMessage: rejectReason } : a))
       )

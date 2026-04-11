@@ -3,7 +3,7 @@ export type SseEventType =
   | "company_created" | "company_updated" | "company_deleted"
   | "department_created" | "department_updated" | "department_deleted"
   | "agent_status_changed" | "agent_updated" | "agent_created"
-  | "issue_created" | "issue_updated"
+  | "issue_created" | "issue_updated" | "issue_comment_added"
   | "goal_created" | "goal_updated" | "project_created" | "project_updated" | "approval_created" | "approval_updated"
   | "heartbeat";
 
@@ -15,7 +15,7 @@ const TRACKED_EVENTS: SseEventType[] = [
   "company_created", "company_updated", "company_deleted",
   "department_created", "department_updated", "department_deleted",
   "agent_status_changed", "agent_updated", "agent_created",
-  "issue_created", "issue_updated",
+  "issue_created", "issue_updated", "issue_comment_added",
   "goal_created", "goal_updated", "project_created", "project_updated", "approval_created", "approval_updated",
 ];
 

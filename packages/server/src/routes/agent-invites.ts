@@ -1,5 +1,6 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import * as agentInviteService from "../services/agent-invite.service.js";
+import * as agentService from "../services/agent.service.js";
 
 export const agentInvitesRouter: Router = Router({ mergeParams: true });
 
@@ -15,7 +16,28 @@ function requireCompanyId(req: Request, res: Response, next: () => void) {
   next();
 }
 
+// Middleware to extract and validate API key
+async function requireApiKey(req: Request, res: Response, next: NextFunction) {
+  const apiKey = req.headers.authorization?.replace(/^Bearer /, "");
+  if (!apiKey) {
+    return res.status(401).json({
+      error: { code: "MISSING_API_KEY", message: "Missing required api-key" }
+    });
+  }
+
+  try {
+    const agentInfo = await agentService.verifyApiKey(apiKey);
+    (req as any).agentInfo = agentInfo;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+    });
+  }
+}
+
 agentInvitesRouter.use(requireCompanyId);
+agentInvitesRouter.use(requireApiKey);
 
 // GET /api/companies/:companyId/agent-invites - List invites
 agentInvitesRouter.get("/", async (req: Request, res: Response) => {
@@ -36,6 +58,7 @@ agentInvitesRouter.get("/", async (req: Request, res: Response) => {
 agentInvitesRouter.post("/", async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
+    const { role: agentRole, agentId } = (req as any).agentInfo;
     const { name, role, title, departmentId } = req.body;
 
     // Validate required fields
@@ -51,6 +74,40 @@ agentInvitesRouter.post("/", async (req: Request, res: Response) => {
     if (!validRoles.includes(roleStr as typeof validRoles[number])) {
       return res.status(400).json({
         error: { code: "VALIDATION_ERROR", message: `Invalid role '${roleStr}'. Must be one of: ${validRoles.join(", ")}` }
+      });
+    }
+
+    // Permission check based on agent role
+    if (agentRole === "CEO") {
+      // CEO can invite Manager or Staff, but not another CEO
+      if (roleStr === "CEO") {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "Cannot invite another CEO" }
+        });
+      }
+    } else if (agentRole === "Manager") {
+      // Manager can only invite Staff to their own department
+      if (roleStr !== "Staff") {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "Manager can only invite Staff" }
+        });
+      }
+      if (departmentId !== (req as any).agentInfo.departmentId) {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "Manager can only invite Staff to their own department" }
+        });
+      }
+    } else {
+      // Staff cannot invite anyone
+      return res.status(403).json({
+        error: { code: "FORBIDDEN", message: "Only CEO or Manager can invite agents" }
+      });
+    }
+
+    // For Staff role, departmentId is required
+    if (roleStr === "Staff" && !departmentId) {
+      return res.status(400).json({
+        error: { code: "VALIDATION_ERROR", message: "Staff role requires departmentId" }
       });
     }
 

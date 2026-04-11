@@ -49,7 +49,7 @@ function ApprovalsPage() {
   const handleApprove = async (approvalId: string) => {
     if (!selectedCompany) return
     try {
-      await approvalApi.update(selectedCompany.id, approvalId, { status: 'Approved' })
+      await approvalApi.approve(selectedCompany.id, approvalId)
       setApprovals((prev) =>
         prev.map((a) => (a.id === approvalId ? { ...a, status: 'Approved' } : a))
       )
@@ -61,7 +61,7 @@ function ApprovalsPage() {
   const handleReject = async (approvalId: string) => {
     if (!selectedCompany) return
     try {
-      await approvalApi.update(selectedCompany.id, approvalId, { status: 'Rejected', rejectMessage: 'Rejected' })
+      await approvalApi.reject(selectedCompany.id, approvalId, 'Rejected')
       setApprovals((prev) =>
         prev.map((a) => (a.id === approvalId ? { ...a, status: 'Rejected' } : a))
       )
