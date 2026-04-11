@@ -287,6 +287,14 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
               className="w-full px-3 py-2 bg-white border border-black/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             >
+              {/* No currentAgent = first agent being created, allow CEO as first hire */}
+              {!currentAgent && (
+                <>
+                  <option value="CEO">CEO</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Staff">Staff</option>
+                </>
+              )}
               {/* CEO can invite any role */}
               {currentAgent?.role === 'CEO' && (
                 <>
@@ -300,7 +308,7 @@ function AgentInviteModal({ isOpen, onClose, companyId, departments, currentAgen
                 <option value="Staff">Staff</option>
               )}
               {/* Staff cannot invite anyone */}
-              {(!currentAgent || currentAgent.role === 'Staff') && (
+              {currentAgent?.role === 'Staff' && (
                 <option value="" disabled>No permission to invite agents</option>
               )}
             </select>
