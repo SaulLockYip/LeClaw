@@ -101,17 +101,18 @@ approvalsRouter.post("/", async (req: Request, res: Response) => {
 // Query params:
 // - status: filter by status (Pending, Approved, Rejected)
 // - mine: if true, only return approvals submitted by the authenticated agent
+// For web-ui (no auth), returns all approvals
 approvalsRouter.get("/", async (req: Request, res: Response) => {
   try {
     const companyId = (req as any).companyId;
-    const { agentId } = (req as any).agentInfo;
+    const agentInfo = (req as any).agentInfo;
     const { status, mine } = req.query;
 
     let approvals;
-    if (mine === "true") {
+    if (mine === "true" && agentInfo) {
       // List only approvals submitted by this agent
       approvals = await approvalService.listApprovalsByRequester(
-        agentId,
+        agentInfo.agentId,
         companyId,
         status as any
       );

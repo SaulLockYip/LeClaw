@@ -168,12 +168,16 @@ issuesRouter.get("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
     }
 
     // Check department access for Manager/Staff
-    const role = (req as any).agentInfo.role;
-    const agentDepartmentId = (req as any).agentDepartmentId;
-    if (role !== "CEO" && issue.departmentId !== agentDepartmentId) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Cannot access issues from other departments" }
-      });
+    const agentInfo = (req as any).agentInfo;
+    // Allow full access for web-ui (no auth)
+    if (agentInfo) {
+      const role = agentInfo.role;
+      const agentDepartmentId = (req as any).agentDepartmentId;
+      if (role !== "CEO" && issue.departmentId !== agentDepartmentId) {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "Cannot access issues from other departments" }
+        });
+      }
     }
 
     res.json({ success: true, data: issue });
@@ -193,12 +197,16 @@ issuesRouter.put("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
       return res.status(404).json({ error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
     }
 
-    const role = (req as any).agentInfo.role;
-    const agentDepartmentId = (req as any).agentDepartmentId;
-    if (role !== "CEO" && existing.departmentId !== agentDepartmentId) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Cannot update issues from other departments" }
-      });
+    const agentInfo = (req as any).agentInfo;
+    // Allow full access for web-ui (no auth)
+    if (agentInfo) {
+      const role = agentInfo.role;
+      const agentDepartmentId = (req as any).agentDepartmentId;
+      if (role !== "CEO" && existing.departmentId !== agentDepartmentId) {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "Cannot update issues from other departments" }
+        });
+      }
     }
 
     const issue = await issueService.updateIssue(req.params.id, {
