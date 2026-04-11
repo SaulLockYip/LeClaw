@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import { agents, agentApiKeys } from "@leclaw/db/schema";
+import { agents, agentApiKeys, agentInvites } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { generateApiKey, hashApiKey, parseApiKey } from "@leclaw/shared/api-key";
 import type { Agent, AgentRole } from "@leclaw/shared";
@@ -100,9 +100,30 @@ export async function deleteAgent(
   companyId: string
 ): Promise<boolean> {
   const db = await getDb();
+
+  // First, get the agent to find its openClawAgentId
+  const [agent] = await db.select({ openClawAgentId: agents.openClawAgentId })
+    .from(agents)
+    .where(and(eq(agents.id, id), eq(agents.companyId, companyId)))
+    .limit(1);
+
+  if (!agent) {
+    return false;
+  }
+
+  // If agent has an openClawAgentId, clear it in the corresponding invite
+  // This frees up the OpenClaw agent slot so it can be re-invited
+  if (agent.openClawAgentId) {
+    await db.update(agentInvites)
+      .set({ openClawAgentId: null } as any)
+      .where(eq(agentInvites.openClawAgentId, agent.openClawAgentId));
+  }
+
+  // Now delete the agent
   const [deleted] = await db.delete(agents)
     .where(and(eq(agents.id, id), eq(agents.companyId, companyId)))
     .returning();
+
   return !!deleted;
 }
 
