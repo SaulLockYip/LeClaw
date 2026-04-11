@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS "sub_issues" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "issues" DROP CONSTRAINT "issues_assignee_agent_id_agents_id_fk";
+ALTER TABLE "issues" DROP CONSTRAINT IF EXISTS "issues_assignee_agent_id_agents_id_fk";
 --> statement-breakpoint
 DROP INDEX "issues_company_assignee_status_idx";--> statement-breakpoint
 ALTER TABLE "issues" ALTER COLUMN "department_id" SET NOT NULL;--> statement-breakpoint
