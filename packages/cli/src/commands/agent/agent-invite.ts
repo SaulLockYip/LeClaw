@@ -81,10 +81,24 @@ async function createAgentInvite(options: {
 }): Promise<{ success: boolean; inviteKey?: string; prompt?: string; expiresAt?: Date; error?: string }> {
   const { apiKey, openClawAgentId, name, title, role, departmentId } = options;
 
-  // Validate role - only CEO or Manager can create invites
+  // Validate role - CEO or Manager can create invites
   const agentInfo = await getAgentInfoFromApiKey(apiKey);
-  if (agentInfo.role !== "CEO" && agentInfo.role !== "Manager") {
-    return { success: false, error: "Only CEO or Manager can create agent invites" };
+
+  if (agentInfo.role === "CEO") {
+    // CEO can invite anyone except another CEO
+    if (role === "CEO") {
+      return { success: false, error: "Cannot invite another CEO" };
+    }
+  } else if (agentInfo.role === "Manager") {
+    // Manager can only invite Staff to their own department
+    if (role !== "Staff") {
+      return { success: false, error: "Manager can only invite Staff" };
+    }
+    if (departmentId !== agentInfo.departmentId) {
+      return { success: false, error: "Manager can only invite Staff to their own department" };
+    }
+  } else {
+    return { success: false, error: "Only CEO or Manager can invite agents" };
   }
 
   // For Staff role, departmentId is required
@@ -178,8 +192,8 @@ export function registerAgentInviteCommand(program: Command): void {
   // leclaw agent invite --create
   inviteCommand
     .command("create")
-    .description("Create an invite for an OpenClaw agent (CEO/Manager only)")
-    .requiredOption("--api-key <key>", "Agent API key (must be CEO or Manager)")
+    .description("Create an invite for an OpenClaw agent (CEO: any role, Manager: Staff only)")
+    .requiredOption("--api-key <key>", "Agent API key (CEO: any role, Manager: Staff to own dept only)")
     .requiredOption("--openclaw-agent-id <id>", "OpenClaw agent ID")
     .requiredOption("--name <name>", "Agent name")
     .requiredOption("--title <title>", "Agent title")

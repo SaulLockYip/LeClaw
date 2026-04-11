@@ -12,6 +12,7 @@ export interface AgentInfo {
   agentId: string;
   companyId: string;
   role: AgentRole;
+  departmentId: string;
 }
 
 /**
@@ -50,9 +51,9 @@ export async function getAgentInfoFromApiKey(apiKey: string): Promise<AgentInfo>
     throw new Error("Invalid API key");
   }
 
-  // Get agent role
+  // Get agent role and department
   const [agentRecord] = await db
-    .select({ id: agents.id, companyId: agents.companyId, role: agents.role })
+    .select({ id: agents.id, companyId: agents.companyId, role: agents.role, departmentId: agents.departmentId })
     .from(agents)
     .where(eq(agents.id, keyRecord.agentId))
     .limit(1);
@@ -71,5 +72,6 @@ export async function getAgentInfoFromApiKey(apiKey: string): Promise<AgentInfo>
     agentId: agentRecord.id,
     companyId: agentRecord.companyId,
     role: agentRecord.role as AgentRole,
+    departmentId: agentRecord.departmentId,
   };
 }
