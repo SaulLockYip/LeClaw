@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS "sub_issues" (
 --> statement-breakpoint
 ALTER TABLE "issues" DROP CONSTRAINT IF EXISTS "issues_assignee_agent_id_agents_id_fk";
 --> statement-breakpoint
-DROP INDEX "issues_company_assignee_status_idx";--> statement-breakpoint
+DROP INDEX IF EXISTS "issues_company_assignee_status_idx";--> statement-breakpoint
 ALTER TABLE "issues" ALTER COLUMN "department_id" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "agent_api_keys" ADD COLUMN "company_id" uuid NOT NULL;--> statement-breakpoint
 ALTER TABLE "agent_api_keys" ADD COLUMN "name" text NOT NULL;--> statement-breakpoint
@@ -60,4 +60,4 @@ CREATE INDEX IF NOT EXISTS "sub_issues_assignee_idx" ON "sub_issues" USING btree
 ALTER TABLE "agent_api_keys" ADD CONSTRAINT "agent_api_keys_company_id_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "approvals" ADD CONSTRAINT "approvals_approver_id_agents_id_fk" FOREIGN KEY ("approver_id") REFERENCES "public"."agents"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "agents_agent_api_key_idx" ON "agents" USING btree ("agent_api_key") WHERE "agents"."agent_api_key" IS NOT NULL;--> statement-breakpoint
-ALTER TABLE "issues" DROP COLUMN "assignee_agent_id";
+ALTER TABLE "issues" DROP COLUMN IF EXISTS "assignee_agent_id";
