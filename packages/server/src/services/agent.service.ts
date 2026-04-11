@@ -95,6 +95,17 @@ export async function updateAgent(
   return { ...agent, role: agent.role as AgentRole };
 }
 
+export async function deleteAgent(
+  id: string,
+  companyId: string
+): Promise<boolean> {
+  const db = await getDb();
+  const [deleted] = await db.delete(agents)
+    .where(and(eq(agents.id, id), eq(agents.companyId, companyId)))
+    .returning();
+  return !!deleted;
+}
+
 /**
  * Verify an API key and return agent info (id, companyId, role)
  * @param apiKey - The full API key (sk-xxx format)

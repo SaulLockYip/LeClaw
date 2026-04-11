@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ChevronLeft, Crown, User, Building2 } from 'lucide-react'
+import { ChevronLeft, Crown, User, Building2, Trash2 } from 'lucide-react'
 import { useCompany } from '../hooks/useCompany'
+import { agentApi } from '../lib/api'
 
 function AgentDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { agents, departments, isLoading } = useCompany()
+  const { selectedCompany, agents, departments, isLoading } = useCompany()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const agent = agents.find((a) => a.id === id)
   const department = agent?.departmentId
@@ -70,6 +74,19 @@ function AgentDetailPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!selectedCompany || !agent) return
+    setIsDeleting(true)
+    try {
+      await agentApi.delete(selectedCompany.id, agent.id)
+      window.location.href = '/agents'
+    } catch (err) {
+      console.error('Failed to delete agent:', err)
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -85,6 +102,12 @@ function AgentDetailPage() {
           <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor(agent.status)}`}></div>
           <span className="text-sm text-black/50 capitalize">{agent.status || 'offline'}</span>
         </div>
+        <button
+          onClick={() => setShowDeleteDialog(true)}
+          className="p-2 border border-black text-black hover:bg-black hover:text-white transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Agent Info Card */}
@@ -196,6 +219,34 @@ function AgentDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-black p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-black mb-2">Delete Agent?</h3>
+            <p className="text-black/70 mb-6">
+              Are you sure you want to delete <strong>{agent.name}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteDialog(false)}
+                className="px-4 py-2 border border-black/20 text-black hover:bg-black/5 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-black text-black hover:bg-black hover:text-white transition-colors"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

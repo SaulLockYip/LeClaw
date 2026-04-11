@@ -164,6 +164,8 @@ export const agentApi = {
     fetchApi<Agent[]>(`/companies/${companyId}/agents`),
   get: (companyId: string, agentId: string) =>
     fetchApi<Agent>(`/companies/${companyId}/agents/${agentId}`),
+  delete: (companyId: string, agentId: string) =>
+    fetchApi<void>(`/companies/${companyId}/agents/${agentId}`, { method: 'DELETE' }),
 }
 
 // Issue API

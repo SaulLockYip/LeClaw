@@ -94,3 +94,21 @@ agentsRouter.put("/:id", async (req: Request, res: Response) => {
     res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update agent" } });
   }
 });
+
+// DELETE /api/companies/:companyId/agents/:id
+agentsRouter.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).companyId;
+    const deleted = await agentService.deleteAgent(req.params.id, companyId);
+    if (!deleted) {
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Agent ${req.params.id} not found` } });
+    }
+
+    broadcastEvent({ type: "agent_deleted", payload: { id: req.params.id } });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting agent:", error);
+    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to delete agent" } });
+  }
+});
