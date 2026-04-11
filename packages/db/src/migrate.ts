@@ -105,4 +105,8 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+// Only run CLI when executed directly, not when imported as a module
+const isMainModule = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^file:\/\//, ""));
+if (isMainModule || process.argv[1]?.includes("migrate.ts")) {
+  await main();
+}
