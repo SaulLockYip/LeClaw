@@ -84,7 +84,16 @@ function AgentsPage() {
       {isLoading ? (
         <div className="text-center py-12 text-black/50">Loading...</div>
       ) : agents.length === 0 ? (
-        <div className="text-center py-12 text-black/50">No agents found</div>
+        <div className="text-center py-12">
+          <p className="text-black/50 mb-4">No agents found</p>
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="px-4 py-2 bg-black text-white rounded text-sm font-medium hover:bg-white/10 flex items-center gap-2 mx-auto"
+          >
+            <UserPlus className="w-4 h-4" />
+            Invite First Agent
+          </button>
+        </div>
       ) : (
         <div className="space-y-6">
           {/* CEOs */}
