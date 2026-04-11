@@ -16,3 +16,6 @@ export const companies = pgTable(
     // Company isolation is enforced via foreign key references in other tables
   }),
 );
+
+export type Company = typeof companies.$inferSelect;
+export type NewCompany = typeof companies.$inferInsert;

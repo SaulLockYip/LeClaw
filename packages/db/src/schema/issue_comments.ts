@@ -18,3 +18,6 @@ export const issueComments = pgTable(
     issueIdx: index("issue_comments_issue_idx").on(table.issueId),
   }),
 );
+
+export type IssueComment = typeof issueComments.$inferSelect;
+export type NewIssueComment = typeof issueComments.$inferInsert;

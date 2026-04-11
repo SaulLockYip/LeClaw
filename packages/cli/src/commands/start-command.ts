@@ -1,10 +1,11 @@
 import { Command } from "commander";
 import path from "path";
 import os from "os";
-import { fork } from "child_process";
+import { spawn } from "child_process";
 import fs from "fs";
 import { loadConfig } from "@leclaw/shared";
 import { initializeDb } from "@leclaw/db";
+import { runMigrations } from "@leclaw/db/migrate";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 const PID_FILE = path.join(os.homedir(), ".leclaw", "server.pid");
@@ -40,7 +41,11 @@ export function registerStartCommand(program: Command): void {
         });
         console.log(`Embedded postgres started on ${db.source} (started=${db.started})`);
 
-        // Fork server process - need to go up 3 levels: dist/commands -> dist -> cli -> repo root
+        // Run migrations before starting server
+        process.env.DATABASE_URL = db.connectionString;
+        await runMigrations();
+
+        // Server process - need to go up 3 levels: dist/commands -> dist -> cli -> repo root
         const serverDistPath = path.resolve(import.meta.dirname, "..", "..", "..", "server", "dist", "index.js");
 
         if (!fs.existsSync(serverDistPath)) {
@@ -54,51 +59,26 @@ export function registerStartCommand(program: Command): void {
           process.exit(1);
         }
 
-        const serverProcess = fork(serverDistPath, {
+        // Spawn detached server process - it will run independently
+        const serverProcess = spawn(process.execPath, [serverDistPath], {
           env: {
             ...process.env,
             PORT: port,
             HOST: host,
             DATABASE_URL: db.connectionString,
           },
-          stdio: ["inherit", "pipe", "pipe", "ipc"],
+          detached: true,
+          stdio: ["ignore", "ignore", "ignore"],
         });
 
         // Write PID file
         fs.writeFileSync(PID_FILE, String(serverProcess.pid));
 
-        serverProcess.stdout?.on("data", (data) => process.stdout.write(data));
-        serverProcess.stderr?.on("data", (data) => process.stderr.write(data));
+        // Unref so parent can exit immediately
+        serverProcess.unref();
 
-        let shuttingDown = false;
-        const shutdown = async () => {
-          if (shuttingDown) return;
-          shuttingDown = true;
-          serverProcess.kill("SIGINT");
-          if (db.started) {
-            await db.stop();
-          }
-          try {
-            fs.unlinkSync(PID_FILE);
-          } catch {
-            // Ignore cleanup errors
-          }
-        };
-
-        serverProcess.on("exit", async (code) => {
-          if (db.started) {
-            await db.stop();
-          }
-          try {
-            fs.unlinkSync(PID_FILE);
-          } catch {
-            // Ignore cleanup errors
-          }
-          process.exit(code ?? 1);
-        });
-
-        process.on("SIGINT", shutdown);
-        process.on("SIGTERM", shutdown);
+        console.log(JSON.stringify({ success: true, pid: serverProcess.pid, message: "Server started in background" }));
+        process.exit(0);
       } catch (err) {
         console.error(
           JSON.stringify({

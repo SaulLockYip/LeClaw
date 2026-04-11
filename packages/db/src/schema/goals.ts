@@ -23,3 +23,6 @@ export const goals = pgTable(
     companyStatusIdx: index("goals_company_status_idx").on(table.companyId, table.status),
   }),
 );
+
+export type Goal = typeof goals.$inferSelect;
+export type NewGoal = typeof goals.$inferInsert;

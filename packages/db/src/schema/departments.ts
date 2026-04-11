@@ -18,3 +18,6 @@ export const departments = pgTable(
     companyIdx: index("departments_company_id_idx").on(table.companyId),
   }),
 );
+
+export type Department = typeof departments.$inferSelect;
+export type NewDepartment = typeof departments.$inferInsert;

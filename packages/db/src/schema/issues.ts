@@ -29,3 +29,6 @@ export const issues = pgTable(
     departmentStatusIdx: index("issues_department_status_idx").on(table.departmentId, table.status),
   }),
 );
+
+export type Issue = typeof issues.$inferSelect;
+export type NewIssue = typeof issues.$inferInsert;

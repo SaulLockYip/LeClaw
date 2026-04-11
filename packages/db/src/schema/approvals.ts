@@ -26,3 +26,6 @@ export const approvals = pgTable(
     requesterStatusIdx: index("approvals_requester_status_idx").on(table.requester, table.status),
   }),
 );
+
+export type Approval = typeof approvals.$inferSelect;
+export type NewApproval = typeof approvals.$inferInsert;

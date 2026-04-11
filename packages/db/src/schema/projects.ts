@@ -21,3 +21,6 @@ export const projects = pgTable(
     companyStatusIdx: index("projects_company_status_idx").on(table.companyId, table.status),
   }),
 );
+
+export type Project = typeof projects.$inferSelect;
+export type NewProject = typeof projects.$inferInsert;

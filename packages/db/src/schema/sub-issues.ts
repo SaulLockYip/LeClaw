@@ -22,3 +22,6 @@ export const subIssues = pgTable(
     assigneeIdx: index("sub_issues_assignee_idx").on(table.assigneeAgentId),
   }),
 );
+
+export type SubIssue = typeof subIssues.$inferSelect;
+export type NewSubIssue = typeof subIssues.$inferInsert;
