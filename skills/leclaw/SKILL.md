@@ -10,24 +10,40 @@ description: >
 
 ## Overview
 
-LeClaw is a hierarchical agent collaboration framework that enables structured task assignment, approval workflows, and strategic goal management across a multi-agent organization. It operates on a Company/Department hierarchy with three agent roles (CEO, Manager, Staff) and provides Issue, Approval, Goal, and Project primitives for organizing work.
+LeClaw is an **auxiliary orchestration framework built specifically for OpenClaw** that provides hierarchical task management and collaboration capabilities through the `leclaw` CLI. There is no REST API — agents use CLI commands to create Issues, request Approvals, manage Goals, and track Projects.
+
+It operates on a Company/Department hierarchy with three agent roles (CEO, Manager, Staff) and provides Issue, Approval, Goal, and Project primitives for organizing work.
 
 ## Documents
 
 | Document | Description |
 |----------|-------------|
-| [overview.md](./overview.md) | Framework overview: What is LeClaw, hierarchy structure, and OpenClaw relationship |
 | [roles.md](./roles.md) | Role definitions: CEO, Manager, Staff responsibilities and reporting structure |
 | [permissions.md](./permissions.md) | Permission matrix: Who can do what by role |
 | [collaboration.md](./collaboration.md) | How agents collaborate: LeClaw primitives + OpenClaw capabilities |
 | [issues.md](./issues.md) | Task assignments for tracking work progress |
+| [sub-issues.md](./sub-issues.md) | Breaking complex Issues into executable sub-tasks |
 | [approvals.md](./approvals.md) | Permission boundary crossing and hierarchical decision-making |
 | [goals.md](./goals.md) | Strategic objectives for company/department level |
 | [projects.md](./projects.md) | Organizational containers for grouping related Issues with workspace directory |
+| [agent-invite.md](./agent-invite.md) | Technical steps for inviting new agents |
+| [hiring/hiring.md](./hiring/hiring.md) | Complete hiring/onboarding flow entry point |
+| [hiring/ceo.md](./hiring/ceo.md) | CEO hiring guide: inviting Managers and Staff |
+| [hiring/manager.md](./hiring/manager.md) | Manager hiring guide: inviting Staff |
 
-## Quick Start
+## Work Primitives
 
-1. **Understand the hierarchy**: Read [roles.md](./roles.md) to understand CEO/Manager/Staff responsibilities
+| Primitive | Purpose | Created By |
+|-----------|---------|------------|
+| Issue | Task assignment and tracking (Department-specific, not agent-specific) | CEO, Manager, Staff |
+| Sub-Issue | Decomposed executable tasks | Manager |
+| Approval | Cross permission boundaries | Staff, Manager |
+| Goal | Strategic objectives | CEO |
+| Project | Work organization with projectDir | CEO, Manager |
+
+## Quick Start(For OpenClaw Agents)
+
+1. **Onboard to OpenClaw**: All OpenClaw agents must join via invite key and onboard command. After onboarding, each agent receives a unique API key — **save this in your own `TOOLS.md`** as it is the sole authentication credential for LeClaw CLI commands.
 2. **Check permissions**: Before executing an operation, consult [permissions.md](./permissions.md)
 3. **Learn collaboration patterns**: Read [collaboration.md](./collaboration.md) to understand when to use LeClaw vs OpenClaw native features
 4. **Assign work**: Use [issues.md](./issues.md) to create task assignments and track progress

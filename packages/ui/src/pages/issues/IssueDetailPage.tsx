@@ -11,6 +11,7 @@ function IssueDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { selectedCompany, isLoading: isCompanyLoading, departments } = useCompany()
   const [issue, setIssue] = useState<Issue | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
   const [subIssues, setSubIssues] = useState<SubIssue[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -35,6 +36,20 @@ function IssueDetailPage() {
       }
     }
     loadIssue()
+  }, [selectedCompany, id])
+
+  useEffect(() => {
+    if (!selectedCompany || !id) return
+
+    async function loadComments() {
+      try {
+        const data = await issueApi.getComments(selectedCompany.id, id)
+        setComments(data)
+      } catch (err) {
+        console.error('Failed to load comments:', err)
+      }
+    }
+    loadComments()
   }, [selectedCompany, id])
 
   useEffect(() => {
@@ -221,11 +236,11 @@ function IssueDetailPage() {
       <div className="bg-white rounded-lg border border-slate-200 p-6">
         <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-slate-500" />
-          Comments ({issue.comments?.length || 0})
+          Comments ({comments.length})
         </h2>
-        {issue.comments && issue.comments.length > 0 ? (
+        {comments.length > 0 ? (
           <div className="space-y-4">
-            {issue.comments.map((comment: Comment, index: number) => (
+            {comments.map((comment: Comment, index: number) => (
               <div key={index} className="flex gap-3 p-3 bg-slate-50 rounded-lg">
                 <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 text-sm font-medium">
                   {comment.author?.charAt(0) || '?'}

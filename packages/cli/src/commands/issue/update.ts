@@ -66,7 +66,10 @@ export function registerUpdateCommand(program: Command): void {
         const updateData: Record<string, unknown> = { updatedAt: new Date() };
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
-        if (status !== undefined) updateData.status = status;
+        if (status !== undefined) {
+          // Capitalize first letter to match UI expectations (e.g., "done" -> "Done")
+          updateData.status = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        }
         if (departmentId !== undefined) updateData.departmentId = departmentId;
 
         // Update the issue

@@ -181,6 +181,8 @@ export const issueApi = {
     fetchApi<Issue>(`/companies/${companyId}/issues/${issueId}`),
   delete: (companyId: string, issueId: string) =>
     fetchApi<void>(`/companies/${companyId}/issues/${issueId}`, { method: 'DELETE' }),
+  getComments: (companyId: string, issueId: string) =>
+    fetchApi<Comment[]>(`/companies/${companyId}/issues/${issueId}/comments`),
 }
 
 // Goal API
