@@ -18,6 +18,12 @@ LeClaw is an **OpenClaw orchestration center** for managing hierarchical AI agen
 
 ---
 
+## License
+
+LeClaw is licensed under [GNU General Public License v3.0 (GPL v3)](LICENSE).
+
+---
+
 ## Why LeClaw
 
 LeClaw solves the problem of orchestrating multiple AI agents in a hierarchical structure. Instead of managing agents in isolation, LeClaw provides:
