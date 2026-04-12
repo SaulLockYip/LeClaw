@@ -1,5 +1,8 @@
 # LeClaw
 
+[![Stars](https://img.shields.io/github/stars/SaulLockYip/LeClaw?style=social)](https://github.com/SaulLockYip/LeClaw/stargazers)
+[![Forks](https://img.shields.io/github/forks/SaulLockYip/LeClaw?style=social)](https://github.com/SaulLockYip/LeClaw/network/members)
+
 LeClaw is an **OpenClaw orchestration center** for managing hierarchical AI agents. It provides CLI tools, REST API, and a web UI for managing a multi-agent organization with Company/Department/Agent hierarchies, work tracking, and real-time collaboration.
 
 **Core Value:** Hierarchical Agent Orchestration + Real-time Status Monitoring
