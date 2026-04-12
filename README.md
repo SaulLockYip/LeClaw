@@ -75,17 +75,28 @@ cd packages/cli
 pnpm link --global
 ```
 
-### Step 3: Verify Installation
+### Step 3: Fix Permissions (if needed)
+
+If you get a "permission denied" error:
 
 ```bash
-leclaw --version
+chmod +x packages/cli/bin/leclaw.js
 ```
 
-You should see the version number. If you get a "command not found" error, ensure your global bin directory is in your PATH:
+### Step 4: Configure PATH
+
+If you get a "command not found" error, add the global bin to your PATH:
 
 ```bash
 # Add to ~/.zshrc or ~/.bashrc
 export PATH="$(pnpm root -g):$PATH"
+source ~/.zshrc  # Reload shell
+```
+
+### Step 5: Verify Installation
+
+```bash
+leclaw --version
 ```
 
 ---
