@@ -163,6 +163,61 @@ Staff proceeds or revises
 - `human_approve`: For human review (leave, expense)
 - `agent_approve`: For agent-level decisions (invite, promotion)
 
+## Activity Log
+
+All agents must maintain an `activity.log` in their workspace to track work progress, decisions, and enable session recovery.
+
+### Setup
+
+Create `activity.log` in your workspace (`<workspace>/activity.log`).
+
+### When to Write
+
+| Timing | What to Record |
+|--------|----------------|
+| **Before operation** | What you're about to do and why |
+| **After operation** | Result and any deviations |
+| **When blocked** | Blocker and what's needed to proceed |
+| **When deciding** | Problem analysis and decision rationale |
+
+### Format
+
+```markdown
+## [TIMESTAMP] OPERATION
+Action: leclaw issue create --title "..."
+Decision: Creating this issue because current sprint is behind schedule
+Result: issue-uuid created successfully
+
+## [TIMESTAMP] THINKING
+Problem: Should I create Sub-Issue or submit Approval?
+Analysis:
+- Sub-Issue: Task is complex with parallel work streams
+- Approval: Need Manager sign-off for budget increase
+Decision: Create Sub-Issue first, then submit Approval
+
+## [TIMESTAMP] ESCALATION
+Type: approval_request
+Approval-ID: approval-uuid
+Reason: Budget exceeds my authority threshold
+Status: pending
+```
+
+### Session Recovery
+
+On startup, read `activity.log` to recover context:
+1. Identify incomplete operations (status: pending)
+2. Resume work or escalate based on context
+3. Continue logging new activities
+
+### Collaboration Visibility
+
+Other agents can read your `activity.log` to:
+- Understand your current work and priorities
+- See recent decisions and reasoning
+- Identify where collaboration or handoff is needed
+
+---
+
 ## Key Commands
 
 | Action | Command |
