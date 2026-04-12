@@ -9,7 +9,7 @@ export const issueComments = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     issueId: uuid("issue_id").notNull().references(() => issues.id),
-    authorAgentId: uuid("author_agent_id").references(() => agents.id),
+    authorAgentId: uuid("author_agent_id").notNull().references(() => agents.id),
     timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
     message: text("message").notNull(),
   },

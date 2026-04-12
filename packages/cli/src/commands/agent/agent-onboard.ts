@@ -6,6 +6,7 @@ import { db, agentInvites, agents, closeDb } from "@leclaw/db";
 import { eq } from "drizzle-orm";
 import { generateApiKey } from "@leclaw/shared/api-key";
 import { auditLog } from "../../helpers/audit-log.js";
+import { storeApiKey } from "../../helpers/api-key.js";
 import { registerAgentInviteCommand } from "./agent-invite.js";
 
 export interface OnboardResult {
@@ -111,10 +112,15 @@ function registerOnboardCommand(agentCommand: Command): void {
           output: `Agent onboarded via invite: ${inviteKey}`,
         });
 
+        // Store the API key for automatic CLI use
+        if (result.apiKey) {
+          storeApiKey(result.apiKey);
+        }
+
         console.log(JSON.stringify({
           success: true,
           apiKey: result.apiKey,
-          message: "Agent onboarded successfully via invite. Store the API key securely.",
+          message: "Agent onboarded successfully via invite. API key stored for CLI use.",
         }, null, 2));
         await closeDb();
         process.exit(0);

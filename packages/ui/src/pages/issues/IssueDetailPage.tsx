@@ -9,7 +9,7 @@ import type { Issue, Comment, SubIssue } from '../../lib/api'
 
 function IssueDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { selectedCompany, isLoading: isCompanyLoading, departments } = useCompany()
+  const { selectedCompany, isLoading: isCompanyLoading, departments, agents } = useCompany()
   const [issue, setIssue] = useState<Issue | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [subIssues, setSubIssues] = useState<SubIssue[]>([])
@@ -17,6 +17,7 @@ function IssueDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showAllComments, setShowAllComments] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -234,26 +235,41 @@ function IssueDetailPage() {
 
       {/* Comments Card */}
       <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-slate-500" />
-          Comments ({comments.length})
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-slate-500" />
+            Comments ({comments.length})
+          </h2>
+          {comments.length > 3 && (
+            <button
+              onClick={() => setShowAllComments(!showAllComments)}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              {showAllComments ? 'Show less' : `Show all ${comments.length} comments`}
+            </button>
+          )}
+        </div>
         {comments.length > 0 ? (
           <div className="space-y-4">
-            {comments.map((comment: Comment, index: number) => (
-              <div key={index} className="flex gap-3 p-3 bg-slate-50 rounded-lg">
-                <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 text-sm font-medium">
-                  {comment.author?.charAt(0) || '?'}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-slate-900">{comment.author}</span>
-                    <span className="text-xs text-slate-400">{formatDate(comment.timestamp)}</span>
+            {(showAllComments ? comments : comments.slice(0, 3)).map((comment: Comment, index: number) => {
+              const agentName = agents.find(a => a.id === comment.authorAgentId)?.name || comment.author || 'Unknown'
+              return (
+                <div key={index} className="flex gap-3 p-3 bg-slate-50 rounded-lg">
+                  <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 text-sm font-medium">
+                    {agentName.charAt(0) || '?'}
                   </div>
-                  <p className="text-sm text-slate-600">{comment.message}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-slate-900">{agentName}</span>
+                      <span className="text-xs text-slate-400">{formatDate(comment.timestamp)}</span>
+                    </div>
+                    <div className="text-sm text-slate-700 prose prose-sm max-w-none prose-p:my-1">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.message}</ReactMarkdown>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <p className="text-sm text-slate-500">No comments yet</p>

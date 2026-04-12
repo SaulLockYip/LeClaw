@@ -6,7 +6,7 @@ import { issueComments } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { eq, desc } from "drizzle-orm";
 import { auditLog } from "../../helpers/audit-log.js";
-import { getAgentIdFromApiKey } from "../../helpers/api-key.js";
+import { getAgentIdFromApiKey, getStoredApiKey } from "../../helpers/api-key.js";
 
 export function registerCommentCommand(program: Command): void {
   const commentCommand = new Command("comment")
@@ -17,9 +17,20 @@ export function registerCommentCommand(program: Command): void {
     .command("list")
     .description("List comments on an issue")
     .requiredOption("--issue-id <id>", "Issue ID")
-    .requiredOption("--api-key <key>", "Agent API key")
+    .option("--api-key <key>", "Agent API key (will use stored key if not provided)")
     .action(async (options) => {
-      const { issueId, apiKey } = options;
+      const { issueId } = options;
+
+      // Get API key from options or fall back to stored key
+      const apiKey = options.apiKey ?? getStoredApiKey();
+      if (!apiKey) {
+        console.error(JSON.stringify({
+          success: false,
+          error: "No API key provided. Run 'leclaw agent onboard' first or provide --api-key",
+          code: "MISSING_API_KEY",
+        }, null, 2));
+        process.exit(1);
+      }
 
       try {
         await getAgentIdFromApiKey(apiKey); // Validate API key
@@ -56,9 +67,20 @@ export function registerCommentCommand(program: Command): void {
     .description("Add a comment to an issue")
     .requiredOption("--issue-id <id>", "Issue ID")
     .requiredOption("--message <text>", "Comment message")
-    .requiredOption("--api-key <key>", "Agent API key")
+    .option("--api-key <key>", "Agent API key (will use stored key if not provided)")
     .action(async (options) => {
-      const { issueId, message, apiKey } = options;
+      const { issueId, message } = options;
+
+      // Get API key from options or fall back to stored key
+      const apiKey = options.apiKey ?? getStoredApiKey();
+      if (!apiKey) {
+        console.error(JSON.stringify({
+          success: false,
+          error: "No API key provided. Run 'leclaw agent onboard' first or provide --api-key",
+          code: "MISSING_API_KEY",
+        }, null, 2));
+        process.exit(1);
+      }
 
       let agentId: string;
       let result: "success" | "failure" = "success";
@@ -74,7 +96,7 @@ export function registerCommentCommand(program: Command): void {
           issueId,
           authorAgentId: agentId,
           message,
-        } as any).returning();
+        }).returning();
 
         output = `Comment ${comment.id} added to issue ${issueId}`;
 
