@@ -59,7 +59,7 @@ LeClaw agents are inherently isolated by Company and Department, so names do NOT
 | Field | Example |
 |-------|---------|
 | **name** | `Lucy` |
-| **title** | `跟单专员` |
+| **title** | `Order Specialist` |
 
 **Example:**
 ```bash
@@ -67,7 +67,7 @@ leclaw agent invite create \
   --api-key <key> \
   --openclaw-agent-id <id> \
   --name "Lucy" \
-  --title "跟单专员" \
+  --title "Order Specialist" \
   --role Staff \
   --department-id <uuid>
 ```

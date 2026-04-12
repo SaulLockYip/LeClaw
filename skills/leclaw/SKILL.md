@@ -75,7 +75,7 @@ LeClaw Skill provides **scenario-based guidance**:
 
 ## Agent API Key
 
-**Agent API Key** 是 Agent 调用大部分 LeClaw CLI 的唯一认证凭证。在 Agent onboard 时获取，需保存在 Agent 自己的 `tools.md` 中。
+**Agent API Key** is the sole authentication credential for agents to call LeClaw CLI commands. Acquired during agent onboarding, must be saved in the agent's own `tools.md`.
 
 ## A2A Communication
 
