@@ -6,8 +6,10 @@ LeClaw is an **OpenClaw orchestration center** for managing hierarchical AI agen
 
 ## Table of Contents
 
+- [Why LeClaw](#why-leclaw)
+- [Prerequisites](#prerequisites)
+- [Global Installation](#global-installation)
 - [Quick Start](#quick-start)
-- [Installation](#installation)
 - [CLI Commands](#cli-commands)
 - [REST API](#rest-api)
 - [Architecture](#architecture)
@@ -16,9 +18,31 @@ LeClaw is an **OpenClaw orchestration center** for managing hierarchical AI agen
 
 ---
 
-## Quick Start
+## Why LeClaw
 
-### Clone and Build
+LeClaw solves the problem of orchestrating multiple AI agents in a hierarchical structure. Instead of managing agents in isolation, LeClaw provides:
+
+- **Hierarchical Organization**: Company > Department > Agent structure matching real organizations
+- **Role-Based Operations**: CEO, Manager, and Staff agents with different permissions and responsibilities
+- **Work Tracking**: Issues, goals, and projects that flow through the hierarchy
+- **Real-time Monitoring**: WebSocket-based status updates and SSE event streams
+- **Approval Workflows**: Human-in-the-loop for critical operations
+
+---
+
+## Prerequisites
+
+- **Node.js** 22.14.0 or higher
+- **pnpm** 10.32.1 or higher
+- **OpenClaw** installation (for agent management)
+
+---
+
+## Global Installation
+
+Install LeClaw globally so you can use the `leclaw` command from anywhere.
+
+### Step 1: Clone and Build
 
 ```bash
 git clone https://github.com/SaulLockYip/LeClaw.git
@@ -27,16 +51,43 @@ pnpm install
 pnpm build
 ```
 
-### Run CLI
+### Step 2: Install CLI Globally
 
 ```bash
-# Create symlink for convenience
-ln -s packages/cli/bin/leclaw.js ./leclaw
+cd packages/cli
+pnpm add -g .
+```
 
-# Run CLI
-pnpm tsx leclaw --help
-pnpm tsx leclaw init
-pnpm tsx leclaw status
+Alternatively, you can use `pnpm link` for development:
+
+```bash
+cd packages/cli
+pnpm link --global
+```
+
+### Step 3: Verify Installation
+
+```bash
+leclaw --version
+```
+
+You should see the version number. If you get a "command not found" error, ensure your global bin directory is in your PATH:
+
+```bash
+# Add to ~/.zshrc or ~/.bashrc
+export PATH="$(pnpm root -g):$PATH"
+```
+
+---
+
+## Quick Start
+
+### Initialize LeClaw
+
+After global installation, configure LeClaw with your OpenClaw settings:
+
+```bash
+leclaw init
 ```
 
 The init command will prompt for:
@@ -50,11 +101,11 @@ Configuration is saved to `~/.leclaw/config.json` and an embedded PostgreSQL dat
 ### Start the Server
 
 ```bash
-pnpm tsx packages/server/src/index.ts
+leclaw start
 # Server runs on http://localhost:4396
 ```
 
-### 3. Use the Web UI
+### Use the Web UI
 
 Open `http://localhost:4396` in your browser to access the dashboard. From there you can:
 
@@ -65,29 +116,21 @@ Open `http://localhost:4396` in your browser to access the dashboard. From there
 
 ---
 
-## Installation
+## Local Development
 
-### Prerequisites
-
-- **Node.js** 22.14.0 or higher
-- **pnpm** 10.32.1 or higher
-- **OpenClaw** installation (for agent management)
-
-### Build from Source
+If you are developing LeClaw and do not want to install it globally, you can run commands directly using pnpm:
 
 ```bash
-# Clone and install dependencies
-pnpm install
-
-# Build all packages
+# Build the project
 pnpm build
-```
 
-### Run CLI Without Build
+# Run CLI commands using tsx
+pnpm tsx packages/cli/bin/leclaw.js --help
+pnpm tsx packages/cli/bin/leclaw.js init
+pnpm tsx packages/cli/bin/leclaw.js status
 
-```bash
-# Use tsx to run directly
-./node_modules/.bin/tsx packages/cli/bin/leclaw.js init
+# Start the server
+pnpm tsx packages/server/src/index.ts
 ```
 
 ---
