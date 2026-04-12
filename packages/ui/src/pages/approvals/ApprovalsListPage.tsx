@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CheckCircle, XCircle, Eye, CheckCheck, X } from 'lucide-react'
 import { useCompany } from '../../hooks/useCompany'
 import { approvalApi } from '../../lib/api'
@@ -8,6 +9,7 @@ type FilterTab = 'All' | 'Pending' | 'Approved' | 'Rejected'
 
 function ApprovalsListPage() {
   const { selectedCompany, isLoading: isCompanyLoading } = useCompany()
+  const navigate = useNavigate()
   const [approvals, setApprovals] = useState<Approval[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<FilterTab>('All')
@@ -201,7 +203,10 @@ function ApprovalsListPage() {
                           </button>
                         </>
                       ) : (
-                        <button className="px-3 py-1 text-sm font-medium rounded border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1">
+                        <button
+                          onClick={() => navigate(`/approvals/${approval.id}`)}
+                          className="px-3 py-1 text-sm font-medium rounded border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1"
+                        >
                           <Eye className="w-3 h-3" />
                           View
                         </button>

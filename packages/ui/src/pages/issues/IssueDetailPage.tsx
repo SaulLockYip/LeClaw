@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ChevronLeft, AlertCircle, MessageSquare, FileText, User, Building2, FolderKanban, Trash2 } from 'lucide-react'
+import { ChevronLeft, AlertCircle, MessageSquare, FileText, Building2, FolderKanban, Trash2 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useCompany } from '../../hooks/useCompany'
 import { issueApi, subIssueApi } from '../../lib/api'
 import type { Issue, Comment, SubIssue } from '../../lib/api'
@@ -151,14 +153,7 @@ function IssueDetailPage() {
             <label className="text-xs uppercase text-slate-500 tracking-wider">Description</label>
             <p className="text-slate-900 mt-1">{issue.description || 'No description'}</p>
           </div>
-          <div>
-            <label className="text-xs uppercase text-slate-500 tracking-wider">Assignee</label>
-            <p className="text-slate-900 mt-1 flex items-center gap-2">
-              <User className="w-4 h-4 text-slate-400" />
-              {issue.assignee || 'Unassigned'}
-            </p>
-          </div>
-          <div>
+                    <div>
             <label className="text-xs uppercase text-slate-500 tracking-wider">Department</label>
             <p className="text-slate-900 mt-1 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-400" />
@@ -257,10 +252,26 @@ function IssueDetailPage() {
             <FileText className="w-5 h-5 text-slate-500" />
             Report
           </h2>
-          <div className="prose prose-sm max-w-none text-slate-700">
-            <pre className="whitespace-pre-wrap text-sm font-mono bg-slate-50 p-4 rounded-lg">
-              {issue.report}
-            </pre>
+          <div className="prose prose-sm max-w-none text-slate-700
+            prose-headings:border-b prose-headings:border-slate-200 prose-headings:pb-1 prose-headings:font-semibold
+            prose-h1:text-xl prose-h1:mt-4 prose-h1:mb-2
+            prose-h2:text-lg prose-h2:mt-3 prose-h2:mb-2
+            prose-h3:text-base prose-h3:mt-3 prose-h3:mb-1
+            prose-p:text-slate-700 prose-p:my-2
+            prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
+            prose-img:max-w-full prose-img:rounded-lg
+            prose-blockquote:border-l-4 prose-blockquote:border-slate-300 prose-blockquote:italic prose-blockquote:text-slate-500 prose-blockquote:pl-4
+            prose-code:text-pink-600 prose-code:bg-slate-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+            prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto
+            prose-pre:prose-pre:text-sm prose-pre:prose-pre:font-mono
+            prose-ul:pl-5 prose-ul:list-disc prose-ul:my-2
+            prose-ol:pl-5 prose-ol:list-decimal prose-ol:my-2
+            prose-li:my-1
+            prose-table:border-collapse prose-table:w-full prose-table:my-4
+            prose-th:border prose-th:border-slate-300 prose-th:bg-slate-100 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:font-semibold
+            prose-td:border prose-td:border-slate-200 prose-td:px-3 prose-td:py-2
+          ">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{issue.report}</ReactMarkdown>
           </div>
         </div>
       )}

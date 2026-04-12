@@ -234,7 +234,7 @@ function DashboardPage() {
                 <div className="flex-1">
                   <div className="text-sm font-medium text-slate-800">{issue.title}</div>
                   <div className="text-xs text-slate-500 mt-1">
-                    {issue.id} · {issue.assignee || 'Unassigned'}
+                    {issue.id} · {departments.find(d => d.id === issue.departmentId)?.name || issue.departmentId || 'Unknown'}
                   </div>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${getIssueStatusBadge(issue.status)}`}>

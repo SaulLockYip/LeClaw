@@ -5,7 +5,7 @@ import { issueApi } from '../lib/api'
 import type { Issue } from '../lib/api'
 
 function IssuesPage() {
-  const { selectedCompany, isLoading: isCompanyLoading } = useCompany()
+  const { selectedCompany, isLoading: isCompanyLoading, departments } = useCompany()
   const [issues, setIssues] = useState<Issue[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<'All' | 'Open' | 'InProgress' | 'Blocked' | 'Done' | 'Cancelled'>('All')
@@ -113,7 +113,7 @@ function IssuesPage() {
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Title</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Assignee</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Department</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Created</th>
             </tr>
           </thead>
@@ -139,7 +139,9 @@ function IssuesPage() {
                       {issue.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{issue.assignee || 'Unassigned'}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {departments.find(d => d.id === issue.departmentId)?.name || issue.departmentId || 'Unknown'}
+                  </td>
                   <td className="px-4 py-3 text-sm text-slate-500">
                     {new Date(issue.createdAt).toLocaleDateString()}
                   </td>

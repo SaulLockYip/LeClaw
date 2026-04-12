@@ -9,6 +9,7 @@ import GoalDetailPage from './pages/goals/GoalDetailPage'
 import ProjectsPage from './pages/ProjectsPage'
 import ProjectDetailPage from './pages/projects/ProjectDetailPage'
 import ApprovalsListPage from './pages/approvals/ApprovalsListPage'
+import ApprovalDetailPage from './pages/approvals/ApprovalDetailPage'
 import DepartmentsPage from './pages/DepartmentsPage'
 import DepartmentDetailPage from './pages/DepartmentDetailPage'
 import AgentsPage from './pages/AgentsPage'
@@ -30,6 +31,7 @@ function App() {
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:id" element={<ProjectDetailPage />} />
             <Route path="/approvals" element={<ApprovalsListPage />} />
+            <Route path="/approvals/:id" element={<ApprovalDetailPage />} />
             <Route path="/departments" element={<DepartmentsPage />} />
             <Route path="/departments/:id" element={<DepartmentDetailPage />} />
             <Route path="/agents" element={<AgentsPage />} />

@@ -43,6 +43,26 @@ LeClaw Skill provides **scenario-based guidance**:
 - What LeClaw does NOT support (direct A2A communication - use OpenClaw sessions_send)
 - How to use OpenClaw native capabilities to fill the gaps
 
+## Agent API Key
+
+**Agent API Key** 是 Agent 调用大部分 LeClaw CLI 的唯一认证凭证。在 Agent onboard 时获取，需保存在 Agent 自己的 `tools.md` 中。
+
+## OpenClaw sessions_send
+
+**sessions_send** 用于 Agent 之间直接发送消息。要求 OpenClaw 配置中 `tools.agentToAgent.enabled=true`。
+
+用法：
+```bash
+sessions_send --to <agent-id> --message "<message>"
+```
+
+> 如果当前没有 active session，可通过以下命令创建：
+> ```bash
+> openclaw agent --agent <openclawAgentId> --message "/new"  # openclawAgentId 是字符串，非 UUID
+> ```
+
+适用场景：委托任务、通知状态变更、提供上下文等直接通信需求。
+
 ## ⚠️ ABSOLUTE RESTRICTION: NO REST API
 
 **REST API usage is strictly FORBIDDEN for all agents.**

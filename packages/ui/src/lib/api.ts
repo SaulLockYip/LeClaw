@@ -41,7 +41,6 @@ export interface Issue {
   title: string
   description: string
   status: 'Open' | 'InProgress' | 'Done' | 'Blocked' | 'Cancelled'
-  assignee?: string
   departmentId: string
   subIssues: string[]
   comments: Comment[]
