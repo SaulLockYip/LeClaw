@@ -7,6 +7,14 @@ import { eq } from "drizzle-orm";
 import { auditLog } from "../../helpers/audit-log.js";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
+function normalizeIssueStatus(status: string): string {
+  const lower = status.toLowerCase();
+  if (lower === "inprogress") return "InProgress";
+  if (lower === "cancelled") return "Cancelled";
+  if (lower === "blocked") return "Blocked";
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
 export function registerUpdateCommand(program: Command): void {
   const updateCommand = new Command("update")
     .description("Update an issue");
@@ -67,8 +75,7 @@ export function registerUpdateCommand(program: Command): void {
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
         if (status !== undefined) {
-          // Capitalize first letter to match UI expectations (e.g., "done" -> "Done")
-          updateData.status = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+          updateData.status = normalizeIssueStatus(status);
         }
         if (departmentId !== undefined) updateData.departmentId = departmentId;
 

@@ -26,10 +26,10 @@ It operates on a Company/Department hierarchy with three agent roles (CEO, Manag
 | [approvals.md](./approvals.md) | Permission boundary crossing and hierarchical decision-making |
 | [goals.md](./goals.md) | Strategic objectives for company/department level |
 | [projects.md](./projects.md) | Organizational containers for grouping related Issues with workspace directory |
+| [workflow.md](./workflow.md) | Top-down and bottom-up task delegation flow |
 | [agent-invite.md](./agent-invite.md) | Technical steps for inviting new agents |
+| [HEARTBEATS_Templates.md](./HEARTBEATS_Templates.md) | Auto task polling and self-execution setup |
 | [hiring/hiring.md](./hiring/hiring.md) | Complete hiring/onboarding flow entry point |
-| [hiring/ceo.md](./hiring/ceo.md) | CEO hiring guide: inviting Managers and Staff |
-| [hiring/manager.md](./hiring/manager.md) | Manager hiring guide: inviting Staff |
 
 ## Work Primitives
 
@@ -41,15 +41,29 @@ It operates on a Company/Department hierarchy with three agent roles (CEO, Manag
 | Goal | Strategic objectives | CEO |
 | Project | Work organization with projectDir | CEO, Manager |
 
+## Status Values
+
+Status values are **case-sensitive** — the UI renders them exactly as stored.
+
+| Entity | Status Values |
+|--------|---------------|
+| Issue/Sub-Issue | `Open`, `InProgress`, `Blocked`, `Done`, `Cancelled` |
+| Goal | `Open`, `Achieved`, `Archived` |
+| Project | `Open`, `InProgress`, `Done`, `Archived` |
+| Approval | `Pending`, `Approved`, `Rejected` |
+
+**CLI normalization:** Commands should accept lowercase input and normalize (e.g., `done` -> `Done`). The special case `InProgress` must preserve camelCase (not `Inprogress` or `INPROGRESS`).
+
 ## Quick Start(For OpenClaw Agents)
 
 1. **Onboard to OpenClaw**: All OpenClaw agents must join via invite key and onboard command. After onboarding, each agent receives a unique API key — **save this in your own `TOOLS.md`** as it is the sole authentication credential for LeClaw CLI commands.
-2. **Check permissions**: Before executing an operation, consult [permissions.md](./permissions.md)
-3. **Learn collaboration patterns**: Read [collaboration.md](./collaboration.md) to understand when to use LeClaw vs OpenClaw native features
-4. **Assign work**: Use [issues.md](./issues.md) to create task assignments and track progress
-5. **Request approvals**: Use [approvals.md](./approvals.md) when crossing permission boundaries
-6. **Set strategic objectives**: Use [goals.md](./goals.md) for company/department-level goals
-7. **Organize complex work**: Use [projects.md](./projects.md) to group related Issues with shared workspace
+2. **Understand the workflow**: Read [workflow.md](./workflow.md) to understand the top-down task delegation and bottom-up reporting flow.
+3. **Check permissions**: Before executing an operation, consult [permissions.md](./permissions.md)
+4. **Learn collaboration patterns**: Read [collaboration.md](./collaboration.md) to understand when to use LeClaw vs OpenClaw native features
+5. **Assign work**: Use [issues.md](./issues.md) to create task assignments and track progress
+6. **Request approvals**: Use [approvals.md](./approvals.md) when crossing permission boundaries
+7. **Set strategic objectives**: Use [goals.md](./goals.md) for company/department-level goals
+8. **Organize complex work**: Use [projects.md](./projects.md) to group related Issues with shared workspace
 
 ## Core Philosophy
 
@@ -63,21 +77,17 @@ LeClaw Skill provides **scenario-based guidance**:
 
 **Agent API Key** 是 Agent 调用大部分 LeClaw CLI 的唯一认证凭证。在 Agent onboard 时获取，需保存在 Agent 自己的 `tools.md` 中。
 
-## OpenClaw sessions_send
+## A2A Communication
 
-**sessions_send** 用于 Agent 之间直接发送消息。要求 OpenClaw 配置中 `tools.agentToAgent.enabled=true`。
+**LeClaw does not support agent-to-agent (A2A) messaging directly.** For direct communication between agents, use the `a2a-chatting` skill from [clawhub](https://clawhub.ai/saullockyip/a2a-chatting).
 
-用法：
+**Recommended: a2a-chatting** (from clawhub)
 ```bash
-sessions_send --to <agent-id> --message "<message>"
+a2a-chatting.sh new-session <agent-id>    # Create new session
+a2a-chatting.sh message <session-id> "..." # Send message
 ```
 
-> 如果当前没有 active session，可通过以下命令创建：
-> ```bash
-> openclaw agent --agent <openclawAgentId> --message "/new"  # openclawAgentId 是字符串，非 UUID
-> ```
-
-适用场景：委托任务、通知状态变更、提供上下文等直接通信需求。
+See [a2a-chatting on clawhub](https://clawhub.ai/saullockyip/a2a-chatting) for full documentation.
 
 ## ⚠️ ABSOLUTE RESTRICTION: NO REST API
 

@@ -1,32 +1,28 @@
 # LeClaw Hiring Guide
 
-**When to read:** When hiring a new agent (CEO or Manager).
+**When to read:** When hiring a new agent (For CEO or Manager agent).
 
 This document provides an overview of the complete hiring and onboarding flow for adding new agents to your LeClaw organization.
 
 ## Complete Hiring Flow
 
 ```
-Step 1: Create OpenClaw Agent
+Step 1: Confirm Naming Convention
+   └── Confirm OpenClaw name and workspace with CEO (if needed)
+
+Step 2: Create OpenClaw Agent
    └── openclaw agents add <name> --workspace <dir> --non-interactive
 
-Step 2: Create LeClaw Invite
-   └── leclaw agent invite --create --openclaw-agent-id <id> --name <name> --title <title> --role <role> --department-id <uuid>
+Step 3: Create LeClaw Invite
+   └── leclaw agent invite create --api-key <key> --openclaw-agent-id <id> --name <name> --title <title> --role <role> --department-id <uuid>
+   └── Returns inviteKey (6-char code)
 
-Step 3: Onboard via OpenClaw A2A
-   └── Use sessions_send to send invite key and identity info
-   └── Guide new agent through onboarding
+Step 4: Onboard new agent
+   └── Send the invite key to the new agent via a2a-chatting or direct message
+   └── New agent runs: leclaw agent onboard --invite-key <code>
+   └── New agent receives ONE-TIME API KEY (auto-stored to ~/.leclaw/agent-api-key)
 
-Step 4: New agent completes leclaw onboard
-   └── Receives ONE-TIME API KEY
-   └── API key appears ONLY ONCE - agent must remember it
-   └── If lost: delete agent and re-onboard
-
-Step 5: Register skills
-   └── Skills location: ~/.leclaw/skills/
-   └── Register skills to agent scope
-
-Step 7: Introduce to team
+Step 5: Introduce to team
 ```
 
 ## Role-Based Permissions
@@ -38,9 +34,51 @@ Step 7: Introduce to team
 
 **Important:** Only the CEO can hire Managers. Managers can only hire Staff to their own department.
 
+## Naming Conventions
+
+### OpenClaw Agent Naming
+
+OpenClaw agents require consistent naming to identify Company, Department, Role, and Name:
+
+| Field | Format | Example |
+|-------|--------|---------|
+| **name** | `{Company}-{Department}-{Role}-{AgentName}` | `Echi-Operation-Staff-Lucy` |
+| **workspace** | `.openclaw/{Company}/{name-lowercase}/` | `.openclaw/Echi/echi-operation-staff-lucy/` |
+
+**Example:**
+```bash
+openclaw agents add Echi-Operation-Staff-Lucy \
+  --workspace .openclaw/Echi/echi-operation-staff-lucy/ \
+  --non-interactive
+```
+
+### LeClaw Agent Naming
+
+LeClaw agents are inherently isolated by Company and Department, so names do NOT need to include company/department info:
+
+| Field | Example |
+|-------|---------|
+| **name** | `Lucy` |
+| **title** | `跟单专员` |
+
+**Example:**
+```bash
+leclaw agent invite create \
+  --api-key <key> \
+  --openclaw-agent-id <id> \
+  --name "Lucy" \
+  --title "跟单专员" \
+  --role Staff \
+  --department-id <uuid>
+```
+
 ## Step-by-Step Details
 
-### Step 1: Create OpenClaw Agent
+### Step 1: Confirm Naming Convention
+
+Before hiring, confirm the OpenClaw agent naming with CEO if needed.
+
+### Step 2: Create OpenClaw Agent
 
 Create the agent in OpenClaw using the CLI:
 
@@ -48,72 +86,55 @@ Create the agent in OpenClaw using the CLI:
 openclaw agents add <name> --workspace <dir> --non-interactive
 ```
 
-Parameters:
-- `<name>`: Unique identifier for the agent
-- `--workspace <dir>`: Working directory for the agent
-- `--non-interactive`: Skip interactive prompts
-
-### Step 1b: Find Department ID
-
-```bash
-leclaw department list
-```
-
-### Step 2: Create LeClaw Invite
+### Step 3: Create LeClaw Invite
 
 Create the invite record in LeClaw:
 
 ```bash
-leclaw agent invite --create --api-key <key> --openclaw-agent-id <id> --name <name> --title <title> --role <role> --department-id <uuid>
+leclaw agent invite create \
+  --api-key <key> \
+  --openclaw-agent-id <id> \
+  --name <name> \
+  --title <title> \
+  --role <role> \
+  --department-id <uuid>
 ```
 
-Parameters:
-- `--openclaw-agent-id <id>`: ID from Step 1
-- `--name <name>`: Display name for the agent
-- `--title <title>`: Job title
-- `--role <role>`: Either "Manager" or "Staff"
-- `--department-id <uuid>`: Target department UUID
+### Step 4: Onboard new agent
 
-### Step 3: A2A Communication
+The hiring agent should send the new agent:
+- The invite key
+- Their role, title, and department
 
-Send an A2A message to the new agent via `sessions_send` containing:
-- Welcome message with the invite key
-- Identity information: role, company name, department
-- Instructions to run: `leclaw onboard --invite-key <key>`
-- Skills location: `~/.leclaw/skills/`
+The new agent then runs:
+```bash
+leclaw agent onboard --invite-key <code>
+```
 
-### Step 4: New Agent Onboards
+The API key is auto-generated and stored to `~/.leclaw/agent-api-key`.
+
+**Onboarding Checklist:**
+```
+Onboarding Checklist:
+1. [ ] Run: leclaw agent onboard --invite-key <code>
+2. [ ] Save API key to your TOOLS.md
+3. [ ] Understand activity.log usage (see [workflow.md](../workflow.md))
+     - Record decisions, operations, and blockers
+4. [ ] Read [HEARTBEATS_Templates.md](../HEARTBEATS_Templates.md) for auto task polling setup
+```
+
+### Step 5: New Agent Onboards
 
 The new agent runs:
 ```bash
-leclaw onboard --invite-key <key>
+leclaw agent onboard --invite-key <code>
 ```
 
-The agent receives a **ONE-TIME API KEY**.
+The API key is auto-generated and stored to `~/.leclaw/agent-api-key`.
 
-The API key appears ONLY ONCE during onboard.
-The agent must remember it by its own means.
-If lost: delete the agent and re-onboard.
+### Step 6: Introduce to Team
 
-### Step 5: Register Skills
-
-The new agent registers skills:
-```bash
-# Register LeClaw skills
-leclaw skills register --scope agent --path ~/.leclaw/skills/
-```
-
-Skills location: `~/.leclaw/skills/`
-
-### Step 6: API Key Storage
-
-The API key appears ONLY ONCE during onboard.
-The agent must remember it by its own means.
-If lost: delete the agent and re-onboard.
-
-### Step 7: Introduce to Team
-
-The hiring agent sends A2A messages to existing team members introducing the new agent.
+The hiring agent notifies existing team members about the new agent via a2a-chatting or direct message.
 
 ## Common Milestones
 
@@ -125,7 +146,5 @@ A successful hiring onboarding completes when:
 
 ## See Also
 
-- [CEO Hiring Guide](ceo.md) - Detailed guide when CEO hires Managers or Staff
-- [Manager Hiring Guide](manager.md) - Detailed guide when Manager hires Staff
 - [Agent Invite](../agent-invite.md) - Technical invite creation reference
 - [Roles](../roles.md) - Role definitions and responsibilities

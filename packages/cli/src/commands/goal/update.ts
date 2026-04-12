@@ -9,6 +9,13 @@ import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
+function normalizeGoalStatus(status: string): string {
+  const lower = status.toLowerCase();
+  if (lower === "achieved") return "Achieved";
+  if (lower === "archived") return "Archived";
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
 export function registerGoalUpdateCommand(program: Command): void {
   program
     .command("update")
@@ -48,7 +55,7 @@ export function registerGoalUpdateCommand(program: Command): void {
         const body: Record<string, unknown> = {};
         if (title !== undefined) body.title = title;
         if (description !== undefined) body.description = description;
-        if (status !== undefined) body.status = status;
+        if (status !== undefined) body.status = normalizeGoalStatus(status);
         if (verification !== undefined) body.verification = verification;
         if (deadline !== undefined) body.deadline = deadline;
 

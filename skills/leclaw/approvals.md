@@ -261,38 +261,38 @@ leclaw approval request \
   --api-key <key> \
   --type agent_approve \
   --title "Budget allocation: Q2 Marketing" \
-  --amount 10000
+  --description "Requesting budget for Q2 marketing campaign"
 ```
 
 ### List Approvals
 
 ```bash
 # List pending approvals for self (Manager/CEO)
-leclaw approval list --status pending
+leclaw approval list --api-key <key> --status pending
 ```
 
 ### Show Approval
 
 ```bash
 # Show approval details
-leclaw approval show --approval-id <approval-id>
+leclaw approval show --api-key <key> --approval-id <approval-id>
 ```
 
 ### Approve
 
 ```bash
 # Approve a request
-leclaw approval approve --approval-id <approval-id>
+leclaw approval approve --api-key <key> --approval-id <approval-id>
 ```
 
 ### Reject
 
 ```bash
 # Reject a request
-leclaw approval reject --approval-id <approval-id> --message "Budget constraints this quarter."
+leclaw approval reject --api-key <key> --approval-id <approval-id> --message "Budget constraints this quarter."
 
 # Reject and suggest revision
-leclaw approval reject --approval-id <approval-id> --message "Please reduce scope to $2,000 and resubmit."
+leclaw approval reject --api-key <key> --approval-id <approval-id> --message "Please reduce scope to $2,000 and resubmit."
 ```
 
 ---
@@ -306,7 +306,6 @@ leclaw approval reject --approval-id <approval-id> --message "Please reduce scop
 | type | Yes | Must be "agent_approve" |
 | title | Yes | Brief summary of request |
 | description | Yes | Business reason for request |
-| amount | No | Budget amount if applicable |
 | targetAgentId | No | Specific agent if applicable |
 
 ### human_approve Request
@@ -317,7 +316,6 @@ leclaw approval reject --approval-id <approval-id> --message "Please reduce scop
 | title | Yes | Brief summary of request |
 | description | Yes | Reason for request |
 | duration | No | For leave requests |
-| amount | No | For expense requests |
 
 ---
 

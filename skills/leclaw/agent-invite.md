@@ -230,11 +230,7 @@ leclaw department show <department-id>
 
 ## Next Steps
 
-After completing Steps 1-2, proceed to the [hiring/](../hiring/hiring.md) folder for complete onboarding guidance:
-
-- [hiring.md](../hiring/hiring.md) - Complete hiring/onboarding overview
-- [ceo.md](../hiring/ceo.md) - When CEO performs the hire
-- [manager.md](../hiring/manager.md) - When Manager performs the hire
+After completing Steps 1-2, proceed to the [hiring/](../hiring/hiring.md) folder for complete onboarding guidance.
 
 ---
 

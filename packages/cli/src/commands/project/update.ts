@@ -9,6 +9,13 @@ import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
+function normalizeProjectStatus(status: string): string {
+  const lower = status.toLowerCase();
+  if (lower === "inprogress") return "InProgress";
+  if (lower === "archived") return "Archived";
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
 export function registerProjectUpdateCommand(program: Command): void {
   program
     .command("update")
@@ -47,7 +54,7 @@ export function registerProjectUpdateCommand(program: Command): void {
         const body: Record<string, unknown> = {};
         if (title !== undefined) body.title = title;
         if (description !== undefined) body.description = description;
-        if (status !== undefined) body.status = status;
+        if (status !== undefined) body.status = normalizeProjectStatus(status);
         if (projectDir !== undefined) body.projectDir = projectDir;
 
         const url = `${gatewayUrl}/api/companies/${agentInfo.companyId}/projects/${projectId}`;

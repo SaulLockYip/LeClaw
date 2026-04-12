@@ -178,24 +178,12 @@ Staff updates Sub-Issue status
 ### Create Sub-Issue
 
 ```bash
-# Basic Sub-Issue
+# Sub-Issue (assignee-agent-id is required)
 leclaw issue sub-issue create \
+  --api-key <key> \
   --title "Implement user authentication" \
   --parent-issue-id <uuid> \
-  --department-id <uuid>
-
-# Sub-Issue with assignment
-leclaw issue sub-issue create \
-  --title "Implement user authentication" \
-  --parent-issue-id <uuid> \
-  --assignee-agent-id <uuid> \
-  --priority high
-
-# Sub-Issue with order
-leclaw issue sub-issue create \
-  --title "Deploy to production" \
-  --parent-issue-id <uuid> \
-  --order-index 3
+  --assignee-agent-id <uuid>
 ```
 
 Use `leclaw issue show --issue-id <parent-id>` to see parent issue with all its sub-issues.
@@ -204,26 +192,23 @@ Use `leclaw issue show --issue-id <parent-id>` to see parent issue with all its 
 
 ```bash
 # Show Sub-Issue details
-leclaw issue show --issue-id <sub-issue-id>
-
-# Show with parent context
-leclaw issue show --issue-id <sub-issue-id> --include-parent
+leclaw issue show --api-key <key> --issue-id <sub-issue-id>
 ```
 
 ### Update Sub-Issue
 
 ```bash
 # Update status
-leclaw issue sub-issue update --sub-issue-id <id> --status inprogress --api-key <key>
+leclaw issue sub-issue update --api-key <key> --sub-issue-id <id> --status inprogress
 
 # Reassign Sub-Issue
-leclaw issue sub-issue update --sub-issue-id <id> --assignee-agent-id <uuid> --api-key <key>
+leclaw issue sub-issue update --api-key <key> --sub-issue-id <id> --assignee-agent-id <uuid>
 
 # Add work note
-leclaw issue comment add --issue-id <sub-issue-id> --message "Started implementation..."
+leclaw issue comment add --api-key <key> --issue-id <sub-issue-id> --message "Started implementation..."
 
 # Complete Sub-Issue
-leclaw issue sub-issue update --sub-issue-id <id> --status done --api-key <key>
+leclaw issue sub-issue update --api-key <key> --sub-issue-id <id> --status done
 ```
 
 ---
@@ -234,6 +219,7 @@ leclaw issue sub-issue update --sub-issue-id <id> --status done --api-key <key>
 
 ```bash
 leclaw issue create \
+  --api-key <key> \
   --title "Launch v2.0 by Q3" \
   --department-id engineering \
   --priority critical \
@@ -244,6 +230,7 @@ leclaw issue create \
 
 ```bash
 leclaw project create \
+  --api-key <key> \
   --title "v2.0 Launch Project" \
   --description "Project root: /company/projects/v2-launch/
 
@@ -257,46 +244,49 @@ Directory structure:
 
 ```bash
 # Sub-Issue 1: API Development
-leclaw issue create \
+leclaw issue sub-issue create \
+  --api-key <key> \
   --title "Implement new REST API endpoints" \
   --parent-issue-id <issue-uuid> \
-  --assignee-agent-id <agent-uuid> \
-  --priority high
+  --assignee-agent-id <agent-uuid>
 
 # Sub-Issue 2: Frontend Update
-leclaw issue create \
+leclaw issue sub-issue create \
+  --api-key <key> \
   --title "Update frontend to use new API" \
   --parent-issue-id <issue-uuid> \
-  --priority high
+  --assignee-agent-id <agent-uuid>
 
 # Sub-Issue 3: Documentation
-leclaw issue create \
+leclaw issue sub-issue create \
+  --api-key <key> \
   --title "Update API documentation" \
   --parent-issue-id <issue-uuid> \
-  --priority medium
+  --assignee-agent-id <agent-uuid>
 
 # Sub-Issue 4: Testing
-leclaw issue create \
+leclaw issue sub-issue create \
+  --api-key <key> \
   --title "Comprehensive integration testing" \
   --parent-issue-id <issue-uuid> \
-  --priority critical
+  --assignee-agent-id <agent-uuid>
 ```
 
 ### Step 4: Staff Works on Sub-Issues
 
 ```bash
 # Staff member picks up API development Sub-Issue
-leclaw issue sub-issue update --sub-issue-id <sub-issue-1-id> --status inprogress
+leclaw issue sub-issue update --api-key <key> --sub-issue-id <sub-issue-1-id> --status inprogress
 
 # After completing work
-leclaw issue sub-issue update --sub-issue-id <sub-issue-1-id> --status done
+leclaw issue sub-issue update --api-key <key> --sub-issue-id <sub-issue-1-id> --status done
 ```
 
 ### Step 5: Manager Monitors Progress
 
 ```bash
 # Check overall progress
-leclaw issue show --issue-id <issue-uuid>
+leclaw issue show --api-key <key> --issue-id <issue-uuid>
 
 # Output shows:
 # - 4 Sub-Issues

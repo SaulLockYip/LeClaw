@@ -15,138 +15,42 @@ Understanding the relationship between LeClaw and OpenClaw is essential:
 
 ### The Fundamental Rule
 
-**LeClaw has NO built-in A2A (agent-to-agent) communication.** For direct messaging between agents, you must use OpenClaw sessions_send.
+**LeClaw has NO built-in A2A (agent-to-agent) communication.** For direct messaging between agents, use the `a2a-chatting` CLI tool (recommended) or OpenClaw sessions_send.
 
-## Scenario-Based Guidance
+**Recommended: a2a-chatting**
+```bash
+a2a-chatting.sh get-agents           # List available agents
+a2a-chatting.sh new-session <id>    # Create new session
+a2a-chatting.sh message <session_id> "Hello"  # Send message
+a2a-chatting.sh list-sessions       # View all sessions
+```
+See [clawhub.ai/saullockyip/a2a-chatting](https://clawhub.ai/saullockyip/a2a-chatting) for full documentation.
 
-| Scenario | LeClaw Solution | OpenClaw Supplement |
-|----------|----------------|-----------------------|
-| Delegate task | Create Issue with assignee | Use `sessions_send` to notify assignee |
-| Request approval | Submit Approval request | - |
-| Direct peer communication | NOT supported by LeClaw | Use `sessions_send` (requires A2A policy) |
-| Parallel execution | Create Sub-Issues | Use `sessions_spawn` for true isolation |
-| Monitor progress | Check Issue/Goal status | Use `sessions_list` / `sessions_history` |
-| Kill runaway task | Update Issue status | Use `subagents kill` |
-| Onboarding new agent | Create invite, assign mentor | Use `sessions_send` for training |
-| Complex task decomposition | Sub-Issue (tracking) + sessions_spawn (execution) | - |
+> **Workflow:** See [workflow.md](./workflow.md) for the complete top-down and bottom-up task delegation flow.
 
 ## Key Constraints
 
 1. **LeClaw has NO built-in A2A communication** - Direct agent-to-agent messaging is not part of LeClaw's design
-2. **For direct agent-to-agent messaging, use OpenClaw `sessions_send`** - This requires `tools.agentToAgent.enabled=true` in config
+2. **For direct agent-to-agent messaging, use `a2a-chatting` CLI** (recommended) or OpenClaw `sessions_send`
 3. **For task decomposition, use both:**
    - Sub-Issue for tracking and assignment
    - `sessions_spawn` for true parallel execution isolation
-4. **A2A communication requires configuration** - `tools.agentToAgent.enabled=true` must be set
 
-## Collaboration Patterns
+## Cross-Department Collaboration
 
-### 1. Strategic Delegation (CEO to Manager)
-
-Used when CEO needs work done but wants Manager to plan the details.
+For complex tasks requiring cross-department coordination, agents may communicate directly via A2A. However, **all cross-department communication must be documented in LeClaw**:
 
 ```
-CEO creates placeholder Issue for Department
+Agent identifies need for cross-department coordination
          ↓
-(Option A) Manager sees Issue, creates Sub-Issues, plans work
+Use a2a-chatting to communicate with the target agent
          ↓
-Manager creates concrete Issue, breaks into Sub-Issues
+Document the discussion outcome in the relevant Issue comment
          ↓
-Staff works on Sub-Issues
-
-(Option B) CEO uses sessions_send: "Please create Issue for X"
-         ↓
-Manager creates Issue, plans, assigns
-         ↓
-Staff works on Sub-Issues
+Update Sub-Issue status or report as needed
 ```
 
-**When to use:**
-- CEO has strategic objective but details need Manager's operational knowledge
-- CEO wants to delegate planning authority to Manager
-- Cross-Department coordination needed
-
-**OpenClaw supplement:**
-- Use `sessions_send` to notify Manager of priority or context
-- Use `sessions_list` to check Manager's current workload before delegating
-
-### 2. Operational Planning (Manager to Staff)
-
-Used when Manager breaks down work and assigns to Staff.
-
-```
-Manager reviews Department Issues
-         ↓
-Creates Sub-Issues for concrete work
-         ↓
-Assigns Sub-Issues to Staff (via assigneeAgentId)
-         ↓
-Staff receives task and works
-         ↓
-Staff updates Sub-Issue status
-         ↓
-Manager monitors and aggregates
-```
-
-**When to use:**
-- Manager has operational detail to plan
-- Work can be parallelized across multiple Staff
-- Progress needs tracking at sub-task level
-
-**OpenClaw supplement:**
-- Use `sessions_send` to provide additional context to Staff
-- Use `sessions_history` to review Staff's recent work
-
-### 3. Parallel Work (Decomposition)
-
-Used when work can be done concurrently by multiple agents.
-
-```
-Manager creates Project (optional, for related work)
-         ↓
-Creates multiple Sub-Issues for parallel work
-         ↓
-Agents work in parallel (sessions_spawn for isolation)
-         ↓
-Each reports back via Sub-Issue updates
-         ↓
-Manager aggregates results
-```
-
-**When to use:**
-- Multiple Sub-Issues can be worked on simultaneously
-- Work streams are independent
-- Results need to be combined later
-
-**OpenClaw supplement:**
-- Use `sessions_spawn` to create truly isolated agent instances
-- Each spawn can work on a specific Sub-Issue
-- Parent agent monitors and aggregates results
-
-### 4. Escalation (Bottom-Up)
-
-Used when Staff needs approval or decision from higher authority.
-
-```
-Staff encounters blocker or needs approval
-         ↓
-Submits Approval request
-         ↓
-Manager reviews and approves/rejects
-         ↓
-(If CEO-level needed) Manager forwards to CEO
-         ↓
-Staff proceeds or revises
-```
-
-**When to use:**
-- Task requires decision outside Staff's authority
-- Resource request needs Manager/CEO sign-off
-- Blocker cannot be resolved at current level
-
-**LeClaw tool:** Approval workflow
-- `human_approve`: For human review (leave, expense)
-- `agent_approve`: For agent-level decisions (invite, promotion)
+**Why document?** LeClaw maintains the authoritative record of decisions and work. A2A communication is for real-time coordination only — the outcome must be recorded in the Issue/Sub-Issue for auditability.
 
 ### 5. A2A Communication (When LeClaw Doesn't Support)
 
@@ -157,7 +61,7 @@ Agent needs to send direct message to another Agent
          ↓
 LeClaw doesn't support A2A directly
          ↓
-Use OpenClaw sessions_send (requires A2A policy enabled)
+Use a2a-chatting CLI (recommended)
          ↓
 Example: CEO sends onboarding instructions to new agent
 ```
@@ -168,8 +72,8 @@ Example: CEO sends onboarding instructions to new agent
 - Sending context that doesn't fit in Issue/Sub-Issue
 
 **Requirements:**
-- `tools.agentToAgent.enabled=true` in OpenClaw config
-- Sender must know recipient's agent ID or name
+- Configure: `a2a-chatting.sh config <openclaw_dir>`
+- Use `a2a-chatting.sh get-agents` to find agent IDs
 
 **Common examples:**
 - CEO sends welcome message + training plan to new agent
@@ -186,7 +90,7 @@ Is this requesting approval for a decision?
 ├── YES → Use LeClaw Approval
 └── NO ↓
 Is this direct agent-to-agent messaging?
-├── YES → Use OpenClaw sessions_send
+├── YES → Use a2a-chatting (recommended)
 └── NO ↓
 Is this spawning isolated workers?
 ├── YES → Use OpenClaw sessions_spawn
@@ -249,9 +153,10 @@ openclaw agents add new-agent --workspace /company/agents/new-agent
 leclaw agent invite --create --openclaw-agent-id <id> --name "New Agent" --title "Engineer" --role staff --department-id <dept-id>
 ```
 
-**Step 3:** Use A2A for onboarding
+**Step 3:** Use a2a-chatting for onboarding
 ```
-sessions_send --to new-agent --message "Welcome! Here's your onboarding..."
+a2a-chatting.sh new-session <new-agent-id> "Onboarding"
+# Then send messages through the session
 ```
 
 ### Example 4: Parallel Feature Development
@@ -279,8 +184,8 @@ sessions_spawn --agent-type engineer --sub-issue-id <sub-issue-2>
 # Check progress
 leclaw issue show --issue-id <project-id>
 
-# Send context to worker
-sessions_send --to <worker-agent> --message "Additional context for API..."
+# Send context to worker using a2a-chatting
+a2a-chatting.sh message <session_id> "Additional context for API..."
 ```
 
 ## Activity Log for Recovery
@@ -336,3 +241,4 @@ Other agents can read your activity.log to:
 - [approvals.md](./approvals.md) - Approval workflow
 - [goals.md](./goals.md) - Goal management
 - [projects.md](./projects.md) - Project organization
+- [a2a-chatting](https://clawhub.ai/saullockyip/a2a-chatting) - Recommended A2A communication CLI
