@@ -10,47 +10,6 @@ Issues belong to Departments, not to individual agents. This is intentional:
 - Manager reviews Department Issues, creates Sub-Issues, and plans/assigns work
 - Staff receives tasks through Manager's planning, not direct CEO assignment
 
-## Activity Log
-
-All agents must maintain an activity.log to track thinking, decisions, and enable session recovery.
-
-### Purpose
-- Solve agent blocking/interruption problems
-- Track thinking and decision logic
-- Enable session recovery after restart
-- Public log (other agents can read for collaboration)
-
-### Location
-`<workspace>/activity.log` (in agent's workspace)
-
-### Rules
-1. **Append-only** - never delete or overwrite
-2. **Update before operation** - record what you're about to do
-3. **Update after operation** - record the result
-4. **Update when blocked** - record what stopped progress
-5. **Read on startup** - recover context from log
-
-### Format
-```
-## [TIMESTAMP] OPENCLAW_OPERATION
-Command: leclaw issue create --title "..."
-Decision: Creating this issue because current sprint is behind schedule
-Result: issue-uuid created successfully
-
-## [TIMESTAMP] THINKING
-Problem: Should I create a Sub-Issue or submit an Approval?
-Analysis:
-- Sub-Issue: Task is complex with parallel work streams
-- Approval: Need Manager sign-off for budget increase
-Decision: Create Sub-Issue first, then submit Approval for budget
-
-## [TIMESTAMP] ESCALATION
-Type: approval_request
-Approval-ID: approval-uuid
-Reason: Budget exceeds my authority threshold
-Status: pending
-```
-
 ## Role Overview
 
 ### CEO
@@ -228,6 +187,7 @@ Completes Sub-Issue, reports status
 
 ## See Also
 
+- [workflow.md](./workflow.md) - Activity log setup and task workflow
 - [permissions.md](./permissions.md) - What each role can do
 - [collaboration.md](./collaboration.md) - How roles work together
 - [issues.md](./issues.md) - Issue creation by role
