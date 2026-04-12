@@ -18,7 +18,22 @@ function IssueDetailPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showAllComments, setShowAllComments] = useState(false)
+  const [expandedCommentIds, setExpandedCommentIds] = useState<Set<string>>(new Set())
   const navigate = useNavigate()
+
+  const LONG_COMMENT_THRESHOLD = 200
+
+  const toggleCommentExpand = (commentId: string) => {
+    setExpandedCommentIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(commentId)) {
+        next.delete(commentId)
+      } else {
+        next.add(commentId)
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     if (!selectedCompany || !id) return
@@ -253,6 +268,8 @@ function IssueDetailPage() {
           <div className="space-y-4">
             {(showAllComments ? comments : comments.slice(0, 3)).map((comment: Comment, index: number) => {
               const agentName = agents.find(a => a.id === comment.authorAgentId)?.name || comment.author || 'Unknown'
+              const isLongComment = comment.message.length > LONG_COMMENT_THRESHOLD
+              const isExpanded = expandedCommentIds.has(comment.id)
               return (
                 <div key={index} className="flex gap-3 p-3 bg-slate-50 rounded-lg">
                   <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 text-sm font-medium">
@@ -264,7 +281,31 @@ function IssueDetailPage() {
                       <span className="text-xs text-slate-400">{formatDate(comment.timestamp)}</span>
                     </div>
                     <div className="text-sm text-slate-700 prose prose-sm max-w-none prose-p:my-1">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.message}</ReactMarkdown>
+                      {isLongComment && !isExpanded ? (
+                        <>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {comment.message.slice(0, LONG_COMMENT_THRESHOLD) + '...'}
+                          </ReactMarkdown>
+                          <button
+                            onClick={() => toggleCommentExpand(comment.id)}
+                            className="text-blue-600 hover:text-blue-800 text-xs mt-1"
+                          >
+                            Show more
+                          </button>
+                        </>
+                      ) : isLongComment && isExpanded ? (
+                        <>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.message}</ReactMarkdown>
+                          <button
+                            onClick={() => toggleCommentExpand(comment.id)}
+                            className="text-blue-600 hover:text-blue-800 text-xs mt-1"
+                          >
+                            Show less
+                          </button>
+                        </>
+                      ) : (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.message}</ReactMarkdown>
+                      )}
                     </div>
                   </div>
                 </div>
