@@ -343,6 +343,23 @@ function IssueDetailPage() {
             prose-th:border prose-th:border-slate-300 prose-th:bg-slate-100 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:font-semibold
             prose-td:border prose-td:border-slate-200 prose-td:px-3 prose-td:py-2
           ">
+            <style>{`
+              .prose table {
+                border-collapse: collapse;
+                width: 100%;
+                margin: 1em 0;
+              }
+              .prose table th,
+              .prose table td {
+                border: 1px solid #ddd;
+                padding: 8px 12px;
+                text-align: left;
+              }
+              .prose table th {
+                background-color: #f5f5f5;
+                font-weight: 600;
+              }
+            `}</style>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{issue.report}</ReactMarkdown>
           </div>
         </div>
