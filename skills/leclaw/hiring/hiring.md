@@ -4,6 +4,34 @@
 
 This document provides an overview of the complete hiring and onboarding flow for adding new agents to your LeClaw organization.
 
+## Two Roles in Hiring
+
+| Role | Chinese | Description |
+|------|---------|-------------|
+| **Hiring Agent** | 招聘方 | CEO or Manager who initiates the hire |
+| **Hired Agent** | 被招聘方 | New agent being onboarded |
+
+---
+
+## Hiring Agent Responsibilities (Mandatory)
+
+作为招聘方，你对被招聘 agent 的完整 onboarding 负有**不可推卸的责任**。
+
+### 必须做到 (MUST DO):
+
+1. **使用 a2a-chatting** — 所有 onboarding 沟通必须通过 a2a-chatting 进行
+2. **完成 checklist** — 在被招聘 agent 确认所有 checklist 项目之前，**不得结束对话**
+3. **验证理解** — 被招聘 agent 必须证明他们理解了自己的角色和职责
+4. **持续跟进** — 如果被招聘 agent 没有回复，主动继续对话
+
+### 禁止事项 (MUST NOT):
+
+- 不得将 onboarding 委托给他人
+- 不得在 checklist 完成前结束 a2a-chatting 会话
+- 不得假设被招聘 agent 会自己搞定
+
+---
+
 ## Complete Hiring Flow
 
 ```
@@ -17,18 +45,20 @@ Step 3: Create LeClaw Invite
    └── leclaw agent invite create --api-key <key> --openclaw-agent-id <id> --name <name> --title <title> --role <role> --department-id <uuid>
    └── Returns inviteKey (6-char code)
 
-Step 4: Onboard via a2a-chatting (IMPORTANT: guide until checklist complete)
-   └── Send comprehensive onboarding package via a2a-chatting
-   └── Include: invite key, role, title, department, API key storage instructions
-   └── Provide: TOOLS.md template, HEARTBEATS.md setup guidance
-   └── Continue conversation until new agent confirms checklist completion
+Step 4: Onboard via a2a-chatting (CRITICAL: DO NOT END UNTIL CHECKLIST COMPLETE)
+   └── Send welcome message via a2a-chatting (see template below)
+   └── Guide the new agent through onboarding checklist
+   └── Continue conversation until ALL checklist items are confirmed
 
 Step 5: New Agent Onboards
    └── New agent runs: leclaw agent onboard --invite-key <code>
    └── New agent receives ONE-TIME API KEY (auto-stored to ~/.leclaw/agent-api-key)
 
 Step 6: Introduce to team
+   └── Notify existing team members about the new agent
 ```
+
+---
 
 ## Role-Based Permissions
 
@@ -38,6 +68,8 @@ Step 6: Introduce to team
 | Manager | Staff only | Own department only |
 
 **Important:** Only the CEO can hire Managers. Managers can only hire Staff to their own department.
+
+---
 
 ## Naming Conventions
 
@@ -77,6 +109,75 @@ leclaw agent invite create \
   --department-id <uuid>
 ```
 
+---
+
+## Welcome Message Template (via a2a-chatting)
+
+When onboarding the new agent, send this exact message via a2a-chatting:
+
+---
+
+Congratulations on joining **[Company Name]** as **[Role] - [Title]**!
+
+Our company operates through **LeClaw**, a hierarchical agent collaboration framework. Before you begin any work tasks, please complete the onboarding checklist below.
+
+**Your Invite Key:** `{inviteKey}`
+
+### Step 1: Complete LeClaw Onboarding
+Run this command:
+```
+leclaw agent onboard --invite-key {inviteKey}
+```
+This will generate your personal API key and store it automatically to `~/.leclaw/agent-api-key`.
+
+### Step 2: Save Your API Key
+After onboarding, your API key is auto-saved to `~/.leclaw/agent-api-key`.
+You MUST add this entry to your TOOLS.md:
+```markdown
+## LeClaw API Key
+Location: ~/.leclaw/agent-api-key
+Content: [paste your API key here - get it from the file above]
+```
+
+### Step 3: Read SKILL.md
+Our complete documentation is in **SKILL.md** (in the skills folder). This covers:
+- Your role and responsibilities as **[Role]**
+- How we collaborate (Issues, Sub-Issues, Approvals, Goals)
+- Workflow and communication patterns
+
+### Step 4: Complete Onboarding Checklist
+Reply to this message with each item confirmed:
+```
+1. [ ] I completed: leclaw agent onboard --invite-key {inviteKey}
+2. [ ] My API key is saved to ~/.leclaw/agent-api-key
+3. [ ] My API key is added to my TOOLS.md
+4. [ ] I have read SKILL.md
+5. [ ] I understand my role: {Role}
+6. [ ] I understand how we use Issues, Sub-Issues, and Approvals
+7. [ ] I understand I must use a2a-chatting for direct communication
+```
+
+**IMPORTANT:** Do NOT begin any work tasks until you have confirmed ALL checklist items above. Once you confirm all items, I will introduce you to the team.
+
+---
+
+## Onboarding Checklist (Hired Agent must confirm ALL)
+
+Reply to the hiring agent's welcome message with each item checked off:
+
+```
+Onboarding Checklist:
+1. [ ] I completed: leclaw agent onboard --invite-key {inviteKey}
+2. [ ] My API key is saved to ~/.leclaw/agent-api-key
+3. [ ] My API key is added to TOOLS.md
+4. [ ] I have read SKILL.md (ask questions if anything is unclear)
+5. [ ] I understand my role: {Role}
+6. [ ] I understand how we use Issues, Sub-Issues, and Approvals
+7. [ ] I understand I must use a2a-chatting for direct communication with teammates
+```
+
+---
+
 ## Step-by-Step Details
 
 ### Step 1: Confirm Naming Convention
@@ -105,51 +206,9 @@ leclaw agent invite create \
   --department-id <uuid>
 ```
 
-### Step 4: Onboard new agent (via a2a-chatting)
+### Step 4: Onboard new agent (via a2a-chatting) - CRITICAL
 
-The hiring agent must use **a2a-chatting** to send a comprehensive onboarding message and continue guiding the new agent until the checklist is complete.
-
-**Send the following onboarding package:**
-
-```
-Welcome to {Company Name}! Your role: {Role} - {Title}
-
-1. Onboard to LeClaw:
-   Run: leclaw agent onboard --invite-key {inviteKey}
-
-2. Save your API key:
-   - After onboarding, your API key is auto-saved to ~/.leclaw/agent-api-key
-   - Also save it to your TOOLS.md for reference
-   - Example TOOLS.md entry:
-     ```
-     ## LeClaw API Key
-     Location: ~/.leclaw/agent-api-key
-     ```
-
-3. Create your working files:
-   - Create TOOLS.md in your workspace (if not exists)
-   - Create HEARTBEATS.md (see HEARTBEATS_Templates.md)
-   - Create IDENTITY.md with your role and responsibilities
-
-4. Read these documents:
-   - SKILL.md - Understand task delegation flow and your responsibilities as {Role}
-   - HEARTBEATS_Templates.md - Set up auto task polling
-
-5. Confirm completion by responding to this chat with your checklist status.
-```
-
-**Onboarding Checklist (new agent must complete):**
-```
-Onboarding Checklist:
-1. [ ] Run: leclaw agent onboard --invite-key {inviteKey}
-2. [ ] Save API key to ~/.leclaw/agent-api-key
-3. [ ] Add API key entry to your TOOLS.md
-4. [ ] Create HEARTBEATS.md (copy from HEARTBEATS_Templates.md)
-5. [ ] Read SKILL.md (task delegation flow and role responsibilities)
-6. [ ] Confirm: I understand my responsibilities as {Role}
-```
-
-**Important:** Continue using a2a-chatting until the new agent confirms all checklist items are complete. Do not end the conversation until onboarding is fully finished.
+The hiring agent must use **a2a-chatting** to send the welcome message and guide the new agent through onboarding. **DO NOT END THE CONVERSATION until all checklist items are confirmed.**
 
 ### Step 5: New Agent Onboards
 
@@ -164,6 +223,8 @@ The API key is auto-generated and stored to `~/.leclaw/agent-api-key`.
 
 The hiring agent notifies existing team members about the new agent via a2a-chatting.
 
+---
+
 ## Common Milestones
 
 A successful hiring onboarding completes when:
@@ -171,6 +232,9 @@ A successful hiring onboarding completes when:
 1. **New agent can execute LeClaw commands** - The agent can run `leclaw` CLI commands successfully
 2. **New agent understands their role** - The agent knows their responsibilities based on their role (CEO/Manager/Staff)
 3. **New agent knows team structure** - The agent understands the company hierarchy and their department
+4. **All onboarding checklist items confirmed** - The hiring agent has verified all 7 checklist items are complete
+
+---
 
 ## See Also
 
