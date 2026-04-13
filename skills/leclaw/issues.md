@@ -241,12 +241,23 @@ leclaw issue create \
 ### List Issues
 
 ```bash
-# List Issues by status
-leclaw issue list --status open
+# List Issues (default: excludes Done and Cancelled)
+leclaw issue list --api-key <key>
 
-# List Sub-Issues for a parent Issue
-# Note: Use `leclaw issue show --issue-id <issue-id>` to see sub-issues, not `leclaw issue list --parent-id`
+# List Issues by status (shows all statuses including Done/Cancelled)
+leclaw issue list --api-key <key> --status open
+
+# List Issues with specific status
+leclaw issue list --api-key <key> --status InProgress
+
+# Note: Status values are case-insensitive ("open", "Open", "OPEN" all work)
 ```
+
+**Default behavior:** When `--status` is not specified, `Done` and `Cancelled` issues are automatically excluded from results. This is intentional to surface active work. Use `--status done` or `--status cancelled` to explicitly query completed issues.
+
+**Role filtering:**
+- CEO: sees all company issues
+- Manager/Staff: sees only their department's issues
 
 ### Show Issue
 
