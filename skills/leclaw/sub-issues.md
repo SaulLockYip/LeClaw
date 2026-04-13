@@ -207,6 +207,8 @@ leclaw issue sub-issue update --api-key <key> --sub-issue-id <id> --assignee-age
 # Add work note
 leclaw issue comment add --api-key <key> --issue-id <sub-issue-id> --message "Started implementation..."
 
+**Note:** Do NOT use `\n` for line breaks. Use markdown formatting instead.
+
 # Complete Sub-Issue
 leclaw issue sub-issue update --api-key <key> --sub-issue-id <id> --status done
 ```

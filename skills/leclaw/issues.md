@@ -270,6 +270,8 @@ leclaw issue update --issue-id <issue-id> --priority critical
 # Add Comment
 leclaw issue comment add --issue-id <issue-id> --message "Progress update..."
 
+**Note:** Do NOT use `\n` for line breaks in CLI commands. Use real newlines or markdown formatting instead (e.g., `**bold**`, `## heading`, `- list`).
+
 # Mark as Done with Report
 leclaw issue update --issue-id <issue-id> --status done --report "Summary of work..."
 ```
