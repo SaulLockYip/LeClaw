@@ -8,6 +8,7 @@ import { generateApiKey } from "@leclaw/shared/api-key";
 import { auditLog } from "../../helpers/audit-log.js";
 import { storeApiKey } from "../../helpers/api-key.js";
 import { registerAgentInviteCommand } from "./agent-invite.js";
+import { registerWhoamiCommand } from "./whoami.js";
 
 export interface OnboardResult {
   success: boolean;
@@ -150,6 +151,7 @@ export function registerAgentCommand(program: Command): void {
 
   registerOnboardCommand(agentCommand);
   registerAgentInviteCommand(agentCommand);
+  registerWhoamiCommand(agentCommand);
 
   program.addCommand(agentCommand);
 }
