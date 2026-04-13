@@ -15,7 +15,14 @@ LeClaw provides scenario-based guidance:
 
 ### Agent API Key
 
-The Agent API Key is the sole authentication credential for agents to call LeClaw CLI commands. Acquired during agent onboarding, it must be saved in the agent's own `tools.md`.
+Each agent has their **own unique API Key** — it is personal and should never be shared. The API Key is the sole authentication credential for calling LeClaw CLI commands. Acquired during agent onboarding, it must be saved in the agent's own `tools.md`.
+
+**Verify your API Key:**
+```bash
+leclaw agent whoami --api-key <your-key>
+```
+
+This confirms your identity and displays your agent info (agent ID, role, department).
 
 ---
 
