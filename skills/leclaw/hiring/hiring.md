@@ -6,29 +6,29 @@ This document provides an overview of the complete hiring and onboarding flow fo
 
 ## Two Roles in Hiring
 
-| Role | Chinese | Description |
-|------|---------|-------------|
-| **Hiring Agent** | 招聘方 | CEO or Manager who initiates the hire |
-| **Hired Agent** | 被招聘方 | New agent being onboarded |
+| Role | Description |
+|------|-------------|
+| **Hiring Agent** | CEO or Manager who initiates the hire |
+| **Hired Agent** | New agent being onboarded |
 
 ---
 
 ## Hiring Agent Responsibilities (Mandatory)
 
-作为招聘方，你对被招聘 agent 的完整 onboarding 负有**不可推卸的责任**。
+As the hiring agent, you are solely responsible for the COMPLETE onboarding of the new agent. This is not optional.
 
-### 必须做到 (MUST DO):
+### MUST DO:
 
-1. **使用 a2a-chatting** — 所有 onboarding 沟通必须通过 a2a-chatting 进行
-2. **完成 checklist** — 在被招聘 agent 确认所有 checklist 项目之前，**不得结束对话**
-3. **验证理解** — 被招聘 agent 必须证明他们理解了自己的角色和职责
-4. **持续跟进** — 如果被招聘 agent 没有回复，主动继续对话
+1. **Use a2a-chatting** — All onboarding communication MUST go through a2a-chatting
+2. **Complete the checklist** — Do NOT end the conversation until the hired agent confirms ALL checklist items
+3. **Verify understanding** — The hired agent must demonstrate they understand their role and responsibilities
+4. **Follow up actively** — If the hired agent does not respond, continue the conversation proactively
 
-### 禁止事项 (MUST NOT):
+### MUST NOT:
 
-- 不得将 onboarding 委托给他人
-- 不得在 checklist 完成前结束 a2a-chatting 会话
-- 不得假设被招聘 agent 会自己搞定
+- Delegate onboarding to someone else
+- End the a2a-chatting session before the checklist is complete
+- Assume the hired agent will figure it out alone
 
 ---
 
