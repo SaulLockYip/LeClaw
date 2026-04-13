@@ -10,7 +10,7 @@ LeClaw operates on a Company/Department hierarchy with three agent roles (CEO, M
 
 LeClaw provides scenario-based guidance:
 - What LeClaw supports (hierarchical task assignment and tracking)
-- What LeClaw does NOT support (direct A2A communication - use OpenClaw sessions_send)
+- What LeClaw does NOT support (direct A2A communication - use `a2a-chatting` skill)
 - How to use OpenClaw native capabilities to fill the gaps
 
 ### Agent API Key
@@ -930,22 +930,40 @@ leclaw approval reject --api-key <key> --approval-id <approval-id> --message "Bu
 
 ### A2A Communication
 
-**LeClaw does not support agent-to-agent (A2A) messaging directly.** For direct communication between agents, use the `a2a-chatting` skill from clawhub.
+**LeClaw does not support agent-to-agent (A2A) messaging directly.** For direct communication between agents, **always use the `a2a-chatting` skill**.
 
-**Recommended: a2a-chatting:**
+#### Strongly Recommended: a2a-chatting
+
+The `a2a-chatting` skill is the **primary and recommended tool** for all agent-to-agent communication. It provides session-based conversations with full context retention.
+
+**Setup:**
 ```bash
-a2a-chatting.sh new-session <agent-id>    # Create new session
-a2a-chatting.sh message <session-id> "..." # Send message
+a2a-chatting.sh config <openclaw_dir>   # Configure with your OpenClaw directory
+a2a-chatting.sh get-agents              # List available agents
 ```
+
+**Core Commands:**
+```bash
+a2a-chatting.sh new-session <agent-id>     # Create new conversation session
+a2a-chatting.sh message <session-id> "..." # Send message in session
+a2a-chatting.sh list-sessions              # View all your sessions
+a2a-chatting.sh session-log <session-id>  # View conversation history
+```
+
+**Why a2a-chatting is preferred:**
+- Session-based: conversations persist and can be reviewed
+- Context-aware: agents retain conversation history
+- Structured: clear turn-taking between agents
+- Auditable: full log of all communications
 
 See [a2a-chatting on clawhub](https://clawhub.ai/saullockyip/a2a-chatting) for full documentation.
 
 #### When to Use a2a-chatting vs sessions_send
 
-| Tool | Use Case |
-|------|----------|
-| a2a-chatting | Interactive conversation, back-and-forth communication |
-| sessions_send | Fire-and-forget messages, notifications |
+| Tool | Use Case | When to Use |
+|------|----------|-------------|
+| **a2a-chatting** | Interactive conversation | **Always prefer this** - use for all A2A communication |
+| sessions_send | Fire-and-forget notifications | Only when a2a-chatting is unavailable |
 
 #### When to Use A2A Communication
 
@@ -963,7 +981,7 @@ Is this requesting approval for a decision?
 ├── YES → Use LeClaw Approval
 └── NO ↓
 Is this direct agent-to-agent messaging?
-├── YES → Use a2a-chatting (recommended) or sessions_send
+├── YES → Use a2a-chatting (always preferred)
 └── NO ↓
 Is this spawning isolated workers?
 ├── YES → Use OpenClaw sessions_spawn
@@ -1150,7 +1168,7 @@ leclaw department list --api-key <key>
 ## Key Constraints
 
 1. **LeClaw has NO built-in A2A communication** - Direct agent-to-agent messaging is not part of LeClaw's design
-2. **For direct agent-to-agent messaging, use `a2a-chatting` CLI** (recommended) or OpenClaw `sessions_send`
+2. **For direct agent-to-agent messaging, use `a2a-chatting` CLI** - This is the primary and recommended tool for all A2A communication. Only use `sessions_send` as fallback if a2a-chatting is unavailable.
 3. **For task decomposition, use both:**
    - Sub-Issue for tracking and assignment
    - `sessions_spawn` for true parallel execution isolation
