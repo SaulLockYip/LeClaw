@@ -2,7 +2,7 @@
 // Display the current authenticated agent's information
 
 import { Command } from "commander";
-import { getStoredApiKey, getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 import { db, agents } from "@leclaw/db";
 import { eq } from "drizzle-orm";
 
@@ -32,18 +32,9 @@ export interface WhoamiResult {
 /**
  * Get the current authenticated agent's information
  */
-export async function getWhoamiInfo(apiKey?: string): Promise<WhoamiResult> {
-  const key = apiKey || getStoredApiKey();
-
-  if (!key) {
-    return {
-      success: false,
-      error: "Not authenticated. Please run 'leclaw agent onboard --invite-key <key>' first.",
-    };
-  }
-
+export async function getWhoamiInfo(apiKey: string): Promise<WhoamiResult> {
   try {
-    const agentInfo = await getAgentInfoFromApiKey(key);
+    const agentInfo = await getAgentInfoFromApiKey(apiKey);
     const name = await getAgentName(agentInfo.agentId);
 
     return {
@@ -66,9 +57,9 @@ export function registerWhoamiCommand(agentCommand: Command): void {
   agentCommand
     .command("whoami")
     .description("Display the current authenticated agent's information")
-    .option("--api-key <key>", "Agent API key (or use stored key from ~/.leclaw/agent-api-key)")
+    .requiredOption("--api-key <key>", "Agent API key")
     .action(async (options) => {
-      const apiKey = options.apiKey || getStoredApiKey();
+      const apiKey = options.apiKey;
 
       if (!apiKey) {
         console.error(JSON.stringify({
@@ -77,7 +68,7 @@ export function registerWhoamiCommand(agentCommand: Command): void {
         process.exit(1);
       }
 
-      const result = await getWhoamiInfo();
+      const result = await getWhoamiInfo(apiKey);
 
       if (result.success) {
         console.log(JSON.stringify({
