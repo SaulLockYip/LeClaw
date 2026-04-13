@@ -234,7 +234,7 @@ function IssueDetailPage() {
             {subIssues.map((subIssue) => (
               <Link
                 key={subIssue.id}
-                to={`/issues/${subIssue.id}`}
+                to={`/sub-issues/${subIssue.id}`}
                 className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <AlertCircle className="w-4 h-4 text-slate-400" />

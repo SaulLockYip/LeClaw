@@ -4,6 +4,7 @@ import AppLayout from './components/AppLayout'
 import DashboardPage from './pages/DashboardPage'
 import IssuesPage from './pages/IssuesPage'
 import IssueDetailPage from './pages/issues/IssueDetailPage'
+import SubIssueDetailPage from './pages/issues/SubIssueDetailPage'
 import GoalsPage from './pages/GoalsPage'
 import GoalDetailPage from './pages/goals/GoalDetailPage'
 import ProjectsPage from './pages/ProjectsPage'
@@ -26,6 +27,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/issues" element={<IssuesPage />} />
             <Route path="/issues/:id" element={<IssueDetailPage />} />
+            <Route path="/sub-issues/:id" element={<SubIssueDetailPage />} />
             <Route path="/goals" element={<GoalsPage />} />
             <Route path="/goals/:id" element={<GoalDetailPage />} />
             <Route path="/projects" element={<ProjectsPage />} />

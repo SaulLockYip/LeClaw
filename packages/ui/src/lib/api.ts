@@ -59,8 +59,12 @@ export interface Comment {
 
 export interface SubIssue {
   id: string
+  parentIssueId: string
   title: string
+  description?: string
   status: 'Open' | 'InProgress' | 'Blocked' | 'Done' | 'Cancelled'
+  assigneeAgentId: string
+  createdAt: string
 }
 
 export interface Goal {
@@ -265,8 +269,16 @@ export const agentInviteApi = {
     }),
 }
 
-// SubIssue API - CORRECTED
+// SubIssue API
 export const subIssueApi = {
   get: (companyId: string, subIssueId: string) =>
     fetchApi<SubIssue>(`/companies/${companyId}/issues/sub-issues/${subIssueId}`),
+  update: (companyId: string, subIssueId: string, data: Partial<SubIssue>) =>
+    fetchApi<SubIssue>(`/companies/${companyId}/issues/sub-issues/${subIssueId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+  listComments: (companyId: string, parentIssueId: string) =>
+    fetchApi<Comment[]>(`/companies/${companyId}/issues/${parentIssueId}/comments`),
 }
