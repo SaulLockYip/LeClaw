@@ -132,8 +132,7 @@ Welcome to {Company Name}! Your role: {Role} - {Title}
    - Create IDENTITY.md with your role and responsibilities
 
 4. Read these documents:
-   - workflow.md - Understand task delegation flow
-   - roles.md - Know your responsibilities as {Role}
+   - SKILL.md - Understand task delegation flow and your responsibilities as {Role}
    - HEARTBEATS_Templates.md - Set up auto task polling
 
 5. Confirm completion by responding to this chat with your checklist status.
@@ -146,9 +145,8 @@ Onboarding Checklist:
 2. [ ] Save API key to ~/.leclaw/agent-api-key
 3. [ ] Add API key entry to your TOOLS.md
 4. [ ] Create HEARTBEATS.md (copy from HEARTBEATS_Templates.md)
-5. [ ] Read workflow.md
-6. [ ] Read roles.md
-7. [ ] Confirm: I understand my responsibilities as {Role}
+5. [ ] Read SKILL.md (task delegation flow and role responsibilities)
+6. [ ] Confirm: I understand my responsibilities as {Role}
 ```
 
 **Important:** Continue using a2a-chatting until the new agent confirms all checklist items are complete. Do not end the conversation until onboarding is fully finished.
@@ -176,5 +174,4 @@ A successful hiring onboarding completes when:
 
 ## See Also
 
-- [Agent Invite](../agent-invite.md) - Technical invite creation reference
-- [Roles](../roles.md) - Role definitions and responsibilities
+- [LeClaw SKILL.md](../SKILL.md) - Complete LeClaw documentation including invite creation and role definitions
