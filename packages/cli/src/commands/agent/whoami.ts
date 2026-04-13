@@ -32,10 +32,10 @@ export interface WhoamiResult {
 /**
  * Get the current authenticated agent's information
  */
-export async function getWhoamiInfo(): Promise<WhoamiResult> {
-  const apiKey = getStoredApiKey();
+export async function getWhoamiInfo(apiKey?: string): Promise<WhoamiResult> {
+  const key = apiKey || getStoredApiKey();
 
-  if (!apiKey) {
+  if (!key) {
     return {
       success: false,
       error: "Not authenticated. Please run 'leclaw agent onboard --invite-key <key>' first.",
@@ -43,7 +43,7 @@ export async function getWhoamiInfo(): Promise<WhoamiResult> {
   }
 
   try {
-    const agentInfo = await getAgentInfoFromApiKey(apiKey);
+    const agentInfo = await getAgentInfoFromApiKey(key);
     const name = await getAgentName(agentInfo.agentId);
 
     return {
@@ -66,7 +66,17 @@ export function registerWhoamiCommand(agentCommand: Command): void {
   agentCommand
     .command("whoami")
     .description("Display the current authenticated agent's information")
-    .action(async () => {
+    .option("--api-key <key>", "Agent API key (or use stored key from ~/.leclaw/agent-api-key)")
+    .action(async (options) => {
+      const apiKey = options.apiKey || getStoredApiKey();
+
+      if (!apiKey) {
+        console.error(JSON.stringify({
+          error: "Not authenticated. Please run 'leclaw agent onboard --invite-key <key>' first.",
+        }, null, 2));
+        process.exit(1);
+      }
+
       const result = await getWhoamiInfo();
 
       if (result.success) {
