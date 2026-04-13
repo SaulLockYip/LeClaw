@@ -8,6 +8,14 @@ import { getDb } from "@leclaw/db/client";
 import { eq, inArray, ne, and, or, sql } from "drizzle-orm";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
+function normalizeIssueStatus(status: string): string {
+  const lower = status.toLowerCase();
+  if (lower === "inprogress") return "InProgress";
+  if (lower === "cancelled") return "Cancelled";
+  if (lower === "blocked") return "Blocked";
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
 export function registerListCommand(program: Command): void {
   const listCommand = new Command("list")
     .description("List issues");
@@ -53,7 +61,7 @@ export function registerListCommand(program: Command): void {
 
         // Status filter
         if (status) {
-          conditions.push(eq(issues.status, status));
+          conditions.push(eq(issues.status, normalizeIssueStatus(status)));
         } else if (excludedStatuses.length > 0) {
           conditions.push(and(
             ...excludedStatuses.map(s => ne(issues.status, s))
