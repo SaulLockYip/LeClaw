@@ -265,8 +265,8 @@ export const agentInviteApi = {
     }),
 }
 
-// SubIssue API
+// SubIssue API - CORRECTED
 export const subIssueApi = {
   get: (companyId: string, subIssueId: string) =>
-    fetchApi<SubIssue>(`/companies/${companyId}/issues/${subIssueId}`),
+    fetchApi<SubIssue>(`/companies/${companyId}/issues/sub-issues/${subIssueId}`),
 }
