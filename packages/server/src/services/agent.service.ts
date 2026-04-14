@@ -125,7 +125,7 @@ export async function deleteAgent(
   await db.delete(approvals)
     .where(or(
       eq(approvals.requester, id),
-      eq(approvals.approver, id)
+      eq(approvals.approverId, id)
     ));
 
   // Now delete the agent
