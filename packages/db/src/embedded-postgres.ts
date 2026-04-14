@@ -252,6 +252,10 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
 
   await instance.start();
 
+  // Wait for PostgreSQL to be fully ready to accept connections
+  // The instance.start() call returns when the process starts, not when it's ready
+  await waitForPostgresReady(selectedPort, user, password);
+
   // Create the "leclaw" database if it doesn't exist
   const maintenanceConn = postgres(`postgres://${user}:${password}@127.0.0.1:${selectedPort}/postgres`, { max: 1 });
   if (!(await checkDatabaseExists(maintenanceConn, dbName))) {
@@ -273,6 +277,39 @@ export async function initializeDb(config?: DbConfig): Promise<DbConnection> {
       return pid !== null;
     },
   };
+}
+
+/**
+ * Wait for PostgreSQL to be ready to accept connections.
+ * This handles the race condition where instance.start() returns before PostgreSQL
+ * is actually ready to accept connections.
+ */
+async function waitForPostgresReady(port: number, user: string, password: string): Promise<void> {
+  const maxRetries = 30;
+  const retryDelayMs = 500;
+  const connectionTimeout = 3;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const sql = postgres(`postgres://${user}:${password}@127.0.0.1:${port}/postgres`, {
+        max: 1,
+        connect_timeout: connectionTimeout,
+      });
+      // Execute a simple query to verify the connection works
+      await sql`SELECT 1`;
+      await sql.end();
+      return; // PostgreSQL is ready
+    } catch {
+      if (attempt === maxRetries) {
+        throw new Error(
+          `PostgreSQL failed to become ready after ${maxRetries} attempts (${maxRetries * retryDelayMs}ms). ` +
+          `This may indicate a configuration issue or insufficient system resources.`,
+        );
+      }
+      // Wait before retrying
+      await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+    }
+  }
 }
 
 /**
