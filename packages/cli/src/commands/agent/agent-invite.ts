@@ -6,8 +6,7 @@ import path from "path";
 import os from "os";
 import { loadConfig } from "@leclaw/shared";
 import { scanOpenClawAgents, type OpenClawAgent } from "@leclaw/shared/openclaw-scanner";
-import { db, agents } from "@leclaw/db";
-import { ne } from "drizzle-orm";
+import { createApiClient } from "../../helpers/api-client.js";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
@@ -32,36 +31,37 @@ export interface OpenClawAgentAvailability {
  * An agent is "already_onboarded" if they have an accepted agent record.
  * Pending invites do NOT count as占用.
  */
-async function listAvailableAgents(): Promise<OpenClawAgentAvailability[]> {
+async function listAvailableAgents(apiKey: string): Promise<OpenClawAgentAvailability[]> {
   // Scan OpenClaw agents from config
   const scanResult = scanOpenClawAgents();
 
-  // Get all onboarded agents (those with accepted status - openClawAgentId is set)
-  const database = await db;
-  const onboardedAgents = await database
-    .select({
-      openClawAgentId: agents.openClawAgentId,
-      id: agents.id,
-      role: agents.role,
-    })
-    .from(agents)
-    .where(ne(agents.openClawAgentId, null));
+  // Get agent info to find companyId
+  const agentInfo = await getAgentInfoFromApiKey(apiKey);
+  const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
 
-  const onboardedMap = new Map(onboardedAgents.map(a => [a.openClawAgentId, a]));
-
-  // Build availability list
+  // Build availability list by checking each OpenClaw agent via HTTP
   const availabilityList: OpenClawAgentAvailability[] = [];
 
   for (const agent of scanResult.agents) {
-    const onboarded = onboardedMap.get(agent.id);
-    availabilityList.push({
-      id: agent.id,
-      name: agent.name,
-      workspace: agent.workspace,
-      status: onboarded ? "already_onboarded" : "available",
-      onboardedAgentId: onboarded?.id,
-      onboardedAgentRole: onboarded?.role,
-    });
+    try {
+      const checkResult = await apiClient.checkAgent(agent.id);
+      availabilityList.push({
+        id: agent.id,
+        name: agent.name,
+        workspace: agent.workspace,
+        status: checkResult.exists ? "already_onboarded" : "available",
+        onboardedAgentId: checkResult.agentId ?? undefined,
+        onboardedAgentRole: checkResult.role ?? undefined,
+      });
+    } catch {
+      // If check fails, treat as available (will be validated on invite creation)
+      availabilityList.push({
+        id: agent.id,
+        name: agent.name,
+        workspace: agent.workspace,
+        status: "available",
+      });
+    }
   }
 
   return availabilityList;
@@ -160,9 +160,10 @@ export function registerAgentInviteCommand(program: Command): void {
   inviteCommand
     .command("list-available")
     .description("List all OpenClaw agents with their availability status")
-    .action(async () => {
+    .requiredOption("--api-key <key>", "Agent API key to authenticate with server")
+    .action(async (options) => {
       try {
-        const availability = await listAvailableAgents();
+        const availability = await listAvailableAgents(options.apiKey);
         console.log(JSON.stringify({
           success: true,
           agents: availability,
@@ -245,23 +246,25 @@ export function registerAgentInviteCommand(program: Command): void {
     });
 
   // Make --list-available the default action when just 'agent invite' is called
-  inviteCommand.action(async () => {
-    // Default to list-available when just 'agent invite' is called without subcommand
-    try {
-      const availability = await listAvailableAgents();
-      console.log(JSON.stringify({
-        success: true,
-        agents: availability,
-        errors: scanOpenClawAgents().errors,
-      }, null, 2));
-    } catch (err) {
-      console.error(JSON.stringify({
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      }, null, 2));
-      process.exit(1);
-    }
-  });
+  inviteCommand
+    .requiredOption("--api-key <key>", "Agent API key to authenticate with server")
+    .action(async (options) => {
+      // Default to list-available when just 'agent invite' is called without subcommand
+      try {
+        const availability = await listAvailableAgents(options.apiKey);
+        console.log(JSON.stringify({
+          success: true,
+          agents: availability,
+          errors: scanOpenClawAgents().errors,
+        }, null, 2));
+      } catch (err) {
+        console.error(JSON.stringify({
+          success: false,
+          error: err instanceof Error ? err.message : String(err),
+        }, null, 2));
+        process.exit(1);
+      }
+    });
 
   program.addCommand(inviteCommand);
 }

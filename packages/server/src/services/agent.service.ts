@@ -88,6 +88,15 @@ export async function updateAgent(
   return { ...agent, role: agent.role as AgentRole, status: (agent.status as AgentSyncStatus) ?? "unknown" };
 }
 
+export async function findAgentByOpenClawAgentId(openClawAgentId: string): Promise<Agent | null> {
+  const db = await getDb();
+  const [agent] = await db.select().from(agents)
+    .where(eq(agents.openClawAgentId, openClawAgentId))
+    .limit(1);
+  if (!agent) return null;
+  return { ...agent, role: agent.role as AgentRole, status: (agent.status as AgentSyncStatus) ?? "unknown" };
+}
+
 export async function deleteAgent(
   id: string,
   companyId: string

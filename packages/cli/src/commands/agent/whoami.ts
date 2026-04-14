@@ -61,6 +61,7 @@ export function registerWhoamiCommand(agentCommand: Command): void {
           companyId: result.companyId,
           departmentId: result.departmentId,
         }, null, 2));
+        process.exit(0);
       } else {
         console.error(JSON.stringify({
           error: result.error,

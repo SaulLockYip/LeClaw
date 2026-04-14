@@ -81,6 +81,13 @@ export function createApiClient({ apiKey, companyId }: ApiClientOptions) {
       request<T>("PUT", endpoint, body),
     delete: <T>(endpoint: string) => request<T>("DELETE", endpoint),
 
+    // Check if agent exists by OpenClaw agent ID
+    checkAgent: (openclawAgentId: string) =>
+      request<{ exists: boolean; agentId: string | null; role: string | null }>(
+        `GET`,
+        `/api/companies/${companyId}/agents/check?openclawAgentId=${encodeURIComponent(openclawAgentId)}`
+      ),
+
     // Convenience methods with companyId prepended
     getDepartments: () =>
       request<any[]>(`GET`, `/api/companies/${companyId}/departments`),

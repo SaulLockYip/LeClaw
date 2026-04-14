@@ -25,8 +25,10 @@ export function registerCompanyListCommand(program: Command): void {
 
         if (companies.length === 0) {
           console.log(JSON.stringify({ success: true, data: [], message: "No companies found" }, null, 2));
+          process.exit(0);
         } else {
           console.log(JSON.stringify({ success: true, data: companies }, null, 2));
+          process.exit(0);
         }
       } catch (err) {
         const error = err instanceof Error ? err.message : String(err);

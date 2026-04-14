@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import * as goalService from "../services/goal.service.js";
 import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
+import { isValidUUID } from "../utils/validation.js";
 
 export const goalsRouter: Router = Router({ mergeParams: true });
 
@@ -92,6 +93,9 @@ goalsRouter.get("/", async (req: Request, res: Response) => {
 // GET /api/companies/:companyId/goals/:id
 goalsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const goal = await goalService.getGoal(req.params.id);
     if (!goal) {
       return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Goal ${req.params.id} not found` } });
@@ -107,6 +111,9 @@ goalsRouter.get("/:id", async (req: Request, res: Response) => {
 // Requires API key + CEO role
 goalsRouter.put("/:id", requireCeo, async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const goal = await goalService.updateGoal(req.params.id, {
       title: req.body.title,
       description: req.body.description,

@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import * as projectService from "../services/project.service.js";
 import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
+import { isValidUUID } from "../utils/validation.js";
 
 export const projectsRouter: Router = Router({ mergeParams: true });
 
@@ -89,6 +90,9 @@ projectsRouter.get("/", async (req: Request, res: Response) => {
 // GET /api/companies/:companyId/projects/:id
 projectsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const project = await projectService.getProject(req.params.id);
     if (!project) {
       return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Project ${req.params.id} not found` } });
@@ -104,6 +108,9 @@ projectsRouter.get("/:id", async (req: Request, res: Response) => {
 // Requires API key + CEO or Manager role
 projectsRouter.put("/:id", requireCeoOrManager, async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const project = await projectService.updateProject(req.params.id, {
       title: req.body.title,
       description: req.body.description,

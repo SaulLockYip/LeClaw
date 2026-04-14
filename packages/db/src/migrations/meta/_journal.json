@@ -99,6 +99,27 @@
       "when": 1744608000000,
       "tag": "0013_add_agent_status_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1744694400000,
+      "tag": "0014_rename_approvals_message",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1744780800000,
+      "tag": "0015_add_project_department_ids",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1744867200000,
+      "tag": "0016_remove_project_department_id_add_department_ids",
+      "breakpoints": true
     }
   ]
 }

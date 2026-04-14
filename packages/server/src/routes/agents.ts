@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
+import { isValidUUID } from "../utils/validation.js";
 
 export const agentsRouter: Router = Router({ mergeParams: true });
 
@@ -59,9 +60,38 @@ agentsRouter.get("/", async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/companies/:companyId/agents/check?openclawAgentId=<id> - Check if agent exists by OpenClaw agent ID
+agentsRouter.get("/check", async (req: Request, res: Response) => {
+  try {
+    const { openclawAgentId } = req.query;
+    if (!openclawAgentId || typeof openclawAgentId !== "string") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "MISSING_PARAM", message: "openclawAgentId query parameter is required" }
+      });
+    }
+
+    const agent = await agentService.findAgentByOpenClawAgentId(openclawAgentId);
+    res.json({
+      success: true,
+      data: {
+        exists: !!agent,
+        agentId: agent?.id ?? null,
+        role: agent?.role ?? null,
+      }
+    });
+  } catch (error) {
+    console.error("Error checking agent:", error);
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to check agent" } });
+  }
+});
+
 // GET /api/companies/:companyId/agents/:id
 agentsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const companyId = (req as any).companyId;
     const agent = await agentService.getAgent(req.params.id, companyId);
     if (!agent) {
@@ -77,6 +107,9 @@ agentsRouter.get("/:id", async (req: Request, res: Response) => {
 // PUT /api/companies/:companyId/agents/:id
 agentsRouter.put("/:id", async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const companyId = (req as any).companyId;
     const agent = await agentService.updateAgent(req.params.id, companyId, {
       name: req.body.name,
@@ -98,6 +131,9 @@ agentsRouter.put("/:id", async (req: Request, res: Response) => {
 // DELETE /api/companies/:companyId/agents/:id
 agentsRouter.delete("/:id", async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const companyId = (req as any).companyId;
     const deleted = await agentService.deleteAgent(req.params.id, companyId);
     if (!deleted) {

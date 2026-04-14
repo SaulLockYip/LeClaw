@@ -5,6 +5,7 @@ import { getDb } from "@leclaw/db/client";
 import * as issueService from "../services/issue.service.js";
 import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
+import { isValidUUID } from "../utils/validation.js";
 
 export const issuesRouter: Router = Router({ mergeParams: true });
 
@@ -162,6 +163,9 @@ issuesRouter.post("/", async (req: Request, res: Response) => {
 // CEO: all, Manager/Staff: same department only
 issuesRouter.get("/:id", requireRoleForIssueAccess, async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const issue = await issueService.getIssue(req.params.id);
     if (!issue) {
       return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
@@ -191,6 +195,9 @@ issuesRouter.get("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
 // CEO: all, Manager/Staff: same department only
 issuesRouter.put("/:id", requireRoleForIssueAccess, async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     // Check department access first
     const existing = await issueService.getIssue(req.params.id);
     if (!existing) {
@@ -231,6 +238,9 @@ issuesRouter.put("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
 // DELETE /api/companies/:companyId/issues/:id
 issuesRouter.delete("/:id", requireRoleForIssueAccess, async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const deleted = await issueService.deleteIssue(req.params.id);
     if (!deleted) {
       return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
@@ -362,6 +372,9 @@ issuesRouter.post("/sub-issues", async (req: Request, res: Response) => {
 // GET /api/companies/:companyId/issues/sub-issues/:id - Get sub-issue
 issuesRouter.get("/sub-issues/:id", async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const db = await getDb();
     const [subIssue] = await db
       .select()
@@ -383,6 +396,9 @@ issuesRouter.get("/sub-issues/:id", async (req: Request, res: Response) => {
 // PUT /api/companies/:companyId/issues/sub-issues/:id - Update sub-issue
 issuesRouter.put("/sub-issues/:id", async (req: Request, res: Response) => {
   try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
     const db = await getDb();
 
     // Check if sub-issue exists

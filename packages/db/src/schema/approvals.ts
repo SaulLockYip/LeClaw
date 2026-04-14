@@ -24,6 +24,8 @@ export const approvals = pgTable(
     companyStatusIdx: index("approvals_company_status_idx").on(table.companyId, table.status),
     // Compound index for querying approvals by requester + status
     requesterStatusIdx: index("approvals_requester_status_idx").on(table.requester, table.status),
+    // Index for querying approvals by approver
+    approverIdx: index("approvals_approver_idx").on(table.approverId),
   }),
 );
 

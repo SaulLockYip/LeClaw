@@ -27,6 +27,10 @@ export const issues = pgTable(
     companyStatusIdx: index("issues_company_status_idx").on(table.companyId, table.status),
     // Compound index for querying issues by department + status
     departmentStatusIdx: index("issues_department_status_idx").on(table.departmentId, table.status),
+    // Index for querying issues by project
+    projectIdx: index("issues_project_idx").on(table.projectId),
+    // Index for querying issues by goal
+    goalIdx: index("issues_goal_idx").on(table.goalId),
   }),
 );
 
