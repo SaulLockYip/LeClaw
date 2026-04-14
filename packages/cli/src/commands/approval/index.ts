@@ -24,6 +24,8 @@ export function registerApprovalCommand(program: Command): void {
 
         // Determine approverId based on type and requester role
         // Note: Server handles finding approver internally for agent_approve
+        let approverId: string | undefined;
+
         if (type === "agent_approve") {
           // CEO doesn't need an approver for agent_approve
           if (agentInfo.role === "CEO") {
@@ -35,8 +37,26 @@ export function registerApprovalCommand(program: Command): void {
           }
         }
 
+        if (type === "human_approve") {
+          // CEO doesn't need human_approve
+          if (agentInfo.role === "CEO") {
+            console.error(JSON.stringify({
+              success: false,
+              error: "CEO does not need human_approve",
+            }, null, 2));
+            process.exit(1);
+          }
+        }
+
         const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
-        const approval = await apiClient.createApproval({ title, description, type });
+
+        // Find approver for human_approve
+        if (type === "human_approve") {
+          const approverResult = await apiClient.findApprover(agentInfo.agentId);
+          approverId = approverResult?.approverId ?? undefined;
+        }
+
+        const approval = await apiClient.createApproval({ title, description, type, approverId });
 
         console.log(JSON.stringify({
           success: true,
@@ -63,19 +83,20 @@ export function registerApprovalCommand(program: Command): void {
       }
     });
 
-  // approval list - List approvals submitted by me
+  // approval list - List approvals pending my approval (default) or submitted by me (--mine)
   approvalCommand
     .command("list")
-    .description("List approvals submitted by me")
+    .description("List approvals pending my approval (default) or my submissions (--mine)")
     .requiredOption("--api-key <key>", "Agent API key (for authentication)")
     .option("--status <status>", "Filter by status", /^(Pending|Approved|Rejected)$/)
+    .option("--mine", "Show approvals I submitted instead of approvals pending my approval")
     .action(async (options) => {
-      const { apiKey, status } = options;
+      const { apiKey, status, mine } = options;
 
       try {
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
         const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
-        const approvalList = await apiClient.getApprovals({ status, mine: true });
+        const approvalList = await apiClient.getApprovals({ status, mine });
 
         console.log(JSON.stringify({
           success: true,
@@ -211,6 +232,57 @@ export function registerApprovalCommand(program: Command): void {
 
         const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
         const updatedApproval = await apiClient.rejectApproval(approvalId, message || "");
+
+        console.log(JSON.stringify({
+          success: true,
+          approval: {
+            id: updatedApproval.id,
+            companyId: updatedApproval.companyId,
+            title: updatedApproval.title,
+            description: updatedApproval.description,
+            requester: updatedApproval.requester,
+            type: updatedApproval.type,
+            approverId: updatedApproval.approverId,
+            status: updatedApproval.status,
+            message: updatedApproval.message,
+            createdAt: updatedApproval.createdAt,
+            updatedAt: updatedApproval.updatedAt,
+          },
+        }, null, 2));
+        process.exit(0);
+      } catch (err) {
+        console.error(JSON.stringify({
+          success: false,
+          error: err instanceof Error ? err.message : String(err),
+        }, null, 2));
+        process.exit(1);
+      }
+    });
+
+  // approval forward - Forward an approval to CEO (Manager only)
+  approvalCommand
+    .command("forward")
+    .description("Forward an approval to CEO (Manager only)")
+    .requiredOption("--approval-id <id>", "Approval ID")
+    .option("--message <text>", "Reason for forwarding")
+    .requiredOption("--api-key <key>", "Agent API key (for authentication)")
+    .action(async (options) => {
+      const { approvalId, message, apiKey } = options;
+
+      try {
+        const agentInfo = await getAgentInfoFromApiKey(apiKey);
+
+        // Role guard: only Manager can forward
+        if (agentInfo.role !== "Manager") {
+          console.error(JSON.stringify({
+            success: false,
+            error: "Only Manager can forward approvals to CEO",
+          }, null, 2));
+          process.exit(1);
+        }
+
+        const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
+        const updatedApproval = await apiClient.forwardApproval(approvalId, message);
 
         console.log(JSON.stringify({
           success: true,

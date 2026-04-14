@@ -1,8 +1,8 @@
 // leclaw department list command - List departments with managers and staffs
-// Access: All roles (CEO, Manager, Staff)
+// Access: CEO sees all departments, Manager/Staff see only their own department
 
 import { Command } from "commander";
-import { getCurrentAgent } from "../../helpers/api-client.js";
+import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 import { createApiClient } from "../../helpers/api-client.js";
 
 interface DepartmentWithAgents {
@@ -26,7 +26,7 @@ interface DepartmentWithAgents {
 
 async function listDepartmentsViaHttp(
   apiKey: string,
-  agentInfo: Awaited<ReturnType<typeof getCurrentAgent>>
+  agentInfo: Awaited<ReturnType<typeof getAgentInfoFromApiKey>>
 ): Promise<DepartmentWithAgents[]> {
   const apiClient = createApiClient({
     apiKey,
@@ -36,7 +36,13 @@ async function listDepartmentsViaHttp(
   // Server returns enriched departments with manager and staffs
   const depts = await apiClient.getDepartments();
 
-  return depts.map((dept: any) => ({
+  // CEO sees all departments, Manager/Staff see only their department
+  const isCeo = agentInfo.role === "CEO";
+  const filteredDepts = isCeo
+    ? depts
+    : depts.filter((dept: any) => dept.id === agentInfo.departmentId);
+
+  return filteredDepts.map((dept: any) => ({
     id: dept.id,
     name: dept.name,
     companyId: dept.companyId,
@@ -59,11 +65,11 @@ async function listDepartmentsViaHttp(
 export function registerDepartmentListCommand(program: Command): void {
   program
     .command("list")
-    .description("List departments for a company with managers and staffs")
+    .description("List departments for a company with managers and staffs (CEO sees all, Manager/Staff see own)")
     .requiredOption("--api-key <key>", "Agent API key")
     .action(async (options) => {
       try {
-        const agentInfo = await getCurrentAgent(options.apiKey);
+        const agentInfo = await getAgentInfoFromApiKey(options.apiKey);
         const departmentsWithAgents = await listDepartmentsViaHttp(options.apiKey, agentInfo);
 
         if (departmentsWithAgents.length === 0) {

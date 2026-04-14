@@ -247,6 +247,48 @@ approvalsRouter.put("/:id/reject", requireManagerOrCeo, async (req: Request, res
   }
 });
 
+// PUT /api/companies/:companyId/approvals/:id/forward - Forward an approval to CEO (Manager only)
+approvalsRouter.put("/:id/forward", requireManagerOrCeo, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!isValidUUID(id)) {
+    return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+  }
+  try {
+    const { agentId, companyId } = (req as any).agentInfo;
+
+    // Get the approval first to verify it exists and is pending
+    const existingApproval = await approvalService.getApproval(id);
+    if (!existingApproval) {
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${id} not found` } });
+    }
+    if (existingApproval.status !== "Pending") {
+      return res.status(400).json({ success: false, error: { code: "INVALID_STATUS", message: "Only pending approvals can be forwarded" } });
+    }
+    // Verify the approver is the authenticated Manager
+    if (existingApproval.approverId !== agentId) {
+      return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
+    }
+
+    // Find the CEO for this company
+    const ceoId = await approvalService.findApproverForAgent(agentId, companyId);
+    if (!ceoId) {
+      return res.status(400).json({ success: false, error: { code: "NO_CEO", message: "Could not find CEO to forward approval to" } });
+    }
+
+    const approval = await approvalService.updateApproval(id, {
+      approverId: ceoId,
+      message: req.body.message,
+    });
+
+    broadcastEvent({ type: "approval_updated", payload: approval as unknown as Record<string, unknown> });
+
+    res.json({ success: true, data: approval });
+  } catch (error) {
+    console.error("Error forwarding approval:", error);
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to forward approval" } });
+  }
+});
+
 // PUT /api/companies/:companyId/approvals/:id
 // Legacy endpoint for general updates (uses API key but doesn't require manager/ceo role)
 approvalsRouter.put("/:id", async (req: Request, res: Response) => {

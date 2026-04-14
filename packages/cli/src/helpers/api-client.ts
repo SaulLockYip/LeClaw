@@ -98,12 +98,14 @@ export function createApiClient({ apiKey, companyId }: ApiClientOptions) {
     },
     getApproval: (id: string) =>
       request<any>(`GET`, `/api/companies/${companyId}/approvals/${id}`),
-    createApproval: (data: { title: string; description: string; type: string }) =>
+    createApproval: (data: { title: string; description: string; type: string; approverId?: string }) =>
       request<any>(`POST`, `/api/companies/${companyId}/approvals`, data),
     approveApproval: (id: string, message?: string) =>
       request<any>(`PUT`, `/api/companies/${companyId}/approvals/${id}/approve`, message ? { message } : undefined),
     rejectApproval: (id: string, message: string) =>
       request<any>(`PUT`, `/api/companies/${companyId}/approvals/${id}/reject`, { message }),
+    forwardApproval: (id: string, message?: string) =>
+      request<any>(`PUT`, `/api/companies/${companyId}/approvals/${id}/forward`, message ? { message } : undefined),
     findApprover: (agentId: string) =>
       request<{ approverId: string | null }>(`GET`, `/api/companies/${companyId}/approvals/approver?agentId=${agentId}`),
 
