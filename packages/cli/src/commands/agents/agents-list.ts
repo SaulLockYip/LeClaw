@@ -1,10 +1,8 @@
 // leclaw agents list command
-// Lists agents from DB with optional refresh from OpenClaw local files
+// Lists agents via LeClaw server API
 
 import { Command } from "commander";
-import { scanOpenClawAgents } from "@leclaw/shared/openclaw-scanner";
-import { db, agents, companies } from "@leclaw/db";
-import { eq } from "drizzle-orm";
+import { createApiClient } from "../../helpers/api-client.js";
 import { getAgentStatusFromFiles, type AgentStatus } from "@leclaw/shared/agent-status";
 
 export interface AgentListEntry {
@@ -23,146 +21,84 @@ export interface AgentsListOutput {
 }
 
 /**
- * Get all agents from the database (bound agents)
+ * Get all agents from the API
  */
-async function getBoundAgents() {
-  const database = await db;
-  const boundAgents = await database.select({
-    id: agents.id,
-    openClawAgentId: agents.openClawAgentId,
-    name: agents.name,
-    role: agents.role,
-    companyId: agents.companyId,
-    departmentId: agents.departmentId,
-    status: agents.status,
-    statusLastUpdated: agents.statusLastUpdated,
-    lastHeartbeatAt: agents.lastHeartbeatAt,
-  }).from(agents);
-
-  return boundAgents;
+async function getAgentsFromApi(apiKey: string): Promise<AgentListEntry[]> {
+  const apiClient = createApiClient({ apiKey });
+  const agents = await apiClient.getAgents();
+  return agents as AgentListEntry[];
 }
 
 /**
- * Sync status from local files for a specific agent
+ * List all agents from API
  */
-async function syncAgentStatusFromFiles(openClawAgentId: string): Promise<AgentStatus> {
-  try {
-    const { status } = await getAgentStatusFromFiles(openClawAgentId);
-    return status;
-  } catch {
-    return "unknown";
-  }
-}
-
-/**
- * List all agents from DB
- */
-export async function listAgentsFromDb(): Promise<AgentsListOutput> {
+export async function listAgentsFromApi(apiKey: string): Promise<AgentsListOutput> {
   const errors: string[] = [];
   const entries: AgentListEntry[] = [];
 
-  // Get bound agents from DB
-  let boundAgentsList: Awaited<ReturnType<typeof getBoundAgents>> = [];
   try {
-    boundAgentsList = await getBoundAgents();
+    const agentsList = await getAgentsFromApi(apiKey);
+    return { agents: agentsList, errors };
   } catch (err) {
-    errors.push(`Database error: ${err instanceof Error ? err.message : String(err)}`);
+    errors.push(`API error: ${err instanceof Error ? err.message : String(err)}`);
     return { agents: entries, errors };
   }
-
-  // Scan openclaw.json for discovered agents (to get workspace info)
-  const scanResult = scanOpenClawAgents();
-  const workspaceMap = new Map(scanResult.agents.map(a => [a.id, a.workspace]));
-
-  // Build entries from bound agents
-  for (const agent of boundAgentsList) {
-    const workspace = agent.openClawAgentId
-      ? workspaceMap.get(agent.openClawAgentId) ?? ""
-      : "";
-
-    entries.push({
-      id: agent.id,
-      name: agent.name,
-      openClawAgentId: agent.openClawAgentId,
-      workspace,
-      status: (agent.status as AgentStatus) ?? "unknown",
-      bound: true,
-      boundTo: { companyId: agent.companyId, role: agent.role },
-    });
-  }
-
-  return { agents: entries, errors };
 }
 
 /**
  * List all agents with fresh status from local files (--refresh mode)
  */
-export async function listAgentsWithFreshStatus(): Promise<AgentsListOutput> {
+export async function listAgentsWithFreshStatus(apiKey: string): Promise<AgentsListOutput> {
   const errors: string[] = [];
   const entries: AgentListEntry[] = [];
 
-  // Get bound agents from DB
-  let boundAgentsList: Awaited<ReturnType<typeof getBoundAgents>> = [];
+  // Get agents from API
+  let agentsList: AgentListEntry[] = [];
   try {
-    boundAgentsList = await getBoundAgents();
+    agentsList = await getAgentsFromApi(apiKey);
   } catch (err) {
-    errors.push(`Database error: ${err instanceof Error ? err.message : String(err)}`);
+    errors.push(`API error: ${err instanceof Error ? err.message : String(err)}`);
     return { agents: entries, errors };
   }
 
-  // Scan openclaw.json for discovered agents
-  const scanResult = scanOpenClawAgents();
-  errors.push(...scanResult.errors);
-  const workspaceMap = new Map(scanResult.agents.map(a => [a.id, a.workspace]));
-
-  // Build entries with fresh status from local files
-  for (const agent of boundAgentsList) {
-    const workspace = agent.openClawAgentId
-      ? workspaceMap.get(agent.openClawAgentId) ?? ""
-      : "";
-
-    // Get fresh status from local files
-    let status: AgentStatus = (agent.status as AgentStatus) ?? "unknown";
+  // Update status from local files for each agent
+  for (const agent of agentsList) {
     if (agent.openClawAgentId) {
       try {
-        const freshResult = await getAgentStatusFromFiles(agent.openClawAgentId);
-        status = freshResult.status;
+        const { status } = await getAgentStatusFromFiles(agent.openClawAgentId);
+        agent.status = status;
       } catch {
         // Keep existing status
       }
     }
-
-    entries.push({
-      id: agent.id,
-      name: agent.name,
-      openClawAgentId: agent.openClawAgentId,
-      workspace,
-      status,
-      bound: true,
-      boundTo: { companyId: agent.companyId, role: agent.role },
-    });
   }
 
-  return { agents: entries, errors };
+  return { agents: agentsList, errors };
 }
 
 export function registerAgentsCommand(program: Command): void {
   program
     .command("agents list")
-    .description("List all bound agents (reads from DB)")
+    .description("List all agents (via API)")
+    .requiredOption("--api-key <key>", "Agent API key")
     .option("--refresh", "Force fresh status sync from OpenClaw local files before listing")
     .action(async (options) => {
-      const result = options.refresh
-        ? await listAgentsWithFreshStatus()
-        : await listAgentsFromDb();
+      try {
+        const result = options.refresh
+          ? await listAgentsWithFreshStatus(options.apiKey)
+          : await listAgentsFromApi(options.apiKey);
 
-      // Output as JSON
-      console.log(JSON.stringify(result, null, 2));
+        // Output as JSON
+        console.log(JSON.stringify(result, null, 2));
 
-      if (result.errors.length > 0) {
-        console.error("Warnings:", result.errors.join("; "));
+        if (result.errors.length > 0) {
+          console.error("Warnings:", result.errors.join("; "));
+        }
+
+        process.exit(0);
+      } catch (err) {
+        console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+        process.exit(1);
       }
-
-      process.exit(0);
     });
 }

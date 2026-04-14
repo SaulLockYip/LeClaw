@@ -154,6 +154,10 @@ export function createApiClient({ apiKey, companyId }: ApiClientOptions) {
     updateIssueReport: (issueId: string, report: string) =>
       request<{ report: string }>(`PUT`, `/api/companies/${companyId}/issues/${issueId}/report`, { report }),
 
+    // Get all agents (no companyId needed, uses auth)
+    getAgents: () =>
+      request<any[]>(`GET`, `/api/agents`),
+
     getSubIssue: (id: string) =>
       request<any>(`GET`, `/api/companies/${companyId}/issues/sub-issues/${id}`),
     createSubIssue: (data: {

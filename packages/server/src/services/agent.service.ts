@@ -1,8 +1,9 @@
 import { eq, and, or } from "drizzle-orm";
-import { agents, agentInvites, approvals } from "@leclaw/db/schema";
+import { agents, agentInvites, approvals, departments } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { generateApiKey } from "@leclaw/shared/api-key";
 import type { Agent, AgentRole, AgentSyncStatus } from "@leclaw/shared";
+import type { AgentStatus } from "@leclaw/shared/agent-status";
 
 export interface VerifyApiKeyResult {
   agentId: string;
@@ -28,6 +29,21 @@ export interface UpdateAgentInput {
 export interface CreateAgentResult {
   agent: Agent;
   apiKey: string; // The plaintext API key (only returned once)
+}
+
+export interface AgentListEntry {
+  id: string;
+  name?: string;
+  openClawAgentId?: string;
+  workspace: string;
+  status: AgentStatus;
+  bound: boolean;
+  boundTo: {
+    companyId: string;
+    role: string;
+    departmentId: string | null;
+    departmentName: string | null;
+  };
 }
 
 export async function createAgent(
@@ -63,6 +79,41 @@ export async function listAgentsByCompany(companyId: string): Promise<Agent[]> {
   const db = await getDb();
   const rows = await db.select().from(agents).where(eq(agents.companyId, companyId));
   return rows.map(row => ({ ...row, role: row.role as AgentRole, status: (row.status as AgentSyncStatus) ?? "unknown" }));
+}
+
+export async function listAgentsWithDepartment(companyId: string): Promise<AgentListEntry[]> {
+  const db = await getDb();
+
+  const rows = await db
+    .select({
+      id: agents.id,
+      name: agents.name,
+      openClawAgentId: agents.openClawAgentId,
+      workspace: agents.openClawAgentWorkspace,
+      status: agents.status,
+      companyId: agents.companyId,
+      role: agents.role,
+      departmentId: agents.departmentId,
+      departmentName: departments.name,
+    })
+    .from(agents)
+    .leftJoin(departments, eq(agents.departmentId, departments.id))
+    .where(eq(agents.companyId, companyId));
+
+  return rows.map(row => ({
+    id: row.id,
+    name: row.name ?? undefined,
+    openClawAgentId: row.openClawAgentId ?? undefined,
+    workspace: row.workspace ?? "",
+    status: (row.status as AgentStatus) ?? "unknown",
+    bound: !!row.openClawAgentId,
+    boundTo: {
+      companyId: row.companyId,
+      role: row.role as string,
+      departmentId: row.departmentId ?? null,
+      departmentName: row.departmentName ?? null,
+    },
+  }));
 }
 
 export async function getAgent(id: string, companyId: string): Promise<Agent | null> {
