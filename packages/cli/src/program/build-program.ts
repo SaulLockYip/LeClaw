@@ -22,7 +22,7 @@ export function buildProgram(): Command {
   program
     .name("leclaw")
     .description("LeClaw - Agent Management Platform")
-    .version("1.0.0");
+    .version("1.1.3");
 
   configureProgramHelp(program);
 
