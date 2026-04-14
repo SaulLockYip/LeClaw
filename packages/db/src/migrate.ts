@@ -77,22 +77,41 @@ export async function runMigrations(db?: DbConnection): Promise<void> {
   // Set DATABASE_URL for any downstream code that might need it
   process.env.DATABASE_URL = databaseUrl;
 
-  console.log(`Inspecting migrations for: ${databaseUrl.split("@")[1] ?? "localhost"}`);
+  const maxRetries = 5;
+  const retryDelay = 1000;
 
-  const before = await inspectMigrations(databaseUrl);
-  if (before.status === "upToDate") {
-    console.log("Database is up to date");
-    return;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      console.log(`Inspecting migrations for: ${databaseUrl.split("@")[1] ?? "localhost"}`);
+
+      const before = await inspectMigrations(databaseUrl);
+      if (before.status === "upToDate") {
+        console.log("Database is up to date");
+        return;
+      }
+
+      console.log(`Applying ${before.pendingMigrations.length} pending migration(s)...`);
+      await applyPendingMigrations(databaseUrl);
+
+      const after = await inspectMigrations(databaseUrl);
+      if (after.status !== "upToDate") {
+        throw new Error(`Migrations incomplete: ${after.pendingMigrations.join(", ")}`);
+      }
+      console.log("Migrations complete");
+      return;
+    } catch (error) {
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
+      const err = error as Error & { code?: string };
+      if (err.code === "ECONNREFUSED") {
+        console.log(`Database connection refused, retrying in ${retryDelay}ms... (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise((r) => setTimeout(r, retryDelay));
+      } else {
+        throw error;
+      }
+    }
   }
-
-  console.log(`Applying ${before.pendingMigrations.length} pending migration(s)...`);
-  await applyPendingMigrations(databaseUrl);
-
-  const after = await inspectMigrations(databaseUrl);
-  if (after.status !== "upToDate") {
-    throw new Error(`Migrations incomplete: ${after.pendingMigrations.join(", ")}`);
-  }
-  console.log("Migrations complete");
 }
 
 // CLI runner
