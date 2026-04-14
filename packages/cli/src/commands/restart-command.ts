@@ -2,8 +2,7 @@ import { Command } from "commander";
 import path from "path";
 import os from "os";
 import fs from "fs";
-import { execSync } from "child_process";
-import { fork } from "child_process";
+import { execSync, spawn } from "child_process";
 import { loadConfig, type LeClawConfig } from "@leclaw/shared";
 import { initializeDb } from "@leclaw/db";
 
@@ -144,54 +143,26 @@ export function registerRestartCommand(program: Command): void {
           process.exit(1);
         }
 
-        // Write PID file
-        const serverProcess = fork(serverDistPath, {
+        // Spawn detached server process - it will run independently
+        const serverProcess = spawn(process.execPath, [serverDistPath], {
           env: {
             ...process.env,
             PORT: port,
             HOST: host,
             DATABASE_URL: db.connectionString,
           },
-          stdio: ["inherit", "pipe", "pipe", "ipc"],
+          detached: true,
+          stdio: ["ignore", "inherit", "inherit"],
         });
 
         // Write PID to file
         fs.writeFileSync(PID_FILE, String(serverProcess.pid));
 
-        serverProcess.stdout?.on("data", (data) => process.stdout.write(data));
-        serverProcess.stderr?.on("data", (data) => process.stderr.write(data));
-
-        let shuttingDown = false;
-        const shutdown = async () => {
-          if (shuttingDown) return;
-          shuttingDown = true;
-          serverProcess.kill("SIGINT");
-          if (db.started) {
-            await db.stop();
-          }
-          try {
-            fs.unlinkSync(PID_FILE);
-          } catch {
-            // Ignore cleanup errors
-          }
-        };
-
-        serverProcess.on("exit", async (code) => {
-          if (db.started) {
-            await db.stop();
-          }
-          try {
-            fs.unlinkSync(PID_FILE);
-          } catch {
-            // Ignore cleanup errors
-          }
-          process.exit(code ?? 1);
-        });
-
-        process.on("SIGINT", shutdown);
-        process.on("SIGTERM", shutdown);
+        // Unref so parent can exit immediately
+        serverProcess.unref();
 
         console.log(JSON.stringify({ success: true, message: `Server restarted on ${host}:${port}` }));
+        process.exit(0);
       } catch (err) {
         console.error(
           JSON.stringify({
