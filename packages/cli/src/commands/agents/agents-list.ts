@@ -162,5 +162,7 @@ export function registerAgentsCommand(program: Command): void {
       if (result.errors.length > 0) {
         console.error("Warnings:", result.errors.join("; "));
       }
+
+      process.exit(0);
     });
 }
