@@ -1,5 +1,9 @@
+import { createRequire } from "node:module";
 import { Command } from "commander";
 import { configureProgramHelp } from "./configure-help.js";
+
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
 import { registerInitCommand } from "../commands/init-command.js";
 import { registerConfigCommand } from "../commands/config-command.js";
 import { registerStatusCommand } from "../commands/status-command.js";
@@ -22,7 +26,7 @@ export function buildProgram(): Command {
   program
     .name("leclaw")
     .description("LeClaw - Agent Management Platform")
-    .version("1.1.3");
+    .version(version);
 
   configureProgramHelp(program);
 
