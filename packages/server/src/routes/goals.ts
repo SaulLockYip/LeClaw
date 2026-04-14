@@ -10,7 +10,7 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   const companyId = req.params.companyId;
   if (!companyId) {
     return res.status(400).json({
-      error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
+      success: false, error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
     });
   }
   (req as any).companyId = companyId;
@@ -33,7 +33,7 @@ async function requireApiKey(req: Request, res: Response, next: NextFunction) {
     next();
   } catch (error) {
     return res.status(401).json({
-      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+      success: false, error: { code: "INVALID_API_KEY", message: "Invalid API key" }
     });
   }
 }
@@ -43,7 +43,7 @@ function requireCeo(req: Request, res: Response, next: NextFunction) {
   const { role } = (req as any).agentInfo;
   if (role !== "CEO") {
     return res.status(403).json({
-      error: { code: "FORBIDDEN", message: "Only CEO can perform this action" }
+      success: false, error: { code: "FORBIDDEN", message: "Only CEO can perform this action" }
     });
   }
   next();
@@ -73,7 +73,7 @@ goalsRouter.post("/", requireCeo, async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: goal });
   } catch (error) {
     console.error("Error creating goal:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create goal" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to create goal" } });
   }
 });
 
@@ -85,7 +85,7 @@ goalsRouter.get("/", async (req: Request, res: Response) => {
     res.json({ success: true, data: goals });
   } catch (error) {
     console.error("Error listing goals:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list goals" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to list goals" } });
   }
 });
 
@@ -94,12 +94,12 @@ goalsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const goal = await goalService.getGoal(req.params.id);
     if (!goal) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Goal ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Goal ${req.params.id} not found` } });
     }
     res.json({ success: true, data: goal });
   } catch (error) {
     console.error("Error getting goal:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get goal" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get goal" } });
   }
 });
 
@@ -117,7 +117,7 @@ goalsRouter.put("/:id", requireCeo, async (req: Request, res: Response) => {
       issueIds: req.body.issueIds,
     });
     if (!goal) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Goal ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Goal ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "goal_updated", payload: goal as unknown as Record<string, unknown> });
@@ -125,6 +125,6 @@ goalsRouter.put("/:id", requireCeo, async (req: Request, res: Response) => {
     res.json({ success: true, data: goal });
   } catch (error) {
     console.error("Error updating goal:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update goal" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update goal" } });
   }
 });

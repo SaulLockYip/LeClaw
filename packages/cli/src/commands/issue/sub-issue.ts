@@ -1,12 +1,19 @@
 // Sub-Issue Command - Create, show, and update sub-issues
 // Sub-issues belong to a parent issue and have an assignee
+// Tier 3 migration candidate
 
 import { Command } from "commander";
+import path from "path";
+import os from "os";
 import { issues, subIssues, agents } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { eq } from "drizzle-orm";
 import { auditLog } from "../../helpers/audit-log.js";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { createApiClient } from "../../helpers/api-client.js";
+import { loadConfig } from "@leclaw/shared";
+
+const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
 export function registerSubIssueCommand(program: Command): void {
   const subIssueCommand = new Command("sub-issue")
@@ -29,53 +36,69 @@ export function registerSubIssueCommand(program: Command): void {
       let output = "";
 
       try {
+        const config = loadConfig({ configPath: CONFIG_FILE });
+        const useHttp = config.features?.httpMigration ?? false;
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
         agentId = agentInfo.agentId;
-        const db = await getDb();
 
-        // Verify parent issue exists
-        const [parentIssue] = await db
-          .select({ id: issues.id, departmentId: issues.departmentId, subIssues: issues.subIssues })
-          .from(issues)
-          .where(eq(issues.id, parentIssueId))
-          .limit(1);
+        let subIssue;
+        if (useHttp) {
+          // HTTP path: API handles validation (parent issue and assignee exist)
+          const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
+          subIssue = await apiClient.createSubIssue({
+            parentIssueId,
+            title,
+            description: description ?? undefined,
+            assigneeAgentId,
+          });
+        } else {
+          // DB path: client-side validation
+          const db = await getDb();
 
-        if (!parentIssue) {
-          console.error(JSON.stringify({
-            success: false,
-            error: `Parent issue not found: ${parentIssueId}`,
-          }, null, 2));
-          process.exit(1);
+          // Verify parent issue exists
+          const [parentIssue] = await db
+            .select({ id: issues.id, departmentId: issues.departmentId, subIssues: issues.subIssues })
+            .from(issues)
+            .where(eq(issues.id, parentIssueId))
+            .limit(1);
+
+          if (!parentIssue) {
+            console.error(JSON.stringify({
+              success: false,
+              error: `Parent issue not found: ${parentIssueId}`,
+            }, null, 2));
+            process.exit(1);
+          }
+
+          // Verify assignee exists
+          const [assignee] = await db
+            .select({ id: agents.id })
+            .from(agents)
+            .where(eq(agents.id, assigneeAgentId))
+            .limit(1);
+
+          if (!assignee) {
+            console.error(JSON.stringify({
+              success: false,
+              error: `Assignee agent not found: ${assigneeAgentId}`,
+            }, null, 2));
+            process.exit(1);
+          }
+
+          // Insert the sub-issue
+          [subIssue] = await db.insert(subIssues).values({
+            parentIssueId,
+            title,
+            description: description ?? null,
+            assigneeAgentId,
+          } as any).returning();
+
+          // Update parent's subIssues array
+          const updatedSubIssues = [...(parentIssue.subIssues ?? []), subIssue.id];
+          await db.update(issues)
+            .set({ subIssues: updatedSubIssues, updatedAt: new Date() } as any)
+            .where(eq(issues.id, parentIssueId));
         }
-
-        // Verify assignee exists
-        const [assignee] = await db
-          .select({ id: agents.id })
-          .from(agents)
-          .where(eq(agents.id, assigneeAgentId))
-          .limit(1);
-
-        if (!assignee) {
-          console.error(JSON.stringify({
-            success: false,
-            error: `Assignee agent not found: ${assigneeAgentId}`,
-          }, null, 2));
-          process.exit(1);
-        }
-
-        // Insert the sub-issue
-        const [subIssue] = await db.insert(subIssues).values({
-          parentIssueId,
-          title,
-          description: description ?? null,
-          assigneeAgentId,
-        } as any).returning();
-
-        // Update parent's subIssues array
-        const updatedSubIssues = [...(parentIssue.subIssues ?? []), subIssue.id];
-        await db.update(issues)
-          .set({ subIssues: updatedSubIssues, updatedAt: new Date() } as any)
-          .where(eq(issues.id, parentIssueId));
 
         output = `Sub-issue ${subIssue.id} created for issue ${parentIssueId}`;
 
@@ -125,22 +148,32 @@ export function registerSubIssueCommand(program: Command): void {
       const { subIssueId, apiKey } = options;
 
       try {
-        await getAgentInfoFromApiKey(apiKey); // Validate API key
-        const db = await getDb();
+        const config = loadConfig({ configPath: CONFIG_FILE });
+        const useHttp = config.features?.httpMigration ?? false;
+        const agentInfo = await getAgentInfoFromApiKey(apiKey);
 
-        const [subIssue] = await db
-          .select({
-            id: subIssues.id,
-            parentIssueId: subIssues.parentIssueId,
-            title: subIssues.title,
-            description: subIssues.description,
-            status: subIssues.status,
-            assigneeAgentId: subIssues.assigneeAgentId,
-            createdAt: subIssues.createdAt,
-          })
-          .from(subIssues)
-          .where(eq(subIssues.id, subIssueId))
-          .limit(1);
+        let subIssue;
+        if (useHttp) {
+          const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
+          subIssue = await apiClient.getSubIssue(subIssueId);
+        } else {
+          await getAgentInfoFromApiKey(apiKey); // Validate API key
+          const db = await getDb();
+
+          [subIssue] = await db
+            .select({
+              id: subIssues.id,
+              parentIssueId: subIssues.parentIssueId,
+              title: subIssues.title,
+              description: subIssues.description,
+              status: subIssues.status,
+              assigneeAgentId: subIssues.assigneeAgentId,
+              createdAt: subIssues.createdAt,
+            })
+            .from(subIssues)
+            .where(eq(subIssues.id, subIssueId))
+            .limit(1);
+        }
 
         if (!subIssue) {
           console.error(JSON.stringify({
@@ -181,60 +214,75 @@ export function registerSubIssueCommand(program: Command): void {
       let output = "";
 
       try {
+        const config = loadConfig({ configPath: CONFIG_FILE });
+        const useHttp = config.features?.httpMigration ?? false;
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
         agentId = agentInfo.agentId;
-        const db = await getDb();
 
-        // Check if sub-issue exists
-        const [existing] = await db
-          .select({ id: subIssues.id })
-          .from(subIssues)
-          .where(eq(subIssues.id, subIssueId))
-          .limit(1);
+        if (useHttp) {
+          // HTTP path: API handles validation
+          const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
+          await apiClient.updateSubIssue(subIssueId, {
+            title: title ?? undefined,
+            description: description ?? undefined,
+            status: status ?? undefined,
+            assigneeAgentId: assigneeAgentId ?? undefined,
+          });
+        } else {
+          // DB path: client-side validation
+          const db = await getDb();
 
-        if (!existing) {
-          console.error(JSON.stringify({
-            success: false,
-            error: `Sub-issue not found: ${subIssueId}`,
-          }, null, 2));
-          process.exit(1);
-        }
-
-        // If updating assignee, verify they exist
-        if (assigneeAgentId) {
-          const [assignee] = await db
-            .select({ id: agents.id })
-            .from(agents)
-            .where(eq(agents.id, assigneeAgentId))
+          // Check if sub-issue exists
+          const [existing] = await db
+            .select({ id: subIssues.id })
+            .from(subIssues)
+            .where(eq(subIssues.id, subIssueId))
             .limit(1);
 
-          if (!assignee) {
+          if (!existing) {
             console.error(JSON.stringify({
               success: false,
-              error: `Assignee agent not found: ${assigneeAgentId}`,
+              error: `Sub-issue not found: ${subIssueId}`,
             }, null, 2));
             process.exit(1);
           }
+
+          // If updating assignee, verify they exist
+          if (assigneeAgentId) {
+            const [assignee] = await db
+              .select({ id: agents.id })
+              .from(agents)
+              .where(eq(agents.id, assigneeAgentId))
+              .limit(1);
+
+            if (!assignee) {
+              console.error(JSON.stringify({
+                success: false,
+                error: `Assignee agent not found: ${assigneeAgentId}`,
+              }, null, 2));
+              process.exit(1);
+            }
+          }
+
+          // Build update object
+          const updateData: Record<string, unknown> = {};
+          if (title !== undefined) updateData.title = title;
+          if (description !== undefined) updateData.description = description;
+          if (status !== undefined) updateData.status = status;
+          if (assigneeAgentId !== undefined) updateData.assigneeAgentId = assigneeAgentId;
+
+          // Update the sub-issue
+          await db.update(subIssues)
+            .set(updateData as any)
+            .where(eq(subIssues.id, subIssueId));
         }
-
-        // Build update object
-        const updateData: Record<string, unknown> = {};
-        if (title !== undefined) updateData.title = title;
-        if (description !== undefined) updateData.description = description;
-        if (status !== undefined) updateData.status = status;
-        if (assigneeAgentId !== undefined) updateData.assigneeAgentId = assigneeAgentId;
-
-        // Update the sub-issue
-        await db.update(subIssues)
-          .set(updateData as any)
-          .where(eq(subIssues.id, subIssueId));
 
         output = `Sub-issue ${subIssueId} updated`;
 
         await auditLog({
           agentId,
           command: "issue sub-issue update",
-          args: { subIssueId, updateData },
+          args: { subIssueId, updateData: { title, description, status, assigneeAgentId } },
           result: "success",
           output,
         });

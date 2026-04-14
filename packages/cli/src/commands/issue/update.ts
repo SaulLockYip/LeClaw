@@ -1,11 +1,18 @@
 // Issue Update Command - Update an issue
+// Tier 3 migration candidate
 
 import { Command } from "commander";
+import path from "path";
+import os from "os";
 import { issues, agents } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { eq } from "drizzle-orm";
 import { auditLog } from "../../helpers/audit-log.js";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { createApiClient } from "../../helpers/api-client.js";
+import { loadConfig } from "@leclaw/shared";
+
+const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
 function normalizeIssueStatus(status: string): string {
   const lower = status.toLowerCase();
@@ -34,62 +41,77 @@ export function registerUpdateCommand(program: Command): void {
       let output = "";
 
       try {
+        const config = loadConfig({ configPath: CONFIG_FILE });
+        const useHttp = config.features?.httpMigration ?? false;
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
         agentId = agentInfo.agentId;
-        const db = await getDb();
 
-        // Check if issue exists
-        const [existing] = await db
-          .select({ id: issues.id, departmentId: issues.departmentId })
-          .from(issues)
-          .where(eq(issues.id, issueId))
-          .limit(1);
+        if (useHttp) {
+          // HTTP path: API handles validation (issue exists, role permissions)
+          const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
+          await apiClient.updateIssue(issueId, {
+            title: title ?? undefined,
+            description: description ?? undefined,
+            status: status ? normalizeIssueStatus(status) : undefined,
+            departmentId: departmentId ?? undefined,
+          });
+        } else {
+          // DB path: client-side validation
+          const db = await getDb();
 
-        if (!existing) {
-          console.error(JSON.stringify({
-            success: false,
-            error: `Issue not found: ${issueId}`,
-          }, null, 2));
-          process.exit(1);
-        }
-
-        // Role guard: Staff/Manager can only update issues in their department
-        if (agentInfo.role !== "CEO") {
-          const [agent] = await db
-            .select({ departmentId: agents.departmentId })
-            .from(agents)
-            .where(eq(agents.id, agentInfo.agentId))
+          // Check if issue exists
+          const [existing] = await db
+            .select({ id: issues.id, departmentId: issues.departmentId })
+            .from(issues)
+            .where(eq(issues.id, issueId))
             .limit(1);
 
-          if (agent?.departmentId !== existing.departmentId) {
+          if (!existing) {
             console.error(JSON.stringify({
               success: false,
-              error: "Access denied: You can only update issues in your department",
+              error: `Issue not found: ${issueId}`,
             }, null, 2));
             process.exit(1);
           }
-        }
 
-        // Build update object
-        const updateData: Record<string, unknown> = { updatedAt: new Date() };
-        if (title !== undefined) updateData.title = title;
-        if (description !== undefined) updateData.description = description;
-        if (status !== undefined) {
-          updateData.status = normalizeIssueStatus(status);
-        }
-        if (departmentId !== undefined) updateData.departmentId = departmentId;
+          // Role guard: Staff/Manager can only update issues in their department
+          if (agentInfo.role !== "CEO") {
+            const [agent] = await db
+              .select({ departmentId: agents.departmentId })
+              .from(agents)
+              .where(eq(agents.id, agentId))
+              .limit(1);
 
-        // Update the issue
-        await db.update(issues)
-          .set(updateData as any)
-          .where(eq(issues.id, issueId));
+            if (agent?.departmentId !== existing.departmentId) {
+              console.error(JSON.stringify({
+                success: false,
+                error: "Access denied: You can only update issues in your department",
+              }, null, 2));
+              process.exit(1);
+            }
+          }
+
+          // Build update object
+          const updateData: Record<string, unknown> = { updatedAt: new Date() };
+          if (title !== undefined) updateData.title = title;
+          if (description !== undefined) updateData.description = description;
+          if (status !== undefined) {
+            updateData.status = normalizeIssueStatus(status);
+          }
+          if (departmentId !== undefined) updateData.departmentId = departmentId;
+
+          // Update the issue
+          await db.update(issues)
+            .set(updateData as any)
+            .where(eq(issues.id, issueId));
+        }
 
         output = `Issue ${issueId} updated`;
 
         await auditLog({
           agentId,
           command: "issue update",
-          args: { issueId, updateData },
+          args: { issueId, updateData: { title, description, status, departmentId } },
           result: "success",
           output,
         });

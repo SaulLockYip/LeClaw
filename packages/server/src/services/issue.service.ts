@@ -1,7 +1,12 @@
 import { eq, and } from "drizzle-orm";
-import { issues, issueComments } from "@leclaw/db/schema";
+import { issues, issueComments, subIssues as subIssuesTable } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
-import type { Issue, IssueComment, IssueStatus } from "@leclaw/shared";
+import type { Issue, IssueComment, IssueStatus, SubIssue } from "@leclaw/shared";
+
+// Extended Issue interface that includes full sub-issue objects instead of just IDs
+export interface IssueWithSubIssues extends Omit<Issue, "subIssues"> {
+  subIssues: SubIssue[];
+}
 
 export interface CreateIssueInput {
   title: string;
@@ -37,11 +42,25 @@ export async function listIssuesByDepartment(departmentId: string): Promise<Issu
   return rows.map(row => ({ ...row, status: row.status as IssueStatus }));
 }
 
-export async function getIssue(id: string): Promise<Issue | null> {
+export async function getIssue(id: string): Promise<IssueWithSubIssues | null> {
   const db = await getDb();
   const result = await db.select().from(issues).where(eq(issues.id, id));
   if (!result[0]) return null;
-  return { ...result[0], status: result[0].status as IssueStatus };
+  const issue = { ...result[0], status: result[0].status as IssueStatus };
+
+  // Fetch full sub-issue objects if there are sub-issue IDs
+  const subIssueList: SubIssue[] = [];
+  if (issue.subIssues && issue.subIssues.length > 0) {
+    const subIssueResults = await db
+      .select()
+      .from(subIssuesTable)
+      .where(eq(subIssuesTable.parentIssueId, id));
+    subIssueList.push(...(subIssueResults as SubIssue[]));
+  }
+
+  // Return issue with full sub-issue objects (not just IDs)
+  const { subIssues: _, ...issueWithoutSubIssues } = issue;
+  return { ...issueWithoutSubIssues, subIssues: subIssueList };
 }
 
 export async function createIssue(input: CreateIssueInput): Promise<Issue> {

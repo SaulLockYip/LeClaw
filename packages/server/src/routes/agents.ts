@@ -9,7 +9,7 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   const companyId = req.params.companyId;
   if (!companyId) {
     return res.status(400).json({
-      error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
+      success: false, error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
     });
   }
   (req as any).companyId = companyId;
@@ -43,7 +43,7 @@ agentsRouter.post("/", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error creating agent:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create agent" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to create agent" } });
   }
 });
 
@@ -55,7 +55,7 @@ agentsRouter.get("/", async (req: Request, res: Response) => {
     res.json({ success: true, data: agents });
   } catch (error) {
     console.error("Error listing agents:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list agents" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to list agents" } });
   }
 });
 
@@ -65,12 +65,12 @@ agentsRouter.get("/:id", async (req: Request, res: Response) => {
     const companyId = (req as any).companyId;
     const agent = await agentService.getAgent(req.params.id, companyId);
     if (!agent) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Agent ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Agent ${req.params.id} not found` } });
     }
     res.json({ success: true, data: agent });
   } catch (error) {
     console.error("Error getting agent:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get agent" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get agent" } });
   }
 });
 
@@ -83,7 +83,7 @@ agentsRouter.put("/:id", async (req: Request, res: Response) => {
       title: req.body.title,
     });
     if (!agent) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Agent ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Agent ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "agent_updated", payload: agent as unknown as Record<string, unknown> });
@@ -91,7 +91,7 @@ agentsRouter.put("/:id", async (req: Request, res: Response) => {
     res.json({ success: true, data: agent });
   } catch (error) {
     console.error("Error updating agent:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update agent" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update agent" } });
   }
 });
 
@@ -101,7 +101,7 @@ agentsRouter.delete("/:id", async (req: Request, res: Response) => {
     const companyId = (req as any).companyId;
     const deleted = await agentService.deleteAgent(req.params.id, companyId);
     if (!deleted) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Agent ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Agent ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "agent_deleted", payload: { id: req.params.id } });
@@ -109,6 +109,6 @@ agentsRouter.delete("/:id", async (req: Request, res: Response) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting agent:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to delete agent" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to delete agent" } });
   }
 });

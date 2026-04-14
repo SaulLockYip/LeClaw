@@ -1,13 +1,8 @@
 // Project Create Command - Create a project for a company (CEO or Manager)
 
 import { Command } from "commander";
-import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
-import { loadConfig } from "@leclaw/shared";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
-
-const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
+import { createApiClient } from "../../helpers/api-client.js";
 
 export function registerProjectCreateCommand(program: Command): void {
   program
@@ -35,42 +30,18 @@ export function registerProjectCreateCommand(program: Command): void {
           process.exit(1);
         }
 
-        let gatewayUrl = "http://localhost:4396";
-        if (fs.existsSync(CONFIG_FILE)) {
-          const config = loadConfig({ configPath: CONFIG_FILE });
-          if (config.openclaw?.gatewayUrl) {
-            gatewayUrl = config.openclaw.gatewayUrl.replace(/^ws:\/\//, "http://").replace(/^wss:\/\//, "https://");
-          }
-        }
+        const client = createApiClient({ apiKey, companyId: agentInfo.companyId });
 
         const body: Record<string, unknown> = { title };
         if (description) body.description = description;
         if (projectDir) body.projectDir = projectDir;
         if (issueIds) body.issueIds = issueIds.split(",").map(s => s.trim());
 
-        const response = await fetch(`${gatewayUrl}/api/companies/${agentInfo.companyId}/projects`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify(body),
-        });
-
-        const data = await response.json() as { error?: { message?: string; code?: string }; data?: unknown };
-
-        if (!response.ok) {
-          console.error(JSON.stringify({
-            success: false,
-            error: data.error?.message || `HTTP ${response.status}`,
-            code: data.error?.code || "CREATE_FAILED",
-          }, null, 2));
-          process.exit(1);
-        }
+        const project = await client.post<any>(`/api/companies/${agentInfo.companyId}/projects`, body);
 
         console.log(JSON.stringify({
           success: true,
-          project: data.data,
+          project,
         }, null, 2));
       } catch (err) {
         console.error(JSON.stringify({

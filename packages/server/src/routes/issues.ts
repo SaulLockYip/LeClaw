@@ -13,7 +13,7 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   const companyId = req.params.companyId;
   if (!companyId) {
     return res.status(400).json({
-      error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
+      success: false, error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
     });
   }
   (req as any).companyId = companyId;
@@ -36,7 +36,7 @@ async function requireApiKey(req: Request, res: Response, next: NextFunction) {
     next();
   } catch (error) {
     return res.status(401).json({
-      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+      success: false, error: { code: "INVALID_API_KEY", message: "Invalid API key" }
     });
   }
 }
@@ -46,7 +46,7 @@ function requireCeo(req: Request, res: Response, next: NextFunction) {
   const { role } = (req as any).agentInfo;
   if (role !== "CEO") {
     return res.status(403).json({
-      error: { code: "FORBIDDEN", message: "Only CEO can perform this action" }
+      success: false, error: { code: "FORBIDDEN", message: "Only CEO can perform this action" }
     });
   }
   next();
@@ -81,7 +81,7 @@ async function requireRoleForIssueAccess(req: Request, res: Response, next: Next
   }
 
   return res.status(403).json({
-    error: { code: "FORBIDDEN", message: "Not authorized to access this issue data" }
+    success: false, error: { code: "FORBIDDEN", message: "Not authorized to access this issue data" }
   });
 }
 
@@ -109,7 +109,7 @@ issuesRouter.get("/", requireRoleForIssueAccess, async (req: Request, res: Respo
     // Manager/Staff can only see their department's issues unless CEO
     if (role !== "CEO" && departmentId && departmentId !== agentDepartmentId) {
       return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Cannot access issues from other departments" }
+        success: false, error: { code: "FORBIDDEN", message: "Cannot access issues from other departments" }
       });
     }
 
@@ -128,7 +128,7 @@ issuesRouter.get("/", requireRoleForIssueAccess, async (req: Request, res: Respo
     res.json({ success: true, data: issues });
   } catch (error) {
     console.error("Error listing issues:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list issues" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to list issues" } });
   }
 });
 
@@ -154,7 +154,7 @@ issuesRouter.post("/", async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: issue });
   } catch (error) {
     console.error("Error creating issue:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create issue" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to create issue" } });
   }
 });
 
@@ -164,7 +164,7 @@ issuesRouter.get("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
   try {
     const issue = await issueService.getIssue(req.params.id);
     if (!issue) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
     }
 
     // Check department access for Manager/Staff
@@ -175,7 +175,7 @@ issuesRouter.get("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
       const agentDepartmentId = (req as any).agentDepartmentId;
       if (role !== "CEO" && issue.departmentId !== agentDepartmentId) {
         return res.status(403).json({
-          error: { code: "FORBIDDEN", message: "Cannot access issues from other departments" }
+          success: false, error: { code: "FORBIDDEN", message: "Cannot access issues from other departments" }
         });
       }
     }
@@ -183,7 +183,7 @@ issuesRouter.get("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
     res.json({ success: true, data: issue });
   } catch (error) {
     console.error("Error getting issue:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get issue" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get issue" } });
   }
 });
 
@@ -194,7 +194,7 @@ issuesRouter.put("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
     // Check department access first
     const existing = await issueService.getIssue(req.params.id);
     if (!existing) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
     }
 
     const agentInfo = (req as any).agentInfo;
@@ -204,7 +204,7 @@ issuesRouter.put("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
       const agentDepartmentId = (req as any).agentDepartmentId;
       if (role !== "CEO" && existing.departmentId !== agentDepartmentId) {
         return res.status(403).json({
-          error: { code: "FORBIDDEN", message: "Cannot update issues from other departments" }
+          success: false, error: { code: "FORBIDDEN", message: "Cannot update issues from other departments" }
         });
       }
     }
@@ -224,7 +224,7 @@ issuesRouter.put("/:id", requireRoleForIssueAccess, async (req: Request, res: Re
     res.json({ success: true, data: issue });
   } catch (error) {
     console.error("Error updating issue:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update issue" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update issue" } });
   }
 });
 
@@ -233,12 +233,12 @@ issuesRouter.delete("/:id", requireRoleForIssueAccess, async (req: Request, res:
   try {
     const deleted = await issueService.deleteIssue(req.params.id);
     if (!deleted) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
     }
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting issue:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to delete issue" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to delete issue" } });
   }
 });
 
@@ -257,7 +257,7 @@ issuesRouter.post("/:id/comments", async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: comment });
   } catch (error) {
     console.error("Error adding comment:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to add comment" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to add comment" } });
   }
 });
 
@@ -274,7 +274,7 @@ issuesRouter.get("/:id/comments", async (req: Request, res: Response) => {
     res.json({ success: true, data: comments });
   } catch (error) {
     console.error("Error listing comments:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list comments" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to list comments" } });
   }
 });
 
@@ -283,12 +283,12 @@ issuesRouter.get("/:id/report", async (req: Request, res: Response) => {
   try {
     const issue = await issueService.getIssue(req.params.id);
     if (!issue) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
     }
     res.json({ success: true, data: { report: issue.report ?? "" } });
   } catch (error) {
     console.error("Error getting report:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get report" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get report" } });
   }
 });
 
@@ -303,7 +303,7 @@ issuesRouter.put("/:id/report", async (req: Request, res: Response) => {
       .limit(1);
 
     if (!issue) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Issue ${req.params.id} not found` } });
     }
 
     // Append with separator if existing report
@@ -317,7 +317,7 @@ issuesRouter.put("/:id/report", async (req: Request, res: Response) => {
     res.json({ success: true, data: { report: updatedReport } });
   } catch (error) {
     console.error("Error updating report:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update report" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update report" } });
   }
 });
 
@@ -335,7 +335,7 @@ issuesRouter.post("/sub-issues", async (req: Request, res: Response) => {
       .limit(1);
 
     if (!parentIssue) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Parent issue not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Parent issue not found` } });
     }
 
     // Insert the sub-issue
@@ -355,7 +355,7 @@ issuesRouter.post("/sub-issues", async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: subIssue });
   } catch (error) {
     console.error("Error creating sub-issue:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create sub-issue" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to create sub-issue" } });
   }
 });
 
@@ -370,13 +370,13 @@ issuesRouter.get("/sub-issues/:id", async (req: Request, res: Response) => {
       .limit(1);
 
     if (!subIssue) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Sub-issue ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Sub-issue ${req.params.id} not found` } });
     }
 
     res.json({ success: true, data: subIssue });
   } catch (error) {
     console.error("Error getting sub-issue:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get sub-issue" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get sub-issue" } });
   }
 });
 
@@ -393,7 +393,7 @@ issuesRouter.put("/sub-issues/:id", async (req: Request, res: Response) => {
       .limit(1);
 
     if (!existing) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Sub-issue ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Sub-issue ${req.params.id} not found` } });
     }
 
     // Build update object
@@ -412,6 +412,6 @@ issuesRouter.put("/sub-issues/:id", async (req: Request, res: Response) => {
     res.json({ success: true, data: updated });
   } catch (error) {
     console.error("Error updating sub-issue:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update sub-issue" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update sub-issue" } });
   }
 });

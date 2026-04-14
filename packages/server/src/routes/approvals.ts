@@ -11,7 +11,7 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   const companyId = req.params.companyId;
   if (!companyId) {
     return res.status(400).json({
-      error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
+      success: false, error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
     });
   }
   (req as any).companyId = companyId;
@@ -34,7 +34,7 @@ async function requireApiKey(req: Request, res: Response, next: NextFunction) {
     next();
   } catch (error) {
     return res.status(401).json({
-      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+      success: false, error: { code: "INVALID_API_KEY", message: "Invalid API key" }
     });
   }
 }
@@ -44,7 +44,7 @@ function requireManagerOrCeo(req: Request, res: Response, next: NextFunction) {
   const { role } = (req as any).agentInfo;
   if (role !== "Manager" && role !== "CEO") {
     return res.status(403).json({
-      error: { code: "FORBIDDEN", message: "Only Manager or CEO can perform this action" }
+      success: false, error: { code: "FORBIDDEN", message: "Only Manager or CEO can perform this action" }
     });
   }
   next();
@@ -67,13 +67,13 @@ approvalsRouter.post("/", async (req: Request, res: Response) => {
       // CEO doesn't need an approver for agent_approve
       if (role === "CEO") {
         return res.status(400).json({
-          error: { code: "INVALID_REQUEST", message: "CEO does not need approval for agent_approve" }
+          success: false, error: { code: "INVALID_REQUEST", message: "CEO does not need approval for agent_approve" }
         });
       }
       const foundApprover = await approvalService.findApproverForAgent(agentId, companyId);
       if (!foundApprover) {
         return res.status(400).json({
-          error: { code: "NO_APPROVER", message: "Could not find an approver for this request" }
+          success: false, error: { code: "NO_APPROVER", message: "Could not find an approver for this request" }
         });
       }
       approverId = foundApprover;
@@ -93,7 +93,7 @@ approvalsRouter.post("/", async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: approval });
   } catch (error) {
     console.error("Error creating approval:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create approval" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to create approval" } });
   }
 });
 
@@ -128,7 +128,30 @@ approvalsRouter.get("/", async (req: Request, res: Response) => {
     res.json({ success: true, data: approvals });
   } catch (error) {
     console.error("Error listing approvals:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list approvals" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to list approvals" } });
+  }
+});
+
+// GET /api/companies/:companyId/approvals/approver - Find approver for an agent
+// Query params:
+// - agentId: the agent who needs an approver
+// Returns the approver ID or null if no approver is needed (e.g., CEO)
+approvalsRouter.get("/approver", async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).companyId;
+    const { agentId } = req.query;
+
+    if (!agentId || typeof agentId !== "string") {
+      return res.status(400).json({
+        success: false, error: { code: "MISSING_AGENT_ID", message: "Missing required agentId query parameter" }
+      });
+    }
+
+    const approverId = await approvalService.findApproverForAgent(agentId as string, companyId);
+    res.json({ success: true, data: { approverId } });
+  } catch (error) {
+    console.error("Error finding approver:", error);
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to find approver" } });
   }
 });
 
@@ -137,12 +160,12 @@ approvalsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const approval = await approvalService.getApproval(req.params.id);
     if (!approval) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
     }
     res.json({ success: true, data: approval });
   } catch (error) {
     console.error("Error getting approval:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get approval" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get approval" } });
   }
 });
 
@@ -154,18 +177,19 @@ approvalsRouter.put("/:id/approve", requireManagerOrCeo, async (req: Request, re
     // Get the approval first to verify it exists and is pending
     const existingApproval = await approvalService.getApproval(req.params.id);
     if (!existingApproval) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
     }
     if (existingApproval.status !== "Pending") {
-      return res.status(400).json({ error: { code: "INVALID_STATUS", message: "Approval is not pending" } });
+      return res.status(400).json({ success: false, error: { code: "INVALID_STATUS", message: "Approval is not pending" } });
     }
     // Verify the approver is the authenticated agent
     if (existingApproval.approverId !== agentId) {
-      return res.status(403).json({ error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
+      return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
     }
 
     const approval = await approvalService.updateApproval(req.params.id, {
       status: "Approved",
+      message: req.body.message,
     });
 
     broadcastEvent({ type: "approval_updated", payload: approval as unknown as Record<string, unknown> });
@@ -173,7 +197,7 @@ approvalsRouter.put("/:id/approve", requireManagerOrCeo, async (req: Request, re
     res.json({ success: true, data: approval });
   } catch (error) {
     console.error("Error approving approval:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to approve approval" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to approve approval" } });
   }
 });
 
@@ -186,19 +210,19 @@ approvalsRouter.put("/:id/reject", requireManagerOrCeo, async (req: Request, res
     // Get the approval first to verify it exists and is pending
     const existingApproval = await approvalService.getApproval(req.params.id);
     if (!existingApproval) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
     }
     if (existingApproval.status !== "Pending") {
-      return res.status(400).json({ error: { code: "INVALID_STATUS", message: "Approval is not pending" } });
+      return res.status(400).json({ success: false, error: { code: "INVALID_STATUS", message: "Approval is not pending" } });
     }
     // Verify the approver is the authenticated agent
     if (existingApproval.approverId !== agentId) {
-      return res.status(403).json({ error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
+      return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
     }
 
     const approval = await approvalService.updateApproval(req.params.id, {
       status: "Rejected",
-      rejectMessage: message,
+      message: message,
     });
 
     broadcastEvent({ type: "approval_updated", payload: approval as unknown as Record<string, unknown> });
@@ -206,7 +230,7 @@ approvalsRouter.put("/:id/reject", requireManagerOrCeo, async (req: Request, res
     res.json({ success: true, data: approval });
   } catch (error) {
     console.error("Error rejecting approval:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to reject approval" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to reject approval" } });
   }
 });
 
@@ -216,10 +240,10 @@ approvalsRouter.put("/:id", async (req: Request, res: Response) => {
   try {
     const approval = await approvalService.updateApproval(req.params.id, {
       status: req.body.status,
-      rejectMessage: req.body.rejectMessage,
+      message: req.body.message,
     });
     if (!approval) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "approval_updated", payload: approval as unknown as Record<string, unknown> });
@@ -227,6 +251,6 @@ approvalsRouter.put("/:id", async (req: Request, res: Response) => {
     res.json({ success: true, data: approval });
   } catch (error) {
     console.error("Error updating approval:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update approval" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update approval" } });
   }
 });

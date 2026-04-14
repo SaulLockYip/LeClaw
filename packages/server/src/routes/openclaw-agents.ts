@@ -17,7 +17,7 @@ openclawAgentsRouter.get("/agents", async (_req: Request, res: Response) => {
   } catch (error) {
     console.error("Error scanning OpenClaw agents:", error);
     res.status(500).json({
-      error: { code: "INTERNAL_ERROR", message: "Failed to scan OpenClaw agents" }
+      success: false, error: { code: "INTERNAL_ERROR", message: "Failed to scan OpenClaw agents" }
     });
   }
 });

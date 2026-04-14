@@ -2,7 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { agents, agentInvites } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { generateApiKey } from "@leclaw/shared/api-key";
-import type { Agent, AgentRole } from "@leclaw/shared";
+import type { Agent, AgentRole, AgentSyncStatus } from "@leclaw/shared";
 
 export interface VerifyApiKeyResult {
   agentId: string;
@@ -54,7 +54,7 @@ export async function createAgent(
   await db.update(agents).set({ agentApiKey: apiKey.fullKey } as any).where(eq(agents.id, agent.id));
 
   return {
-    agent: { ...agent, role: agent.role as AgentRole },
+    agent: { ...agent, role: agent.role as AgentRole, status: (agent.status as AgentSyncStatus) ?? "unknown" },
     apiKey: apiKey.fullKey,
   };
 }
@@ -62,7 +62,7 @@ export async function createAgent(
 export async function listAgentsByCompany(companyId: string): Promise<Agent[]> {
   const db = await getDb();
   const rows = await db.select().from(agents).where(eq(agents.companyId, companyId));
-  return rows.map(row => ({ ...row, role: row.role as AgentRole }));
+  return rows.map(row => ({ ...row, role: row.role as AgentRole, status: (row.status as AgentSyncStatus) ?? "unknown" }));
 }
 
 export async function getAgent(id: string, companyId: string): Promise<Agent | null> {
@@ -70,7 +70,7 @@ export async function getAgent(id: string, companyId: string): Promise<Agent | n
   const result = await db.select().from(agents)
     .where(and(eq(agents.id, id), eq(agents.companyId, companyId)));
   if (!result[0]) return null;
-  return { ...result[0], role: result[0].role as AgentRole };
+  return { ...result[0], role: result[0].role as AgentRole, status: (result[0].status as AgentSyncStatus) ?? "unknown" };
 }
 
 export async function updateAgent(
@@ -85,7 +85,7 @@ export async function updateAgent(
     .returning();
 
   if (!agent) return null;
-  return { ...agent, role: agent.role as AgentRole };
+  return { ...agent, role: agent.role as AgentRole, status: (agent.status as AgentSyncStatus) ?? "unknown" };
 }
 
 export async function deleteAgent(

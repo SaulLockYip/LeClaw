@@ -18,7 +18,7 @@ function ApprovalsListPage() {
   const [showApproveDialog, setShowApproveDialog] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
   const [selectedApproval, setSelectedApproval] = useState<Approval | null>(null)
-  const [rejectReason, setRejectReason] = useState('')
+  const [message, setMessage] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
@@ -62,7 +62,7 @@ function ApprovalsListPage() {
 
   const openRejectDialog = (approval: Approval) => {
     setSelectedApproval(approval)
-    setRejectReason('')
+    setMessage('')
     setShowRejectDialog(true)
   }
 
@@ -70,7 +70,7 @@ function ApprovalsListPage() {
     setShowApproveDialog(false)
     setShowRejectDialog(false)
     setSelectedApproval(null)
-    setRejectReason('')
+    setMessage('')
   }
 
   const handleApprove = async () => {
@@ -91,12 +91,12 @@ function ApprovalsListPage() {
 
   const handleReject = async () => {
     if (!selectedCompany || !selectedApproval) return
-    if (!rejectReason.trim()) return
+    if (!message.trim()) return
     setIsProcessing(true)
     try {
-      await approvalApi.reject(selectedCompany.id, selectedApproval.id, rejectReason)
+      await approvalApi.reject(selectedCompany.id, selectedApproval.id, message)
       setApprovals((prev) =>
-        prev.map((a) => (a.id === selectedApproval.id ? { ...a, status: 'Rejected', rejectMessage: rejectReason } : a))
+        prev.map((a) => (a.id === selectedApproval.id ? { ...a, status: 'Rejected', message } : a))
       )
       closeDialogs()
     } catch (err) {
@@ -298,8 +298,8 @@ function ApprovalsListPage() {
               <div>
                 <label className="text-xs uppercase text-slate-500 tracking-wider">Reason</label>
                 <textarea
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   placeholder="Enter reason for rejection..."
                   className="w-full mt-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   rows={3}
@@ -317,7 +317,7 @@ function ApprovalsListPage() {
               <button
                 onClick={handleReject}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-                disabled={isProcessing || !rejectReason.trim()}
+                disabled={isProcessing || !message.trim()}
               >
                 {isProcessing ? 'Processing...' : 'Reject'}
               </button>

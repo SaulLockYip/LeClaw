@@ -1,12 +1,19 @@
 // Issue Report Command - Show and append to issue reports
 // Access: Agent (write) via CLI, Human read-only via Web UI
+// Tier 3 migration candidate
 
 import { Command } from "commander";
+import path from "path";
+import os from "os";
 import { issues } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { eq } from "drizzle-orm";
 import { auditLog } from "../../helpers/audit-log.js";
-import { getAgentIdFromApiKey } from "../../helpers/api-key.js";
+import { getAgentIdFromApiKey, getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { createApiClient } from "../../helpers/api-client.js";
+import { loadConfig } from "@leclaw/shared";
+
+const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
 export function registerReportCommand(program: Command): void {
   const reportCommand = new Command("report")
@@ -22,27 +29,40 @@ export function registerReportCommand(program: Command): void {
       const { issueId, apiKey } = options;
 
       try {
-        await getAgentIdFromApiKey(apiKey); // Validate API key
-        const db = await getDb();
+        const config = loadConfig({ configPath: CONFIG_FILE });
+        const useHttp = config.features?.httpMigration ?? false;
+        const agentInfo = await getAgentInfoFromApiKey(apiKey);
 
-        const [issue] = await db
-          .select({ id: issues.id, report: issues.report })
-          .from(issues)
-          .where(eq(issues.id, issueId))
-          .limit(1);
+        let report;
+        if (useHttp) {
+          const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
+          const result = await apiClient.getIssueReport(issueId);
+          report = result.report;
+        } else {
+          await getAgentIdFromApiKey(apiKey); // Validate API key
+          const db = await getDb();
 
-        if (!issue) {
-          console.error(JSON.stringify({
-            success: false,
-            error: `Issue not found: ${issueId}`,
-          }, null, 2));
-          process.exit(1);
+          const [issue] = await db
+            .select({ id: issues.id, report: issues.report })
+            .from(issues)
+            .where(eq(issues.id, issueId))
+            .limit(1);
+
+          if (!issue) {
+            console.error(JSON.stringify({
+              success: false,
+              error: `Issue not found: ${issueId}`,
+            }, null, 2));
+            process.exit(1);
+          }
+
+          report = issue.report ?? "";
         }
 
         console.log(JSON.stringify({
           success: true,
-          issueId: issue.id,
-          report: issue.report ?? "",
+          issueId,
+          report,
         }, null, 2));
       } catch (err) {
         console.error(JSON.stringify({
@@ -68,29 +88,39 @@ export function registerReportCommand(program: Command): void {
       let output = "";
 
       try {
-        // Extract agentId from API key
-        agentId = await getAgentIdFromApiKey(apiKey);
-        const db = await getDb();
+        const config = loadConfig({ configPath: CONFIG_FILE });
+        const useHttp = config.features?.httpMigration ?? false;
+        const agentInfo = await getAgentInfoFromApiKey(apiKey);
+        agentId = agentInfo.agentId;
 
-        // Fetch existing report (append-only)
-        const [issue] = await db
-          .select({ report: issues.report })
-          .from(issues)
-          .where(eq(issues.id, issueId))
-          .limit(1);
+        if (useHttp) {
+          const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
+          await apiClient.updateIssueReport(issueId, report);
+        } else {
+          // Extract agentId from API key
+          agentId = await getAgentIdFromApiKey(apiKey);
+          const db = await getDb();
 
-        if (!issue) {
-          throw new Error(`Issue not found: ${issueId}`);
+          // Fetch existing report (append-only)
+          const [issue] = await db
+            .select({ report: issues.report })
+            .from(issues)
+            .where(eq(issues.id, issueId))
+            .limit(1);
+
+          if (!issue) {
+            throw new Error(`Issue not found: ${issueId}`);
+          }
+
+          // Append with separator if existing report
+          const separator = issue.report ? "\n\n---\n\n" : "";
+          const updatedReport = `${issue.report ?? ""}${separator}${report}`;
+
+          // Update the issue with appended report
+          await db.update(issues)
+            .set({ report: updatedReport, updatedAt: new Date() } as any)
+            .where(eq(issues.id, issueId));
         }
-
-        // Append with separator if existing report
-        const separator = issue.report ? "\n\n---\n\n" : "";
-        const updatedReport = `${issue.report ?? ""}${separator}${report}`;
-
-        // Update the issue with appended report
-        await db.update(issues)
-          .set({ report: updatedReport, updatedAt: new Date() } as any)
-          .where(eq(issues.id, issueId));
 
         output = `Report appended to issue ${issueId}`;
 

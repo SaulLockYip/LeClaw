@@ -99,7 +99,7 @@ export interface Approval {
   type: string
   requester: string
   status: 'Pending' | 'Approved' | 'Rejected'
-  rejectMessage?: string
+  message?: string
   approverId?: string
   createdAt: string
   updatedAt: string
@@ -212,15 +212,17 @@ export const approvalApi = {
   list: (companyId: string) => fetchApi<Approval[]>(`/companies/${companyId}/approvals`),
   get: (companyId: string, approvalId: string) =>
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}`),
-  approve: (companyId: string, approvalId: string) =>
+  approve: (companyId: string, approvalId: string, message?: string) =>
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}/approve`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
     }),
-  reject: (companyId: string, approvalId: string, rejectMessage: string) =>
+  reject: (companyId: string, approvalId: string, message: string) =>
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rejectMessage }),
+      body: JSON.stringify({ message }),
     }),
 }
 

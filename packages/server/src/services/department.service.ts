@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { departments, agents } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
-import type { Department, Agent } from "@leclaw/shared";
+import type { Department, Agent, AgentSyncStatus } from "@leclaw/shared";
 
 export interface CreateDepartmentInput {
   name: string;
@@ -43,8 +43,8 @@ export async function listDepartmentsByCompany(companyId: string): Promise<Depar
 
       return {
         ...dept,
-        manager: manager ? { ...manager, role: manager.role as Agent["role"] } : null,
-        staffs: staffs.map((s) => ({ ...s, role: s.role as Agent["role"] })),
+        manager: manager ? { ...manager, role: manager.role as Agent["role"], status: (manager.status as AgentSyncStatus) ?? "unknown" } : null,
+        staffs: staffs.map((s) => ({ ...s, role: s.role as Agent["role"], status: (s.status as AgentSyncStatus) ?? "unknown" })),
       };
     })
   );

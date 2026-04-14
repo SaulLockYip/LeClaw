@@ -1,12 +1,19 @@
 // leclaw department update command - Update a department
 // Access: CEO or same department Manager
+// Tier 2 migration candidate
 
 import { Command } from "commander";
+import path from "path";
+import os from "os";
 import { departments, agents } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { eq } from "drizzle-orm";
 import { auditLog } from "../../helpers/audit-log.js";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { createApiClient } from "../../helpers/api-client.js";
+import { loadConfig } from "@leclaw/shared";
+
+const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
 export function registerDepartmentUpdateCommand(program: Command): void {
   const updateCommand = new Command("update")
@@ -23,41 +30,10 @@ export function registerDepartmentUpdateCommand(program: Command): void {
       let output = "";
 
       try {
+        const config = loadConfig({ configPath: CONFIG_FILE });
+        const useHttp = config.features?.httpMigration ?? false;
         const agentInfo = await getAgentInfoFromApiKey(options.apiKey);
         agentId = agentInfo.agentId;
-        const db = await getDb();
-
-        // Verify department exists
-        const [department] = await db
-          .select({ id: departments.id, companyId: departments.companyId })
-          .from(departments)
-          .where(eq(departments.id, options.departmentId))
-          .limit(1);
-
-        if (!department) {
-          console.error(JSON.stringify({
-            success: false,
-            error: `Department not found: ${options.departmentId}`,
-          }, null, 2));
-          process.exit(1);
-        }
-
-        // Role guard: CEO can update any department, Manager can only update their own
-        if (agentInfo.role !== "CEO") {
-          const [agent] = await db
-            .select({ departmentId: agents.departmentId })
-            .from(agents)
-            .where(eq(agents.id, agentId))
-            .limit(1);
-
-          if (agent?.departmentId !== options.departmentId) {
-            console.error(JSON.stringify({
-              success: false,
-              error: "Access denied: You can only update your own department",
-            }, null, 2));
-            process.exit(1);
-          }
-        }
 
         // Build update values
         const updateValues: Record<string, unknown> = {};
@@ -77,12 +53,56 @@ export function registerDepartmentUpdateCommand(program: Command): void {
           process.exit(1);
         }
 
-        // Update the department
-        const [updated] = await db
-          .update(departments)
-          .set(updateValues as any)
-          .where(eq(departments.id, options.departmentId))
-          .returning();
+        let updated;
+        if (useHttp) {
+          // HTTP path: API handles validation (department exists, role permissions)
+          const apiClient = createApiClient({ apiKey: options.apiKey, companyId: agentInfo.companyId });
+          updated = await apiClient.updateDepartment(options.departmentId, {
+            name: options.name,
+            description: options.description,
+          });
+        } else {
+          // DB path: client-side validation
+          const db = await getDb();
+
+          // Verify department exists
+          const [department] = await db
+            .select({ id: departments.id, companyId: departments.companyId })
+            .from(departments)
+            .where(eq(departments.id, options.departmentId))
+            .limit(1);
+
+          if (!department) {
+            console.error(JSON.stringify({
+              success: false,
+              error: `Department not found: ${options.departmentId}`,
+            }, null, 2));
+            process.exit(1);
+          }
+
+          // Role guard: CEO can update any department, Manager can only update their own
+          if (agentInfo.role !== "CEO") {
+            const [agent] = await db
+              .select({ departmentId: agents.departmentId })
+              .from(agents)
+              .where(eq(agents.id, agentId))
+              .limit(1);
+
+            if (agent?.departmentId !== options.departmentId) {
+              console.error(JSON.stringify({
+                success: false,
+                error: "Access denied: You can only update your own department",
+              }, null, 2));
+              process.exit(1);
+            }
+          }
+
+          [updated] = await db
+            .update(departments)
+            .set(updateValues as any)
+            .where(eq(departments.id, options.departmentId))
+            .returning();
+        }
 
         output = `Department ${options.departmentId} updated`;
 

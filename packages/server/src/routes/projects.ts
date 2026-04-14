@@ -10,7 +10,7 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   const companyId = req.params.companyId;
   if (!companyId) {
     return res.status(400).json({
-      error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
+      success: false, error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
     });
   }
   (req as any).companyId = companyId;
@@ -33,7 +33,7 @@ async function requireApiKey(req: Request, res: Response, next: NextFunction) {
     next();
   } catch (error) {
     return res.status(401).json({
-      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+      success: false, error: { code: "INVALID_API_KEY", message: "Invalid API key" }
     });
   }
 }
@@ -43,7 +43,7 @@ function requireCeoOrManager(req: Request, res: Response, next: NextFunction) {
   const { role } = (req as any).agentInfo;
   if (role !== "CEO" && role !== "Manager") {
     return res.status(403).json({
-      error: { code: "FORBIDDEN", message: "Only CEO or Manager can perform this action" }
+      success: false, error: { code: "FORBIDDEN", message: "Only CEO or Manager can perform this action" }
     });
   }
   next();
@@ -70,7 +70,7 @@ projectsRouter.post("/", requireCeoOrManager, async (req: Request, res: Response
     res.status(201).json({ success: true, data: project });
   } catch (error) {
     console.error("Error creating project:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create project" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to create project" } });
   }
 });
 
@@ -82,7 +82,7 @@ projectsRouter.get("/", async (req: Request, res: Response) => {
     res.json({ success: true, data: projects });
   } catch (error) {
     console.error("Error listing projects:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list projects" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to list projects" } });
   }
 });
 
@@ -91,12 +91,12 @@ projectsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const project = await projectService.getProject(req.params.id);
     if (!project) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Project ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Project ${req.params.id} not found` } });
     }
     res.json({ success: true, data: project });
   } catch (error) {
     console.error("Error getting project:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get project" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get project" } });
   }
 });
 
@@ -112,7 +112,7 @@ projectsRouter.put("/:id", requireCeoOrManager, async (req: Request, res: Respon
       issueIds: req.body.issueIds,
     });
     if (!project) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Project ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Project ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "project_updated", payload: project as unknown as Record<string, unknown> });
@@ -120,6 +120,6 @@ projectsRouter.put("/:id", requireCeoOrManager, async (req: Request, res: Respon
     res.json({ success: true, data: project });
   } catch (error) {
     console.error("Error updating project:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update project" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update project" } });
   }
 });

@@ -419,7 +419,7 @@ curl -X PUT http://localhost:4396/api/companies/:id/approvals/:id \
 # Reject
 curl -X PUT http://localhost:4396/api/companies/:id/approvals/:id \
   -H "Content-Type: application/json" \
-  -d '{"status": "Rejected", "rejectMessage": "Budget exceeded"}'
+  -d '{"status": "Rejected", "message": "Budget exceeded"}'
 ```
 
 ### Server-Sent Events (SSE)
@@ -698,7 +698,7 @@ pnpm check
 - `description` (text)
 - `requester` (UUID, foreign key to Agent)
 - `status` (text: `Pending`, `Approved`, `Rejected`)
-- `rejectMessage` (text)
+- `message` (text)
 - `createdAt`, `updatedAt` (timestamps)
 
 ### AgentApiKey

@@ -20,6 +20,9 @@ export interface Department {
 // Agent role types
 export type AgentRole = "CEO" | "Manager" | "Staff";
 
+// Agent status types (synced from OpenClaw local files)
+export type AgentSyncStatus = "online" | "busy" | "offline" | "unknown";
+
 // Agent entity - Maps OpenClaw agents to LeClaw roles
 export interface Agent {
   id: string;
@@ -31,6 +34,10 @@ export interface Agent {
   openClawAgentId?: string; // External OpenClaw agent identifier
   openClawAgentWorkspace?: string; // OpenClaw workspace path
   openClawAgentDir?: string; // OpenClaw agent working directory
+  status?: AgentSyncStatus; // Synced from OpenClaw local files
+  statusLastUpdated?: Date; // When LeClaw last synced status
+  lastHeartbeatAt?: Date; // Last activity from OpenClaw session
+  heartbeatEnabled?: boolean; // Whether heartbeat monitoring is enabled
   createdAt: Date;
   updatedAt: Date;
 }
@@ -124,7 +131,7 @@ export interface Approval {
   type: ApprovalType;
   approverId?: string; // Actual approver (for agent_approve type)
   status: ApprovalStatus;
-  rejectMessage?: string; // Reason for rejection
+  message?: string; // Message from approver (filled when approved or rejected)
   createdAt: Date;
   updatedAt: Date;
 }

@@ -9,7 +9,7 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   const companyId = req.header("companyId") ?? req.query.companyId as string ?? req.query.company_id as string;
   if (!companyId) {
     return res.status(400).json({
-      error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
+      success: false, error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
     });
   }
   (req as any).companyId = companyId;
@@ -23,7 +23,7 @@ companiesRouter.get("/", async (_req: Request, res: Response) => {
     res.json({ success: true, data: companies });
   } catch (error) {
     console.error("Error listing companies:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list companies" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to list companies" } });
   }
 });
 
@@ -40,7 +40,7 @@ companiesRouter.post("/", async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: company });
   } catch (error) {
     console.error("Error creating company:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create company" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to create company" } });
   }
 });
 
@@ -49,12 +49,12 @@ companiesRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const company = await companyService.getCompany(req.params.id);
     if (!company) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Company ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Company ${req.params.id} not found` } });
     }
     res.json({ success: true, data: company });
   } catch (error) {
     console.error("Error getting company:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get company" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get company" } });
   }
 });
 
@@ -66,7 +66,7 @@ companiesRouter.put("/:id", async (req: Request, res: Response) => {
       description: req.body.description,
     });
     if (!company) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Company ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Company ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "company_updated", payload: company as unknown as Record<string, unknown> });
@@ -74,7 +74,7 @@ companiesRouter.put("/:id", async (req: Request, res: Response) => {
     res.json({ success: true, data: company });
   } catch (error) {
     console.error("Error updating company:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update company" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update company" } });
   }
 });
 
@@ -83,7 +83,7 @@ companiesRouter.delete("/:id", async (req: Request, res: Response) => {
   try {
     const deleted = await companyService.deleteCompany(req.params.id);
     if (!deleted) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Company ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Company ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "company_deleted", payload: { id: req.params.id } });
@@ -91,6 +91,6 @@ companiesRouter.delete("/:id", async (req: Request, res: Response) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting company:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to delete company" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to delete company" } });
   }
 });

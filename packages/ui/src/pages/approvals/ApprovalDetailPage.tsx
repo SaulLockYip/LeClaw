@@ -13,7 +13,7 @@ function ApprovalDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
-  const [rejectMessage, setRejectMessage] = useState('')
+  const [message, setMessage] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const navigate = useNavigate()
 
@@ -63,8 +63,8 @@ function ApprovalDetailPage() {
     if (!selectedCompany || !approval) return
     setIsProcessing(true)
     try {
-      await approvalApi.approve(selectedCompany.id, approval.id)
-      setApproval((prev) => prev ? { ...prev, status: 'Approved' } : null)
+      await approvalApi.approve(selectedCompany.id, approval.id, message)
+      setApproval((prev) => prev ? { ...prev, status: 'Approved', message } : null)
       setShowApproveDialog(false)
       navigate('/approvals')
     } catch (err) {
@@ -74,11 +74,11 @@ function ApprovalDetailPage() {
   }
 
   const handleReject = async () => {
-    if (!selectedCompany || !approval || !rejectMessage.trim()) return
+    if (!selectedCompany || !approval || !message.trim()) return
     setIsProcessing(true)
     try {
-      await approvalApi.reject(selectedCompany.id, approval.id, rejectMessage)
-      setApproval((prev) => prev ? { ...prev, status: 'Rejected', rejectMessage } : null)
+      await approvalApi.reject(selectedCompany.id, approval.id, message)
+      setApproval((prev) => prev ? { ...prev, status: 'Rejected', message } : null)
       setShowRejectDialog(false)
       navigate('/approvals')
     } catch (err) {
@@ -190,14 +190,14 @@ function ApprovalDetailPage() {
         </div>
       </div>
 
-      {/* Rejection Reason Card */}
-      {approval.status === 'Rejected' && approval.rejectMessage && (
-        <div className="bg-red-50 rounded-lg border border-red-200 p-6">
-          <h2 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
-            <XCircle className="w-5 h-5 text-red-500" />
-            Rejection Reason
+      {/* Approval/Rejection Message Card */}
+      {approval.message && (approval.status === 'Approved' || approval.status === 'Rejected') && (
+        <div className={`rounded-lg border p-6 ${approval.status === 'Approved' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+          <h2 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${approval.status === 'Approved' ? 'text-green-900' : 'text-red-900'}`}>
+            {approval.status === 'Approved' ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
+            {approval.status === 'Approved' ? 'Approval Message' : 'Rejection Reason'}
           </h2>
-          <p className="text-red-800">{approval.rejectMessage}</p>
+          <p className={approval.status === 'Approved' ? 'text-green-800' : 'text-red-800'}>{approval.message}</p>
         </div>
       )}
 
@@ -230,10 +230,20 @@ function ApprovalDetailPage() {
                 <label className="text-xs uppercase text-slate-500 tracking-wider">Requester</label>
                 <p className="text-slate-900 mt-1">{approval.requester}</p>
               </div>
+              <div>
+                <label className="text-xs uppercase text-slate-500 tracking-wider">Message</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Enter approval message (optional)..."
+                  className="w-full mt-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  rows={3}
+                />
+              </div>
             </div>
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => setShowApproveDialog(false)}
+                onClick={() => { setShowApproveDialog(false); setMessage(''); }}
                 className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
                 disabled={isProcessing}
               >
@@ -279,8 +289,8 @@ function ApprovalDetailPage() {
               <div>
                 <label className="text-xs uppercase text-slate-500 tracking-wider">Reason</label>
                 <textarea
-                  value={rejectMessage}
-                  onChange={(e) => setRejectMessage(e.target.value)}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   placeholder="Enter reason for rejection..."
                   className="w-full mt-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   rows={3}
@@ -289,7 +299,7 @@ function ApprovalDetailPage() {
             </div>
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => setShowRejectDialog(false)}
+                onClick={() => { setShowRejectDialog(false); setMessage(''); }}
                 className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
                 disabled={isProcessing}
               >
@@ -298,7 +308,7 @@ function ApprovalDetailPage() {
               <button
                 onClick={handleReject}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-                disabled={isProcessing || !rejectMessage.trim()}
+                disabled={isProcessing || !message.trim()}
               >
                 {isProcessing ? 'Processing...' : 'Reject'}
               </button>

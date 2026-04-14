@@ -1,13 +1,8 @@
 // Project List Command - List projects for a company
 
 import { Command } from "commander";
-import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
-import { loadConfig } from "@leclaw/shared";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
-
-const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
+import { createApiClient } from "../../helpers/api-client.js";
 
 export function registerProjectListCommand(program: Command): void {
   program
@@ -22,13 +17,7 @@ export function registerProjectListCommand(program: Command): void {
         // Authenticate via API key
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
 
-        let gatewayUrl = "http://localhost:4396";
-        if (fs.existsSync(CONFIG_FILE)) {
-          const config = loadConfig({ configPath: CONFIG_FILE });
-          if (config.openclaw?.gatewayUrl) {
-            gatewayUrl = config.openclaw.gatewayUrl.replace(/^ws:\/\//, "http://").replace(/^wss:\/\//, "https://");
-          }
-        }
+        const client = createApiClient({ apiKey, companyId: agentInfo.companyId });
 
         // Build query params
         const params = new URLSearchParams();
@@ -39,30 +28,12 @@ export function registerProjectListCommand(program: Command): void {
           params.set("excludeStatus", "Archived");
         }
 
-        const url = `${gatewayUrl}/api/companies/${agentInfo.companyId}/projects?${params.toString()}`;
-
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-        });
-
-        const data = await response.json() as { error?: { message?: string; code?: string }; data?: unknown };
-
-        if (!response.ok) {
-          console.error(JSON.stringify({
-            success: false,
-            error: data.error?.message || `HTTP ${response.status}`,
-            code: data.error?.code || "LIST_FAILED",
-          }, null, 2));
-          process.exit(1);
-        }
+        const query = params.toString();
+        const projects = await client.get<any[]>(`/api/companies/${agentInfo.companyId}/projects${query ? `?${query}` : ""}`);
 
         console.log(JSON.stringify({
           success: true,
-          projects: data.data,
+          projects,
         }, null, 2));
       } catch (err) {
         console.error(JSON.stringify({

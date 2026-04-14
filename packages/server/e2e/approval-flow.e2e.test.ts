@@ -99,7 +99,7 @@ test.describe("Approval flow", () => {
       {
         data: {
           status: "Rejected",
-          rejectMessage: "Test rejection reason",
+          message: "Test rejection reason",
         },
       }
     );
@@ -107,6 +107,6 @@ test.describe("Approval flow", () => {
 
     const rejectBody = await rejectRes.json();
     expect(rejectBody.data).toHaveProperty("status", "Rejected");
-    expect(rejectBody.data).toHaveProperty("rejectMessage", "Test rejection reason");
+    expect(rejectBody.data).toHaveProperty("message", "Test rejection reason");
   });
 });

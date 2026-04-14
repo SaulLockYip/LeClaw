@@ -10,7 +10,7 @@ function requireCompanyId(req: Request, res: Response, next: NextFunction) {
   const companyId = req.params.companyId;
   if (!companyId) {
     return res.status(400).json({
-      error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
+      success: false, error: { code: "MISSING_COMPANY_ID", message: "Missing required companyId" }
     });
   }
   (req as any).companyId = companyId;
@@ -33,7 +33,7 @@ async function requireApiKey(req: Request, res: Response, next: NextFunction) {
     next();
   } catch (error) {
     return res.status(401).json({
-      error: { code: "INVALID_API_KEY", message: "Invalid API key" }
+      success: false, error: { code: "INVALID_API_KEY", message: "Invalid API key" }
     });
   }
 }
@@ -43,7 +43,7 @@ function requireCeo(req: Request, res: Response, next: NextFunction) {
   const { role } = (req as any).agentInfo;
   if (role !== "CEO") {
     return res.status(403).json({
-      error: { code: "FORBIDDEN", message: "Only CEO can perform this action" }
+      success: false, error: { code: "FORBIDDEN", message: "Only CEO can perform this action" }
     });
   }
   next();
@@ -71,7 +71,7 @@ async function requireCeoOrSameDepartmentManager(req: Request, res: Response, ne
   }
 
   return res.status(403).json({
-    error: { code: "FORBIDDEN", message: "Only CEO or same department Manager can perform this action" }
+    success: false, error: { code: "FORBIDDEN", message: "Only CEO or same department Manager can perform this action" }
   });
 }
 
@@ -87,7 +87,7 @@ departmentsRouter.get("/", async (req: Request, res: Response) => {
     res.json({ success: true, data: departments });
   } catch (error) {
     console.error("Error listing departments:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to list departments" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to list departments" } });
   }
 });
 
@@ -107,7 +107,7 @@ departmentsRouter.post("/", requireCeo, async (req: Request, res: Response) => {
     res.status(201).json({ success: true, data: department });
   } catch (error) {
     console.error("Error creating department:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to create department" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to create department" } });
   }
 });
 
@@ -117,12 +117,12 @@ departmentsRouter.get("/:id", async (req: Request, res: Response) => {
     const companyId = (req as any).companyId;
     const department = await departmentService.getDepartment(req.params.id, companyId);
     if (!department) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Department ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Department ${req.params.id} not found` } });
     }
     res.json({ success: true, data: department });
   } catch (error) {
     console.error("Error getting department:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to get department" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to get department" } });
   }
 });
 
@@ -136,7 +136,7 @@ departmentsRouter.put("/:id", requireCeoOrSameDepartmentManager, async (req: Req
       description: req.body.description,
     });
     if (!department) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Department ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Department ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "department_updated", payload: department as unknown as Record<string, unknown> });
@@ -144,7 +144,7 @@ departmentsRouter.put("/:id", requireCeoOrSameDepartmentManager, async (req: Req
     res.json({ success: true, data: department });
   } catch (error) {
     console.error("Error updating department:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to update department" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update department" } });
   }
 });
 
@@ -154,7 +154,7 @@ departmentsRouter.delete("/:id", async (req: Request, res: Response) => {
     const companyId = (req as any).companyId;
     const deleted = await departmentService.deleteDepartment(req.params.id, companyId);
     if (!deleted) {
-      return res.status(404).json({ error: { code: "NOT_FOUND", message: `Department ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Department ${req.params.id} not found` } });
     }
 
     broadcastEvent({ type: "department_deleted", payload: { id: req.params.id } });
@@ -162,6 +162,6 @@ departmentsRouter.delete("/:id", async (req: Request, res: Response) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting department:", error);
-    res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Failed to delete department" } });
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to delete department" } });
   }
 });

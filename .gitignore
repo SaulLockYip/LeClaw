@@ -46,3 +46,6 @@ referenceRepo/
 .env
 .env.local
 .env.*.local
+
+# Planning directory
+.planning/

@@ -2,6 +2,7 @@ import { createApp } from "./app.js";
 import { configureDatabase, applyPendingMigrations } from "@leclaw/db/client";
 import { runMigrations } from "@leclaw/db/migrate";
 import { initializeDb } from "@leclaw/db/embedded-postgres";
+import { startAgentStatusSync, stopAgentStatusSync } from "./services/agent-status-sync.service.js";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
@@ -60,6 +61,9 @@ app.listen(PORT, HOST, async () => {
     await runMigrations();
   }
 
+  // Start agent status sync service
+  startAgentStatusSync();
+
   console.log(
     JSON.stringify({
       success: true,
@@ -69,8 +73,9 @@ app.listen(PORT, HOST, async () => {
   );
 });
 
-// Graceful shutdown to stop embedded postgres
+// Graceful shutdown to stop embedded postgres and sync service
 process.on("SIGINT", async () => {
+  stopAgentStatusSync();
   if (dbConnection) {
     await dbConnection.stop();
   }
@@ -78,6 +83,7 @@ process.on("SIGINT", async () => {
 });
 
 process.on("SIGTERM", async () => {
+  stopAgentStatusSync();
   if (dbConnection) {
     await dbConnection.stop();
   }

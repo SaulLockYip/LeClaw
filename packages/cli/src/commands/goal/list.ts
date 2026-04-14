@@ -1,13 +1,8 @@
 // Goal List Command - List goals for a company
 
 import { Command } from "commander";
-import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
-import { loadConfig } from "@leclaw/shared";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
-
-const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
+import { createApiClient } from "../../helpers/api-client.js";
 
 export function registerGoalListCommand(program: Command): void {
   program
@@ -22,13 +17,7 @@ export function registerGoalListCommand(program: Command): void {
         // Authenticate via API key
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
 
-        let gatewayUrl = "http://localhost:4396";
-        if (fs.existsSync(CONFIG_FILE)) {
-          const config = loadConfig({ configPath: CONFIG_FILE });
-          if (config.openclaw?.gatewayUrl) {
-            gatewayUrl = config.openclaw.gatewayUrl.replace(/^ws:\/\//, "http://").replace(/^wss:\/\//, "https://");
-          }
-        }
+        const client = createApiClient({ apiKey, companyId: agentInfo.companyId });
 
         // CEO gets all goals, Manager/Staff get department-related goals
         // Build query params
@@ -42,30 +31,12 @@ export function registerGoalListCommand(program: Command): void {
         // For Manager/Staff, we need to pass department filter to backend
         // The backend will filter based on agent's departments for non-CEO
 
-        const url = `${gatewayUrl}/api/companies/${agentInfo.companyId}/goals?${params.toString()}`;
-
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-        });
-
-        const data = await response.json() as { error?: { message?: string; code?: string }; data?: unknown };
-
-        if (!response.ok) {
-          console.error(JSON.stringify({
-            success: false,
-            error: data.error?.message || `HTTP ${response.status}`,
-            code: data.error?.code || "LIST_FAILED",
-          }, null, 2));
-          process.exit(1);
-        }
+        const query = params.toString();
+        const goals = await client.get<any[]>(`/api/companies/${agentInfo.companyId}/goals${query ? `?${query}` : ""}`);
 
         console.log(JSON.stringify({
           success: true,
-          goals: data.data,
+          goals,
         }, null, 2));
       } catch (err) {
         console.error(JSON.stringify({
