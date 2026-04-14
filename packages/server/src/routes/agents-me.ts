@@ -27,7 +27,7 @@ async function requireApiKey(req: Request, res: Response, next: NextFunction) {
 agentsMeRouter.use(requireApiKey);
 
 // GET /api/agents/me - Get current authenticated agent's info
-agentsMeRouter.get("/me", async (req: Request, res: Response) => {
+agentsMeRouter.get("/", async (req: Request, res: Response) => {
   try {
     const { agentId, companyId, role } = (req as any).agentInfo;
 
