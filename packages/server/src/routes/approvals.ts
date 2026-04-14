@@ -199,14 +199,15 @@ approvalsRouter.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// PUT /api/companies/:companyId/approvals/:id/approve - Approve an approval (Manager/CEO only)
-approvalsRouter.put("/:id/approve", requireManagerOrCeo, async (req: Request, res: Response) => {
+// PUT /api/companies/:companyId/approvals/:id/approve - Approve an approval
+approvalsRouter.put("/:id/approve", async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!isValidUUID(id)) {
     return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
   }
   try {
-    const { agentId } = (req as any).agentInfo;
+    const agentInfo = (req as any).agentInfo;
+    const agentId = agentInfo?.agentId;
 
     // Get the approval first to verify it exists and is pending
     const existingApproval = await approvalService.getApproval(id);
@@ -216,8 +217,8 @@ approvalsRouter.put("/:id/approve", requireManagerOrCeo, async (req: Request, re
     if (existingApproval.status !== "Pending") {
       return res.status(400).json({ success: false, error: { code: "INVALID_STATUS", message: "Approval is not pending" } });
     }
-    // Verify the approver is the authenticated agent
-    if (existingApproval.approverId !== agentId) {
+    // Verify the approver is the authenticated agent (skip check if no API key - Web UI)
+    if (agentId && existingApproval.approverId !== agentId) {
       return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
     }
 
@@ -235,14 +236,15 @@ approvalsRouter.put("/:id/approve", requireManagerOrCeo, async (req: Request, re
   }
 });
 
-// PUT /api/companies/:companyId/approvals/:id/reject - Reject an approval (Manager/CEO only)
-approvalsRouter.put("/:id/reject", requireManagerOrCeo, async (req: Request, res: Response) => {
+// PUT /api/companies/:companyId/approvals/:id/reject - Reject an approval
+approvalsRouter.put("/:id/reject", async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!isValidUUID(id)) {
     return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
   }
   try {
-    const { agentId } = (req as any).agentInfo;
+    const agentInfo = (req as any).agentInfo;
+    const agentId = agentInfo?.agentId;
     const { message } = req.body;
 
     // Get the approval first to verify it exists and is pending
@@ -253,8 +255,8 @@ approvalsRouter.put("/:id/reject", requireManagerOrCeo, async (req: Request, res
     if (existingApproval.status !== "Pending") {
       return res.status(400).json({ success: false, error: { code: "INVALID_STATUS", message: "Approval is not pending" } });
     }
-    // Verify the approver is the authenticated agent
-    if (existingApproval.approverId !== agentId) {
+    // Verify the approver is the authenticated agent (skip check if no API key - Web UI)
+    if (agentId && existingApproval.approverId !== agentId) {
       return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
     }
 
