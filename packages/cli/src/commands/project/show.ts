@@ -25,6 +25,7 @@ export function registerProjectShowCommand(program: Command): void {
           success: true,
           project,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,

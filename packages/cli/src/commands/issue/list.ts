@@ -25,6 +25,7 @@ export function registerListCommand(program: Command): void {
           success: true,
           issues,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,

@@ -39,6 +39,7 @@ export function registerCommentCommand(program: Command): void {
           success: true,
           comments,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,
@@ -94,6 +95,7 @@ export function registerCommentCommand(program: Command): void {
           commentId: comment.id,
           message: output,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         output = error.message;

@@ -53,6 +53,7 @@ export function registerApprovalCommand(program: Command): void {
             updatedAt: approval.updatedAt,
           },
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,
@@ -80,6 +81,7 @@ export function registerApprovalCommand(program: Command): void {
           success: true,
           approvals: approvalList,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,
@@ -124,6 +126,7 @@ export function registerApprovalCommand(program: Command): void {
           success: true,
           approval,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,
@@ -169,11 +172,12 @@ export function registerApprovalCommand(program: Command): void {
             type: updatedApproval.type,
             approverId: updatedApproval.approverId,
             status: updatedApproval.status,
-            message: updatedApproval.message,
+            rejectMessage: updatedApproval.rejectMessage,
             createdAt: updatedApproval.createdAt,
             updatedAt: updatedApproval.updatedAt,
           },
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,
@@ -219,11 +223,12 @@ export function registerApprovalCommand(program: Command): void {
             type: updatedApproval.type,
             approverId: updatedApproval.approverId,
             status: updatedApproval.status,
-            message: updatedApproval.message,
+            rejectMessage: updatedApproval.rejectMessage,
             createdAt: updatedApproval.createdAt,
             updatedAt: updatedApproval.updatedAt,
           },
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,

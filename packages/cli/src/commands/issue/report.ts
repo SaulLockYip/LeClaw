@@ -29,6 +29,7 @@ export function registerReportCommand(program: Command): void {
           issueId,
           report: result.report,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,
@@ -73,6 +74,7 @@ export function registerReportCommand(program: Command): void {
           issueId,
           message: output,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         output = error.message;

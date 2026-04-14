@@ -38,6 +38,7 @@ export function registerGoalListCommand(program: Command): void {
           success: true,
           goals,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,

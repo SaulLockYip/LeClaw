@@ -45,6 +45,7 @@ export function registerGoalCreateCommand(program: Command): void {
           success: true,
           goal,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,

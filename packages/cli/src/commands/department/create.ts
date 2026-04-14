@@ -3,7 +3,7 @@
 
 import { Command } from "commander";
 import { auditLog } from "../../helpers/audit-log.js";
-import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { getCurrentAgent } from "../../helpers/api-client.js";
 import { createApiClient } from "../../helpers/api-client.js";
 
 export function registerDepartmentCreateCommand(program: Command): void {
@@ -19,7 +19,7 @@ export function registerDepartmentCreateCommand(program: Command): void {
       let output = "";
 
       try {
-        const agentInfo = await getAgentInfoFromApiKey(options.apiKey);
+        const agentInfo = await getCurrentAgent(options.apiKey);
         agentId = agentInfo.agentId;
 
         // Role guard: Only CEO can create departments
@@ -52,6 +52,7 @@ export function registerDepartmentCreateCommand(program: Command): void {
           departmentId: department.id,
           message: output,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         output = error.message;

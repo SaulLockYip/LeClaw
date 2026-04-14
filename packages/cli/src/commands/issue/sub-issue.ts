@@ -53,6 +53,7 @@ export function registerSubIssueCommand(program: Command): void {
           subIssueId: subIssue.id,
           message: output,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         output = error.message;
@@ -93,6 +94,7 @@ export function registerSubIssueCommand(program: Command): void {
           success: true,
           subIssue,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,
@@ -146,6 +148,7 @@ export function registerSubIssueCommand(program: Command): void {
           subIssueId,
           message: output,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         output = error.message;

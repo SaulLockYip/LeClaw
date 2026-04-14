@@ -2,9 +2,8 @@
 // Show sub-issues and pending approvals based on agent role
 
 import { Command } from "commander";
-import { db, subIssues, approvals, agents } from "@leclaw/db";
-import { eq, and, inArray } from "drizzle-orm";
 import { getAgentInfoFromApiKey } from "../helpers/api-key.js";
+import { createApiClient, getCurrentAgent } from "../helpers/api-client.js";
 import type { AgentRole } from "@leclaw/shared";
 
 export interface SubIssueEntry {
@@ -32,51 +31,34 @@ export interface TodoOutput {
   pendingApprovals?: ApprovalEntry[];
 }
 
-async function getSubIssuesForAgent(agentId: string): Promise<SubIssueEntry[]> {
-  const database = await db;
-  const rows = await database
-    .select({
-      id: subIssues.id,
-      parentIssueId: subIssues.parentIssueId,
-      title: subIssues.title,
-      description: subIssues.description,
-      status: subIssues.status,
-      assigneeAgentId: subIssues.assigneeAgentId,
-      createdAt: subIssues.createdAt,
-    })
-    .from(subIssues)
-    .where(
-      and(
-        eq(subIssues.assigneeAgentId, agentId),
-        inArray(subIssues.status, ["Open", "InProgress", "Blocked"])
-      )
-    );
+async function getSubIssuesForAgent(
+  apiClient: ReturnType<typeof createApiClient>,
+  agentId: string
+): Promise<SubIssueEntry[]> {
+  const issues = await apiClient.getIssues();
+  const allSubIssues: any[] = [];
 
-  return rows;
+  for (const issue of issues) {
+    if (issue.subIssues && Array.isArray(issue.subIssues)) {
+      allSubIssues.push(...issue.subIssues);
+    }
+  }
+
+  return allSubIssues.filter(
+    (si: any) =>
+      si.assigneeAgentId === agentId &&
+      ["Open", "InProgress", "Blocked"].includes(si.status)
+  ) as SubIssueEntry[];
 }
 
-async function getPendingApprovalsForApprover(approverId: string): Promise<ApprovalEntry[]> {
-  const database = await db;
-  const rows = await database
-    .select({
-      id: approvals.id,
-      title: approvals.title,
-      description: approvals.description,
-      type: approvals.type,
-      status: approvals.status,
-      requester: approvals.requester,
-      createdAt: approvals.createdAt,
-    })
-    .from(approvals)
-    .where(
-      and(
-        eq(approvals.approverId, approverId),
-        eq(approvals.status, "Pending"),
-        eq(approvals.type, "agent_approve")
-      )
-    );
-
-  return rows;
+async function getPendingApprovalsForApprover(
+  apiClient: ReturnType<typeof createApiClient>,
+  approverId: string
+): Promise<ApprovalEntry[]> {
+  const approvals = await apiClient.getApprovals({ status: "Pending", mine: true });
+  return approvals.filter(
+    (a: any) => a.approverId === approverId && a.type === "agent_approve"
+  ) as ApprovalEntry[];
 }
 
 export function registerTodoCommand(program: Command): void {
@@ -90,9 +72,13 @@ export function registerTodoCommand(program: Command): void {
       try {
         // Get agent info from API key
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
+        const agentData = await getCurrentAgent(apiKey);
+        const companyId = agentData.companyId;
+
+        const apiClient = createApiClient({ apiKey, companyId });
 
         // Get sub-issues assigned to this agent (Open/InProgress/Blocked only)
-        const subIssuesList = await getSubIssuesForAgent(agentInfo.agentId);
+        const subIssuesList = await getSubIssuesForAgent(apiClient, agentInfo.agentId);
 
         const output: TodoOutput = {
           subIssues: subIssuesList,
@@ -100,7 +86,7 @@ export function registerTodoCommand(program: Command): void {
 
         // Manager and CEO also see pending approvals assigned to them
         if (agentInfo.role === "Manager" || agentInfo.role === "CEO") {
-          const pendingApprovals = await getPendingApprovalsForApprover(agentInfo.agentId);
+          const pendingApprovals = await getPendingApprovalsForApprover(apiClient, agentInfo.agentId);
           output.pendingApprovals = pendingApprovals;
         }
 
@@ -109,6 +95,7 @@ export function registerTodoCommand(program: Command): void {
           role: agentInfo.role,
           ...output,
         }, null, 2));
+        process.exit(0);
       } catch (err) {
         console.error(JSON.stringify({
           success: false,

@@ -2,7 +2,7 @@
 // Access: All roles (CEO, Manager, Staff)
 
 import { Command } from "commander";
-import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { getCurrentAgent } from "../../helpers/api-client.js";
 import { createApiClient } from "../../helpers/api-client.js";
 
 interface DepartmentWithAgents {
@@ -26,7 +26,7 @@ interface DepartmentWithAgents {
 
 async function listDepartmentsViaHttp(
   apiKey: string,
-  agentInfo: Awaited<ReturnType<typeof getAgentInfoFromApiKey>>
+  agentInfo: Awaited<ReturnType<typeof getCurrentAgent>>
 ): Promise<DepartmentWithAgents[]> {
   const apiClient = createApiClient({
     apiKey,
@@ -63,7 +63,7 @@ export function registerDepartmentListCommand(program: Command): void {
     .requiredOption("--api-key <key>", "Agent API key")
     .action(async (options) => {
       try {
-        const agentInfo = await getAgentInfoFromApiKey(options.apiKey);
+        const agentInfo = await getCurrentAgent(options.apiKey);
         const departmentsWithAgents = await listDepartmentsViaHttp(options.apiKey, agentInfo);
 
         if (departmentsWithAgents.length === 0) {
@@ -71,6 +71,7 @@ export function registerDepartmentListCommand(program: Command): void {
         } else {
           console.log(JSON.stringify({ success: true, data: departmentsWithAgents }, null, 2));
         }
+        process.exit(0);
       } catch (err) {
         const error = err instanceof Error ? err.message : String(err);
         console.error(JSON.stringify({ success: false, error }, null, 2));

@@ -6,8 +6,8 @@ import path from "path";
 import os from "os";
 import { loadConfig } from "@leclaw/shared";
 import { scanOpenClawAgents, type OpenClawAgent } from "@leclaw/shared/openclaw-scanner";
-import { db, agents, agentInvites } from "@leclaw/db";
-import { eq, and, ne } from "drizzle-orm";
+import { db, agents } from "@leclaw/db";
+import { ne } from "drizzle-orm";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 
 const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
@@ -113,18 +113,6 @@ async function createAgentInvite(options: {
     return { success: false, error: `OpenClaw agent not found: ${openClawAgentId}` };
   }
 
-  // Check if agent is already onboarded
-  const database = await db;
-  const existingAgent = await database
-    .select({ id: agents.id })
-    .from(agents)
-    .where(eq(agents.openClawAgentId, openClawAgentId))
-    .limit(1);
-
-  if (existingAgent.length > 0) {
-    return { success: false, error: "Agent is already onboarded" };
-  }
-
   try {
     const serverUrl = await getServerUrl();
     const response = await fetch(`${serverUrl}/api/companies/${agentInfo.companyId}/agent-invites`, {
@@ -227,6 +215,7 @@ export function registerAgentInviteCommand(program: Command): void {
           prompt: result.prompt,
           expiresAt: result.expiresAt?.toISOString(),
         }, null, 2));
+        process.exit(0);
       } else {
         console.error(JSON.stringify({
           success: false,

@@ -146,7 +146,7 @@ export async function createApproval(input: CreateApprovalInput): Promise<Approv
 export async function updateApproval(id: string, input: UpdateApprovalInput): Promise<Approval | null> {
   const db = await getDb();
   const [approval] = await db.update(approvals)
-    .set({ status: input.status, message: input.message ?? undefined, approverId: input.approverId ?? undefined, updatedAt: new Date() } as any)
+    .set({ status: input.status, rejectMessage: input.message ?? undefined, approverId: input.approverId ?? undefined, updatedAt: new Date() } as any)
     .where(eq(approvals.id, id))
     .returning();
 
