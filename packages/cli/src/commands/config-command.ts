@@ -21,15 +21,15 @@ export function registerConfigCommand(program: Command): void {
   // leclaw config set <path> <value>
   const setCommand = config
     .command("set")
-    .description("Set a config value (e.g., 'features.httpMigration true')")
-    .requiredOption("--path <path>", "Config path (e.g., 'features.httpMigration')")
+    .description("Set a config value")
+    .requiredOption("--path <path>", "Config path (e.g., 'openclaw.dir')")
     .requiredOption("--value <value>", "Config value")
     .action(async (opts) => {
       try {
         const cfg = loadConfig({ configPath: CONFIG_FILE });
         const { path: configPath, value } = opts;
 
-        // Parse nested path (e.g., "features.httpMigration")
+        // Parse nested path (e.g., "openclaw.dir")
         const parts = configPath.split(".");
         let current: any = cfg;
 

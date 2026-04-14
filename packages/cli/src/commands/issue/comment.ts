@@ -1,19 +1,10 @@
 // Issue Comment Command - List and add comments on an issue
 // Access: Agent (write) via CLI, Human read-only via Web UI
-// Tier 3 migration candidate
 
 import { Command } from "commander";
-import path from "path";
-import os from "os";
-import { issueComments } from "@leclaw/db/schema";
-import { getDb } from "@leclaw/db/client";
-import { eq, desc } from "drizzle-orm";
 import { auditLog } from "../../helpers/audit-log.js";
-import { getAgentIdFromApiKey, getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
 import { createApiClient } from "../../helpers/api-client.js";
-import { loadConfig } from "@leclaw/shared";
-
-const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
 export function registerCommentCommand(program: Command): void {
   const commentCommand = new Command("comment")
@@ -40,29 +31,9 @@ export function registerCommentCommand(program: Command): void {
       }
 
       try {
-        const config = loadConfig({ configPath: CONFIG_FILE });
-        const useHttp = config.features?.httpMigration ?? false;
         const agentInfo = await getAgentInfoFromApiKey(effectiveApiKey);
-
-        let comments;
-        if (useHttp) {
-          const apiClient = createApiClient({ apiKey: effectiveApiKey, companyId: agentInfo.companyId });
-          comments = await apiClient.getIssueComments(issueId);
-        } else {
-          await getAgentIdFromApiKey(effectiveApiKey); // Validate API key
-          const db = await getDb();
-          comments = await db
-            .select({
-              id: issueComments.id,
-              issueId: issueComments.issueId,
-              authorAgentId: issueComments.authorAgentId,
-              message: issueComments.message,
-              timestamp: issueComments.timestamp,
-            })
-            .from(issueComments)
-            .where(eq(issueComments.issueId, issueId))
-            .orderBy(desc(issueComments.timestamp));
-        }
+        const apiClient = createApiClient({ apiKey: effectiveApiKey, companyId: agentInfo.companyId });
+        const comments = await apiClient.getIssueComments(issueId);
 
         console.log(JSON.stringify({
           success: true,
@@ -99,31 +70,14 @@ export function registerCommentCommand(program: Command): void {
       }
 
       let agentId: string;
-      let result: "success" | "failure" = "success";
       let output = "";
 
       try {
-        const config = loadConfig({ configPath: CONFIG_FILE });
-        const useHttp = config.features?.httpMigration ?? false;
         const agentInfo = await getAgentInfoFromApiKey(effectiveApiKey);
         agentId = agentInfo.agentId;
 
-        let comment;
-        if (useHttp) {
-          const apiClient = createApiClient({ apiKey: effectiveApiKey, companyId: agentInfo.companyId });
-          comment = await apiClient.addIssueComment(issueId, message);
-        } else {
-          // Extract agentId from API key
-          agentId = await getAgentIdFromApiKey(effectiveApiKey);
-          const db = await getDb();
-
-          // Insert the comment
-          [comment] = await db.insert(issueComments).values({
-            issueId,
-            authorAgentId: agentId,
-            message,
-          }).returning();
-        }
+        const apiClient = createApiClient({ apiKey: effectiveApiKey, companyId: agentInfo.companyId });
+        const comment = await apiClient.addIssueComment(issueId, message);
 
         output = `Comment ${comment.id} added to issue ${issueId}`;
 
@@ -141,7 +95,6 @@ export function registerCommentCommand(program: Command): void {
           message: output,
         }, null, 2));
       } catch (err) {
-        result = "failure";
         const error = err instanceof Error ? err : new Error(String(err));
         output = error.message;
 
