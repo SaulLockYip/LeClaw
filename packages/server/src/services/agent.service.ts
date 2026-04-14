@@ -1,5 +1,5 @@
-import { eq, and } from "drizzle-orm";
-import { agents, agentInvites } from "@leclaw/db/schema";
+import { eq, and, or } from "drizzle-orm";
+import { agents, agentInvites, approvals } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
 import { generateApiKey } from "@leclaw/shared/api-key";
 import type { Agent, AgentRole, AgentSyncStatus } from "@leclaw/shared";
@@ -120,6 +120,13 @@ export async function deleteAgent(
       .set({ openClawAgentId: null } as any)
       .where(eq(agentInvites.openClawAgentId, agent.openClawAgentId));
   }
+
+  // Delete related approvals (where agent is requester or approver)
+  await db.delete(approvals)
+    .where(or(
+      eq(approvals.requester, id),
+      eq(approvals.approver, id)
+    ));
 
   // Now delete the agent
   const [deleted] = await db.delete(agents)
