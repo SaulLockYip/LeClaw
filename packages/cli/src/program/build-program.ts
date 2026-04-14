@@ -1,9 +1,13 @@
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { Command } from "commander";
 import { configureProgramHelp } from "./configure-help.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const require = createRequire(import.meta.url);
-const { version } = require("../package.json");
+const { version } = require(join(__dirname, "package.json"));
 import { registerInitCommand } from "../commands/init-command.js";
 import { registerConfigCommand } from "../commands/config-command.js";
 import { registerStatusCommand } from "../commands/status-command.js";
