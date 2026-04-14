@@ -1237,7 +1237,7 @@ LeClaw supports feature flags that control behavior:
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `features.httpMigration` | `false` | When enabled, Tier 1/2/3 CLI commands use HTTP instead of direct DB access. Tier 4 commands (init, doctor, status, onboard, whoami, agents-list) always use direct DB. |
+| `features.httpMigration` | `true` | All CLI commands (Tier 1-4) use HTTP API. Commands requiring authentication use `--api-key` flag. |
 
 ### Agent Status Fields
 
