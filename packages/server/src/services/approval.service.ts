@@ -42,6 +42,20 @@ export async function listApprovalsByRequester(requesterAgentId: string, company
   }));
 }
 
+export async function listApprovalsPendingApprover(approverId: string, companyId: string, status?: ApprovalStatus): Promise<Approval[]> {
+  const db = await getDb();
+  const conditions = [eq(approvals.approverId, approverId), eq(approvals.companyId, companyId)];
+  if (status) {
+    conditions.push(eq(approvals.status, status) as any);
+  }
+  const rows = await db.select().from(approvals).where(and(...conditions));
+  return rows.map(row => ({
+    ...row,
+    status: row.status as ApprovalStatus,
+    type: row.type as ApprovalType,
+  }));
+}
+
 /**
  * Find the approver for an agent based on their role and approval type
  * Routing logic:

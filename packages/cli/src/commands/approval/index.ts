@@ -50,12 +50,8 @@ export function registerApprovalCommand(program: Command): void {
 
         const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
 
-        // Find approver for human_approve
-        if (type === "human_approve") {
-          const approverResult = await apiClient.findApprover(agentInfo.agentId);
-          approverId = approverResult?.approverId ?? undefined;
-        }
-
+        // Note: For both agent_approve and human_approve, the server handles
+        // finding the approver internally via findApproverForAgent
         const approval = await apiClient.createApproval({ title, description, type, approverId });
 
         console.log(JSON.stringify({
@@ -96,7 +92,8 @@ export function registerApprovalCommand(program: Command): void {
       try {
         const agentInfo = await getAgentInfoFromApiKey(apiKey);
         const apiClient = createApiClient({ apiKey, companyId: agentInfo.companyId });
-        const approvalList = await apiClient.getApprovals({ status, mine });
+        // Default to showing pending approvals (where user is approver) when --mine is not specified
+        const approvalList = await apiClient.getApprovals({ status, mine: mine ?? true });
 
         console.log(JSON.stringify({
           success: true,

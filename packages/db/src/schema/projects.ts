@@ -13,6 +13,7 @@ export const projects = pgTable(
     status: text("status").notNull().default("Open"), // "Open" | "InProgress" | "Done" | "Archived"
     projectDir: text("project_dir"), // Project root directory (outputs, regulations, etc.)
     issueIds: jsonb("issue_ids").$type<string[]>().notNull().default([]), // JSONB array of Issue UUIDs
+    departmentIds: jsonb("department_ids").$type<string[]>().notNull().default([]), // JSONB array of Department UUIDs
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

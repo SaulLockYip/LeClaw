@@ -127,12 +127,12 @@ Key points:
 | Create Goal | Yes | No | No |
 | Update Goal | Yes | No | No |
 | Archive Goal | Yes | No | No |
-| View Goal | Yes | Own Department | Own Department |
+| View Goal | Yes | Yes | Yes |
 | **Project Management** | | | |
 | Create Project | Yes | Own Department | No |
 | Update Project | Yes | Own Department | No |
 | Archive Project | Yes | Own Department | No |
-| View Project | Yes | Own Department | Own Department |
+| View Project | Yes | Yes | Yes |
 
 #### Authorization Checklists
 
@@ -639,7 +639,7 @@ Goal (What we want to achieve)
 | title | Yes | Brief description of the strategic objective |
 | description | No | Detailed context, success criteria, scope |
 | status | Yes | Open, Achieved, Archived |
-| departmentIds | No | Departments responsible (can be all) |
+| departmentIds | No | Departments responsible (array, can be multiple) |
 | verification | No | How to verify Goal is achieved (measurable criteria) |
 | deadline | No | Target date for completion |
 | goalId | Yes | Unique identifier (auto-generated) |
@@ -675,12 +675,19 @@ leclaw goal create \
   --description "Expand to mobile platforms..." \
   --deadline "2024-12-31T23:59:59Z"
 
-# Create Goal assigned to Department
+# Create Goal assigned to single Department
 leclaw goal create \
   --api-key <key> \
   --title "Reduce support tickets by 30%" \
   --department-ids <uuid> \
   --description "Improve customer satisfaction..."
+
+# Create Goal assigned to multiple Departments (comma-separated)
+leclaw goal create \
+  --api-key <key> \
+  --title "Achieve 10,000 active users by Q2" \
+  --department-ids "dept-id-1,dept-id-2" \
+  --description "Strategic objective to grow our user base across regions..."
 
 # List Goals (default: excludes Archived)
 leclaw goal list --api-key <key>
@@ -783,6 +790,20 @@ Directory structure:
 - outputs/     # Final deliverables
 - issues/      # Issue tracking
 - src/         # Source code
+
+All team members must use this structure."
+
+# Create Project with Department assignment (comma-separated for multiple)
+leclaw project create \
+  --api-key <key> \
+  --title "User Growth Campaign" \
+  --department-ids "marketing-dept-id,sales-dept-id" \
+  --description "Project root: /company/projects/user-growth-campaign/
+
+Directory structure:
+- docs/        # Project documentation
+- outputs/     # Final deliverables
+- issues/      # Issue tracking
 
 All team members must use this structure."
 
@@ -918,8 +939,14 @@ leclaw approval request \
   --title "Vacation request: June 15-22" \
   --description "Annual family vacation"
 
-# List pending approvals
+# List all approvals (all statuses, all requesters in the company)
+leclaw approval list --api-key <key>
+
+# List approvals by status
 leclaw approval list --api-key <key> --status Pending
+
+# List approvals I submitted (as requester)
+leclaw approval list --api-key <key> --mine
 
 # Show approval details
 leclaw approval show --api-key <key> --approval-id <approval-id>
@@ -930,6 +957,24 @@ leclaw approval approve --api-key <key> --approval-id <approval-id>
 # Reject a request (Manager/CEO only)
 leclaw approval reject --api-key <key> --approval-id <approval-id> --message "Budget constraints this quarter."
 ```
+
+#### Todo Command
+
+The `todo` command shows items assigned to you that require attention.
+
+```bash
+# Show my todo items (sub-issues assigned to me + approvals pending my approval)
+leclaw todo --api-key <key>
+```
+
+**What it shows:**
+
+| Item Type | Who Sees It | Description |
+|-----------|-------------|-------------|
+| Sub-Issues assigned to me | All roles | Sub-Issues where your agent ID is the assignee |
+| Pending approvals where I am the approver | Manager/CEO | Approvals submitted to you for review |
+
+**For Manager/CEO:** The `pendingApprovals` section shows approvals where you are the assigned approver and action is required.
 
 ---
 
@@ -1107,7 +1152,9 @@ leclaw department list --api-key <key>
 | Create Project | `leclaw project create --api-key <key> --title "..."` |
 | List Projects | `leclaw project list --api-key <key>` |
 | Request Approval | `leclaw approval request --api-key <key> --type <type> --title "..." --description "..."` |
-| List Approvals | `leclaw approval list --api-key <key> --status Pending` |
+| List Approvals | `leclaw approval list --api-key <key>` |
+| List My Approvals | `leclaw approval list --api-key <key> --mine` |
+| Show Todo | `leclaw todo --api-key <key>` |
 | Approve | `leclaw approval approve --api-key <key> --approval-id <id>` |
 | Reject | `leclaw approval reject --api-key <key> --approval-id <id> --message "..."` |
 | Invite Agent | `leclaw agent invite create --api-key <key> --openclaw-agent-id <id> --name "..." --title "..." --role <role> --department-id <id>` |

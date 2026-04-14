@@ -20,9 +20,10 @@ export function registerProjectUpdateCommand(program: Command): void {
     .option("--description <desc>", "Project description")
     .option("--status <status>", "Project status: Open | InProgress | Done | Archived")
     .option("--project-dir <path>", "Project root directory")
+    .option("--department-ids <uuid1,uuid2>", "Comma-separated department UUIDs")
     .requiredOption("--api-key <key>", "Agent API key (for authentication)")
     .action(async (options) => {
-      const { projectId, title, description, status, projectDir, apiKey } = options;
+      const { projectId, title, description, status, projectDir, departmentIds, apiKey } = options;
 
       try {
         // Authenticate via API key
@@ -45,6 +46,7 @@ export function registerProjectUpdateCommand(program: Command): void {
         if (description !== undefined) body.description = description;
         if (status !== undefined) body.status = normalizeProjectStatus(status);
         if (projectDir !== undefined) body.projectDir = projectDir;
+        if (departmentIds !== undefined) body.departmentIds = departmentIds.split(",").map(s => s.trim());
 
         const project = await client.put<any>(`/api/companies/${agentInfo.companyId}/projects/${projectId}`, body);
 

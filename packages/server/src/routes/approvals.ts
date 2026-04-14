@@ -117,8 +117,28 @@ approvalsRouter.get("/", async (req: Request, res: Response) => {
         companyId,
         status as any
       );
+    } else if (agentInfo) {
+      // List both: approvals submitted by this agent AND approvals pending this agent's approval
+      const mySubmissions = await approvalService.listApprovalsByRequester(
+        agentInfo.agentId,
+        companyId,
+        status as any
+      );
+      const pendingMyApproval = await approvalService.listApprovalsPendingApprover(
+        agentInfo.agentId,
+        companyId,
+        status as any
+      );
+      // Combine and deduplicate by id
+      const combined = [...mySubmissions, ...pendingMyApproval];
+      const seen = new Set<string>();
+      approvals = combined.filter(a => {
+        if (seen.has(a.id)) return false;
+        seen.add(a.id);
+        return true;
+      });
     } else {
-      // List all approvals for the company
+      // List all approvals for the company (web-ui mode without auth)
       approvals = await approvalService.listApprovalsByCompany(companyId);
       // Apply status filter if provided
       if (status) {

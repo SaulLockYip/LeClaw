@@ -21,9 +21,10 @@ export function registerGoalUpdateCommand(program: Command): void {
     .option("--status <status>", "Goal status: Open | Achieved | Archived")
     .option("--verification <text>", "How to verify goal is achieved")
     .option("--deadline <datetime>", "Goal deadline (ISO datetime)")
+    .option("--department-ids <uuid1,uuid2>", "Comma-separated department UUIDs")
     .requiredOption("--api-key <key>", "Agent API key (for authentication)")
     .action(async (options) => {
-      const { goalId, title, description, status, verification, deadline, apiKey } = options;
+      const { goalId, title, description, status, verification, deadline, departmentIds, apiKey } = options;
 
       try {
         // Authenticate via API key
@@ -47,6 +48,7 @@ export function registerGoalUpdateCommand(program: Command): void {
         if (status !== undefined) body.status = normalizeGoalStatus(status);
         if (verification !== undefined) body.verification = verification;
         if (deadline !== undefined) body.deadline = deadline;
+        if (departmentIds !== undefined) body.departmentIds = departmentIds.split(",").map(s => s.trim());
 
         const goal = await client.put<any>(`/api/companies/${agentInfo.companyId}/goals/${goalId}`, body);
 

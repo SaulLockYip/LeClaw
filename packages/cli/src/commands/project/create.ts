@@ -12,9 +12,10 @@ export function registerProjectCreateCommand(program: Command): void {
     .option("--description <desc>", "Project description (outputs, specs, etc.)")
     .option("--project-dir <path>", "Project root directory")
     .option("--issue-ids <uuid1,uuid2>", "Comma-separated issue UUIDs")
+    .option("--department-ids <uuid1,uuid2>", "Comma-separated department UUIDs")
     .requiredOption("--api-key <key>", "Agent API key (for authentication)")
     .action(async (options) => {
-      const { title, description, projectDir, issueIds, apiKey } = options;
+      const { title, description, projectDir, issueIds, departmentIds, apiKey } = options;
 
       // Validate required fields
       if (!title || title.trim() === "") {
@@ -46,6 +47,7 @@ export function registerProjectCreateCommand(program: Command): void {
         if (description) body.description = description;
         if (projectDir) body.projectDir = projectDir;
         if (issueIds) body.issueIds = issueIds.split(",").map(s => s.trim());
+        if (departmentIds) body.departmentIds = departmentIds.split(",").map(s => s.trim());
 
         const project = await client.post<any>(`/api/companies/${agentInfo.companyId}/projects`, body);
 
