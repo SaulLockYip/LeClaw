@@ -49,6 +49,15 @@ export function registerReportCommand(program: Command): void {
     .action(async (options) => {
       const { issueId, report, apiKey } = options;
 
+      if (!report || report.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Report content cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
       let agentId: string;
       let output = "";
 

@@ -18,6 +18,16 @@ export function registerDepartmentCreateCommand(program: Command): void {
       let agentId: string;
       let output = "";
 
+      // Validate required fields
+      if (!options.name || options.name.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Name cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
       try {
         const agentInfo = await getCurrentAgent(options.apiKey);
         agentId = agentInfo.agentId;

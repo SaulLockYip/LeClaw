@@ -190,6 +190,25 @@ export function registerAgentInviteCommand(program: Command): void {
     .action(async (options) => {
       const { apiKey, openclawAgentId, name, title, role, departmentId } = options;
 
+      // Validate required fields
+      if (!name || name.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Name cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
+      if (!title || title.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Title cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
       // Validate role
       if (role !== "CEO" && role !== "Manager" && role !== "Staff") {
         console.error(JSON.stringify({

@@ -17,6 +17,16 @@ export function registerGoalCreateCommand(program: Command): void {
     .action(async (options) => {
       const { title, description, verification, deadline, departmentIds, apiKey } = options;
 
+      // Validate required fields
+      if (!title || title.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Title cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
       try {
         // Authenticate via API key
         const agentInfo = await getAgentInfoFromApiKey(apiKey);

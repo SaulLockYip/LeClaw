@@ -22,6 +22,33 @@ export function registerSubIssueCommand(program: Command): void {
     .action(async (options) => {
       const { parentIssueId, title, assigneeAgentId, description, apiKey } = options;
 
+      if (!parentIssueId || parentIssueId.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Parent issue ID cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
+      if (!title || title.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Title cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
+      if (!assigneeAgentId || assigneeAgentId.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Assignee agent ID cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
       let agentId: string;
       let output = "";
 

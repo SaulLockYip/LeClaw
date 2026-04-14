@@ -3,6 +3,7 @@ import * as approvalService from "../services/approval.service.js";
 import * as agentService from "../services/agent.service.js";
 import { broadcastEvent } from "../sse/event-bus.js";
 import type { AgentRole } from "@leclaw/shared";
+import { isValidUUID } from "../utils/validation.js";
 
 export const approvalsRouter: Router = Router({ mergeParams: true });
 
@@ -157,10 +158,14 @@ approvalsRouter.get("/approver", async (req: Request, res: Response) => {
 
 // GET /api/companies/:companyId/approvals/:id
 approvalsRouter.get("/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!isValidUUID(id)) {
+    return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+  }
   try {
-    const approval = await approvalService.getApproval(req.params.id);
+    const approval = await approvalService.getApproval(id);
     if (!approval) {
-      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${id} not found` } });
     }
     res.json({ success: true, data: approval });
   } catch (error) {
@@ -171,13 +176,17 @@ approvalsRouter.get("/:id", async (req: Request, res: Response) => {
 
 // PUT /api/companies/:companyId/approvals/:id/approve - Approve an approval (Manager/CEO only)
 approvalsRouter.put("/:id/approve", requireManagerOrCeo, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!isValidUUID(id)) {
+    return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+  }
   try {
     const { agentId } = (req as any).agentInfo;
 
     // Get the approval first to verify it exists and is pending
-    const existingApproval = await approvalService.getApproval(req.params.id);
+    const existingApproval = await approvalService.getApproval(id);
     if (!existingApproval) {
-      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${id} not found` } });
     }
     if (existingApproval.status !== "Pending") {
       return res.status(400).json({ success: false, error: { code: "INVALID_STATUS", message: "Approval is not pending" } });
@@ -187,7 +196,7 @@ approvalsRouter.put("/:id/approve", requireManagerOrCeo, async (req: Request, re
       return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
     }
 
-    const approval = await approvalService.updateApproval(req.params.id, {
+    const approval = await approvalService.updateApproval(id, {
       status: "Approved",
       message: req.body.message,
     });
@@ -203,14 +212,18 @@ approvalsRouter.put("/:id/approve", requireManagerOrCeo, async (req: Request, re
 
 // PUT /api/companies/:companyId/approvals/:id/reject - Reject an approval (Manager/CEO only)
 approvalsRouter.put("/:id/reject", requireManagerOrCeo, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!isValidUUID(id)) {
+    return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+  }
   try {
     const { agentId } = (req as any).agentInfo;
     const { message } = req.body;
 
     // Get the approval first to verify it exists and is pending
-    const existingApproval = await approvalService.getApproval(req.params.id);
+    const existingApproval = await approvalService.getApproval(id);
     if (!existingApproval) {
-      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${id} not found` } });
     }
     if (existingApproval.status !== "Pending") {
       return res.status(400).json({ success: false, error: { code: "INVALID_STATUS", message: "Approval is not pending" } });
@@ -220,7 +233,7 @@ approvalsRouter.put("/:id/reject", requireManagerOrCeo, async (req: Request, res
       return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "You are not the assigned approver for this approval" } });
     }
 
-    const approval = await approvalService.updateApproval(req.params.id, {
+    const approval = await approvalService.updateApproval(id, {
       status: "Rejected",
       message: message,
     });
@@ -237,13 +250,17 @@ approvalsRouter.put("/:id/reject", requireManagerOrCeo, async (req: Request, res
 // PUT /api/companies/:companyId/approvals/:id
 // Legacy endpoint for general updates (uses API key but doesn't require manager/ceo role)
 approvalsRouter.put("/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!isValidUUID(id)) {
+    return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+  }
   try {
-    const approval = await approvalService.updateApproval(req.params.id, {
+    const approval = await approvalService.updateApproval(id, {
       status: req.body.status,
       message: req.body.message,
     });
     if (!approval) {
-      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${req.params.id} not found` } });
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Approval ${id} not found` } });
     }
 
     broadcastEvent({ type: "approval_updated", payload: approval as unknown as Record<string, unknown> });

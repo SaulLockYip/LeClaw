@@ -18,6 +18,25 @@ export function registerCreateCommand(program: Command): void {
     .action(async (options) => {
       const { departmentId, title, description, apiKey } = options;
 
+      // Validate required fields
+      if (!title || title.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Title cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
+      if (!departmentId || departmentId.trim() === "") {
+        console.error(JSON.stringify({
+          success: false,
+          error: "Department ID cannot be empty",
+          code: "INVALID_INPUT",
+        }, null, 2));
+        process.exit(1);
+      }
+
       let agentId: string;
       let output = "";
 
