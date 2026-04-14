@@ -150,6 +150,7 @@ function ApprovalsListPage() {
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Title</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Requester</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Type</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Date</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Actions</th>
@@ -158,11 +159,11 @@ function ApprovalsListPage() {
           <tbody className="divide-y divide-slate-100">
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">Loading...</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">Loading...</td>
               </tr>
             ) : filteredApprovals.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">No approvals found</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">No approvals found</td>
               </tr>
             ) : (
               filteredApprovals.map((approval) => (
@@ -176,6 +177,7 @@ function ApprovalsListPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-600">{approval.requester}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">{approval.type}</td>
                   <td className="px-4 py-3 text-sm text-slate-500">
                     {new Date(approval.createdAt).toLocaleDateString()}
                   </td>
