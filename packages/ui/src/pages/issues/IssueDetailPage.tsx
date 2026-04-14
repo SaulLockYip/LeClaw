@@ -69,22 +69,11 @@ function IssueDetailPage() {
   }, [selectedCompany, id])
 
   useEffect(() => {
-    if (!selectedCompany || !issue?.subIssues?.length) return
-
-    async function loadSubIssues() {
-      try {
-        const results = await Promise.all(
-          issue.subIssues.map((subIssueId) =>
-            subIssueApi.get(selectedCompany.id, subIssueId)
-          )
-        )
-        setSubIssues(results)
-      } catch (err) {
-        console.error('Failed to load sub-issues:', err)
-      }
+    // subIssues are already loaded with the issue via getIssue()
+    if (issue?.subIssues) {
+      setSubIssues(issue.subIssues)
     }
-    loadSubIssues()
-  }, [selectedCompany, issue?.subIssues])
+  }, [issue?.subIssues])
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
