@@ -77,8 +77,11 @@ export async function listAgentsWithFreshStatus(apiKey: string): Promise<AgentsL
 }
 
 export function registerAgentsCommand(program: Command): void {
-  program
-    .command("agents list")
+  const agentsCommand = new Command("agents")
+    .description("Manage agents");
+
+  agentsCommand
+    .command("list")
     .description("List all agents (via API)")
     .requiredOption("--api-key <key>", "Agent API key")
     .option("--refresh", "Force fresh status sync from OpenClaw local files before listing")
@@ -101,4 +104,6 @@ export function registerAgentsCommand(program: Command): void {
         process.exit(1);
       }
     });
+
+  program.addCommand(agentsCommand);
 }
