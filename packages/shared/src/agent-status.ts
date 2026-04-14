@@ -14,6 +14,21 @@ interface SessionEntry {
   updatedAt?: number | string;
   startedAt?: string;
   lastActivity?: string;
+  lastActivityAt?: number | string;
+  createdAt?: number | string;
+  active?: boolean;
+  isActive?: boolean;
+  state?: string;
+  runState?: string;
+  lifecycleState?: string;
+  acp?: {
+    state?: string;
+    active?: boolean;
+    isActive?: boolean;
+    lastActivityAt?: number | string;
+    updatedAt?: number | string;
+    createdAt?: number | string;
+  };
   [key: string]: unknown;
 }
 
@@ -36,6 +51,24 @@ const ACTIVE_SESSION_STATES = new Set([
   "streaming",
 ]);
 
+const INACTIVE_SESSION_STATES = new Set([
+  "idle",
+  "inactive",
+  "error",
+  "failed",
+  "stopped",
+  "stopping",
+  "closed",
+  "done",
+  "completed",
+  "complete",
+  "paused",
+  "aborted",
+  "terminated",
+  "cancelled",
+  "canceled",
+]);
+
 function getDefaultConfigPath(): string {
   const home = process.env.HOME ?? process.env.USERPROFILE ?? "";
   return join(home, ".leclaw", "config.json");
@@ -44,12 +77,6 @@ function getDefaultConfigPath(): string {
 function resolveOpenClawHomePath(): string {
   const config = loadConfig({ configPath: getDefaultConfigPath() });
   return config.openclaw?.dir?.trim() || join(homedir(), ".openclaw");
-}
-
-function resolveOpenClawConfigPath(): string {
-  const explicit = process.env.OPENCLAW_CONFIG_PATH?.trim();
-  if (explicit) return explicit;
-  return join(resolveOpenClawHomePath(), "openclaw.json");
 }
 
 function resolveAgentSessionPath(agentId: string): string {
@@ -76,108 +103,127 @@ function asString(input: unknown): string | undefined {
   return typeof input === "string" ? input : undefined;
 }
 
+function asBoolean(input: unknown): boolean | undefined {
+  return typeof input === "boolean" ? input : undefined;
+}
+
 /**
  * Normalize session records from various JSON structures.
  * Handles: direct array, keyed object, nested .sessions/.items/.records
  */
-function normalizeSessionRecords(parsed: unknown): SessionEntry[] {
-  // Handle direct array
-  if (Array.isArray(parsed)) {
-    return parsed
+function normalizeRecordCollection(input: unknown): SessionEntry[] {
+  if (Array.isArray(input)) {
+    return input
       .map((item) => asObject(item) as SessionEntry | undefined)
       .filter((item): item is SessionEntry => Boolean(item));
   }
 
+  const object = asObject(input);
+  if (!object) return [];
+  return Object.values(object)
+    .map((item) => asObject(item) as SessionEntry | undefined)
+    .filter((item): item is SessionEntry => Boolean(item));
+}
+
+function extractSessionRecords(parsed: unknown): SessionEntry[] {
+  const direct = normalizeRecordCollection(parsed).filter(looksLikeSessionRecord);
+  if (direct.length > 0) return direct;
+
   const root = asObject(parsed);
   if (!root) return [];
 
-  // Handle keyed object { "agent:key": { ... }, ... }
-  const values = Object.values(root) as unknown[];
-  const records = values
-    .map((item) => asObject(item) as SessionEntry | undefined)
-    .filter((item): item is SessionEntry => Boolean(item));
-  if (records.length > 0) return records;
-
-  // Handle nested collections
-  const nestedCollections = [
-    root.sessions,
-    root.items,
-    root.records,
+  const topLevelCollections = [
+    normalizeRecordCollection(root.sessions),
+    normalizeRecordCollection(root.items),
+    normalizeRecordCollection(root.records),
   ];
-
-  for (const collection of nestedCollections) {
-    if (Array.isArray(collection)) {
-      const nested = (collection as unknown[])
-        .map((item) => asObject(item) as SessionEntry | undefined)
-        .filter((item): item is SessionEntry => Boolean(item));
-      if (nested.length > 0) return nested;
-    } else if (collection && typeof collection === "object") {
-      const nested = Object.values(collection as Record<string, unknown>) as unknown[];
-      const keyed = nested
-        .map((item) => asObject(item) as SessionEntry | undefined)
-        .filter((item): item is SessionEntry => Boolean(item));
-      if (keyed.length > 0) return keyed;
-    }
+  for (const collection of topLevelCollections) {
+    const records = collection.filter(looksLikeSessionRecord);
+    if (records.length > 0) return records;
   }
 
-  // Handle nested .data object
   const data = asObject(root.data);
   if (data) {
-    const dataCollections = [data.sessions, data.items, data.records];
-    for (const collection of dataCollections) {
-      if (Array.isArray(collection)) {
-        const nested = (collection as unknown[])
-          .map((item) => asObject(item) as SessionEntry | undefined)
-          .filter((item): item is SessionEntry => Boolean(item));
-        if (nested.length > 0) return nested;
-      } else if (collection && typeof collection === "object") {
-        const nested = Object.values(collection as Record<string, unknown>) as unknown[];
-        const keyed = nested
-          .map((item) => asObject(item) as SessionEntry | undefined)
-          .filter((item): item is SessionEntry => Boolean(item));
-        if (keyed.length > 0) return keyed;
-      }
+    const nestedCollections = [
+      normalizeRecordCollection(data.sessions),
+      normalizeRecordCollection(data.items),
+      normalizeRecordCollection(data.records),
+    ];
+    for (const collection of nestedCollections) {
+      const records = collection.filter(looksLikeSessionRecord);
+      if (records.length > 0) return records;
     }
   }
 
   return [];
 }
 
+function looksLikeSessionRecord(item: Record<string, unknown>): boolean {
+  if (
+    asString(item.sessionId) ||
+    asString(item.sessionKey) ||
+    asString(item.key) ||
+    asString(item.sessionFile)
+  ) {
+    return true;
+  }
+  if (asObject(item.acp) || asObject(item.origin) || asObject(item.deliveryContext)) return true;
+  if (readSessionState(item)) return true;
+  return false;
+}
+
+function readSessionState(item: Record<string, unknown>): string | undefined {
+  const direct =
+    asString(item.state) ??
+    asString(item.status) ??
+    asString(item.runState) ??
+    asString(item.lifecycleState);
+  if (direct) return direct.trim().toLowerCase();
+
+  const acp = asObject(item.acp);
+  const acpState = asString(acp?.state);
+  return acpState ? acpState.trim().toLowerCase() : undefined;
+}
+
+function readExplicitActiveFlag(item: Record<string, unknown>): boolean | undefined {
+  const direct = asBoolean(item.active) ?? asBoolean(item.isActive);
+  if (typeof direct === "boolean") return direct;
+
+  const acp = asObject(item.acp);
+  const acpActive = asBoolean(acp?.active) ?? asBoolean(acp?.isActive);
+  return typeof acpActive === "boolean" ? acpActive : undefined;
+}
+
 /**
  * Read updatedAt from session entry as epoch milliseconds.
  * Handles both number (epoch ms) and string formats.
+ * Also checks nested acp fields and alternative timestamp fields.
  */
 function readUpdatedAtMs(item: SessionEntry): number {
-  const updatedAt = item.updatedAt;
+  const candidates = [
+    item.updatedAt,
+    item.lastActivityAt,
+    item.createdAt,
+    asObject(item.acp)?.lastActivityAt,
+    asObject(item.acp)?.updatedAt,
+    asObject(item.acp)?.createdAt,
+  ];
 
-  if (typeof updatedAt === "number" && Number.isFinite(updatedAt)) {
-    return normalizeEpochMs(updatedAt);
-  }
-
-  if (typeof updatedAt === "string" && updatedAt.trim() !== "") {
-    const trimmed = updatedAt.trim();
-    // Check if it's a numeric string
-    if (/^\d+(\.\d+)?$/.test(trimmed)) {
-      const parsedNumeric = Number(trimmed);
-      if (Number.isFinite(parsedNumeric)) return normalizeEpochMs(parsedNumeric);
+  for (const candidate of candidates) {
+    if (typeof candidate === "number" && Number.isFinite(candidate)) {
+      return normalizeEpochMs(candidate);
     }
-    // Try parsing as date string
-    const parsedDate = Date.parse(trimmed);
-    if (!Number.isNaN(parsedDate)) return parsedDate;
-  }
-
-  // Fallback to lastActivity if it's a string date
-  const lastActivity = item.lastActivity;
-  if (typeof lastActivity === "string" && lastActivity.trim() !== "") {
-    const parsedDate = Date.parse(lastActivity.trim());
-    if (!Number.isNaN(parsedDate)) return parsedDate;
-  }
-
-  // Fallback to startedAt if it's a string date
-  const startedAt = item.startedAt;
-  if (typeof startedAt === "string" && startedAt.trim() !== "") {
-    const parsedDate = Date.parse(startedAt.trim());
-    if (!Number.isNaN(parsedDate)) return parsedDate;
+    if (typeof candidate === "string" && candidate.trim() !== "") {
+      const trimmed = candidate.trim();
+      // Check if it's a numeric string
+      if (/^\d+(\.\d+)?$/.test(trimmed)) {
+        const parsedNumeric = Number(trimmed);
+        if (Number.isFinite(parsedNumeric)) return normalizeEpochMs(parsedNumeric);
+      }
+      // Try parsing as date string
+      const parsedDate = Date.parse(trimmed);
+      if (!Number.isNaN(parsedDate)) return parsedDate;
+    }
   }
 
   return Number.NaN;
@@ -196,6 +242,25 @@ function normalizeEpochMs(value: number): number {
 }
 
 /**
+ * Check if a session entry represents an active session.
+ * Uses explicit active flag first, then state matching, then recency.
+ */
+function isSessionActive(item: SessionEntry, recencyWindowMs: number, nowMs: number): boolean {
+  const explicitActive = readExplicitActiveFlag(item);
+  if (typeof explicitActive === "boolean") return explicitActive;
+
+  const explicitState = readSessionState(item);
+  if (explicitState) {
+    if (ACTIVE_SESSION_STATES.has(explicitState)) return true;
+    if (INACTIVE_SESSION_STATES.has(explicitState)) return false;
+  }
+
+  const updatedAtMs = readUpdatedAtMs(item);
+  if (!Number.isFinite(updatedAtMs)) return false;
+  return nowMs - updatedAtMs <= recencyWindowMs;
+}
+
+/**
  * Determine agent status from session data
  * - "online" if active session exists (status is in ACTIVE_SESSION_STATES)
  * - "busy" if session exists but has been idle > 5 minutes
@@ -208,17 +273,17 @@ function determineStatus(sessionData: SessionsJson | null, lastActivity: Date | 
   }
 
   // Get sessions as array (handle keyed object structure)
-  const sessions = normalizeSessionRecords(sessionData);
+  const sessions = extractSessionRecords(sessionData);
 
   if (sessions.length === 0) {
     return "offline";
   }
 
+  const nowMs = Date.now();
+  const recencyWindowMs = 5 * 60 * 1000; // 5 minutes
+
   // Find the most recent active session
-  const activeSession = sessions.find((s) => {
-    const status = asString(s.status)?.toLowerCase();
-    return status !== undefined && ACTIVE_SESSION_STATES.has(status);
-  });
+  const activeSession = sessions.find((s) => isSessionActive(s, recencyWindowMs, nowMs));
 
   if (!activeSession) {
     return "offline";
@@ -228,7 +293,7 @@ function determineStatus(sessionData: SessionsJson | null, lastActivity: Date | 
   if (lastActivity) {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     if (lastActivity > fiveMinutesAgo) {
-      const status = asString(activeSession.status)?.toLowerCase();
+      const status = readSessionState(activeSession);
       return status === "busy" ? "busy" : "online";
     }
     return "busy";
@@ -247,17 +312,17 @@ function getLastActivity(sessionData: SessionsJson | null): Date | null {
   }
 
   // Get sessions as array (handle keyed object structure)
-  const sessions = normalizeSessionRecords(sessionData);
+  const sessions = extractSessionRecords(sessionData);
 
   if (sessions.length === 0) {
     return null;
   }
 
+  const nowMs = Date.now();
+  const recencyWindowMs = 5 * 60 * 1000; // 5 minutes
+
   // Find the most recent active session
-  const activeSession = sessions.find((s) => {
-    const status = asString(s.status)?.toLowerCase();
-    return status !== undefined && ACTIVE_SESSION_STATES.has(status);
-  });
+  const activeSession = sessions.find((s) => isSessionActive(s, recencyWindowMs, nowMs));
 
   if (!activeSession) {
     return null;
@@ -267,24 +332,6 @@ function getLastActivity(sessionData: SessionsJson | null): Date | null {
   const updatedAtMs = readUpdatedAtMs(activeSession);
   if (Number.isFinite(updatedAtMs)) {
     return new Date(updatedAtMs);
-  }
-
-  // Fallback to lastActivity string parsing
-  const lastActivityStr = asString(activeSession.lastActivity);
-  if (lastActivityStr) {
-    const parsed = new Date(lastActivityStr);
-    if (!isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  }
-
-  // Fallback to startedAt string parsing
-  const startedAtStr = asString(activeSession.startedAt);
-  if (startedAtStr) {
-    const parsed = new Date(startedAtStr);
-    if (!isNaN(parsed.getTime())) {
-      return parsed;
-    }
   }
 
   return null;
