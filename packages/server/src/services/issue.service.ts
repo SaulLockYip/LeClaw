@@ -95,7 +95,10 @@ export async function updateIssue(id: string, input: UpdateIssueInput): Promise<
 export async function deleteIssue(id: string): Promise<boolean> {
   const db = await getDb();
 
-  // Delete related sub-issues first to avoid foreign key constraint violation
+  // Delete related comments first to avoid foreign key constraint violation
+  await db.delete(issueComments).where(eq(issueComments.issueId, id));
+
+  // Delete related sub-issues next to avoid foreign key constraint violation
   await db.delete(subIssuesTable).where(eq(subIssuesTable.parentIssueId, id));
 
   const result = await db.delete(issues).where(eq(issues.id, id)).returning();
