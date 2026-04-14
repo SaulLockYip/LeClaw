@@ -42,8 +42,13 @@ async function requireApiKey(req: Request, res: Response, next: NextFunction) {
 
 // Middleware to require Manager or CEO role
 function requireManagerOrCeo(req: Request, res: Response, next: NextFunction) {
-  const { role } = (req as any).agentInfo;
-  if (role !== "Manager" && role !== "CEO") {
+  const agentInfo = (req as any).agentInfo;
+  if (!agentInfo) {
+    return res.status(401).json({
+      success: false, error: { code: "UNAUTHORIZED", message: "API key required for this action" }
+    });
+  }
+  if (agentInfo.role !== "Manager" && agentInfo.role !== "CEO") {
     return res.status(403).json({
       success: false, error: { code: "FORBIDDEN", message: "Only Manager or CEO can perform this action" }
     });
