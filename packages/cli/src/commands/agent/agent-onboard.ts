@@ -2,12 +2,18 @@
 // Onboards an OpenClaw agent to LeClaw via invite key
 
 import { Command } from "commander";
+import path from "path";
+import os from "os";
 import { db, agentInvites, agents, closeDb } from "@leclaw/db";
 import { eq } from "drizzle-orm";
 import { generateApiKey } from "@leclaw/shared/api-key";
 import { auditLog } from "../../helpers/audit-log.js";
 import { registerAgentInviteCommand } from "./agent-invite.js";
 import { registerWhoamiCommand } from "./whoami.js";
+import { getLeClawServerUrl } from "../../helpers/api-client.js";
+import { loadConfig } from "@leclaw/shared";
+
+const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
 export interface OnboardResult {
   success: boolean;
@@ -17,11 +23,60 @@ export interface OnboardResult {
   validationErrors?: string[];
 }
 
+interface ClaimApiResponse {
+  success: boolean;
+  data?: {
+    agentId?: string;
+    apiKey?: string;
+  };
+  error?: {
+    message?: string;
+  };
+}
+
 /**
  * Claim an invite and onboard the agent
  * Uses the pre-stored openClawAgentId, workspace, and dir from invite creation
  */
 export async function claimInviteAndOnboard(inviteKey: string): Promise<OnboardResult> {
+  const config = loadConfig({ configPath: CONFIG_FILE });
+  const useHttp = config.features?.httpMigration ?? false;
+
+  if (useHttp) {
+    // Use HTTP API to claim invite
+    const serverUrl = getLeClawServerUrl();
+    const response = await fetch(`${serverUrl}/api/agent-invites/claim/${inviteKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const text = await response.text();
+    if (!text) {
+      return {
+        success: false,
+        error: `HTTP ${response.status}: Empty response`,
+      };
+    }
+
+    const result: ClaimApiResponse = JSON.parse(text);
+
+    if (!response.ok || !result.success) {
+      return {
+        success: false,
+        error: result.error?.message ?? "Failed to claim invite via API",
+      };
+    }
+
+    return {
+      success: true,
+      agentId: result.data?.agentId,
+      apiKey: result.data?.apiKey,
+    };
+  }
+
+  // Direct DB access (original behavior)
   // Unwrap db promise to get the actual drizzle instance for method chaining
   const database = await db;
 

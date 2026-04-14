@@ -2,9 +2,15 @@
 // Display the current authenticated agent's information
 
 import { Command } from "commander";
+import path from "path";
+import os from "os";
 import { getAgentInfoFromApiKey } from "../../helpers/api-key.js";
+import { getCurrentAgent } from "../../helpers/api-client.js";
+import { loadConfig } from "@leclaw/shared";
 import { db, agents } from "@leclaw/db";
 import { eq } from "drizzle-orm";
+
+const CONFIG_FILE = path.join(os.homedir(), ".leclaw", "config.json");
 
 /**
  * Get the name of an agent from the database
@@ -31,9 +37,25 @@ export interface WhoamiResult {
 
 /**
  * Get the current authenticated agent's information
+ * When useHttp is true, uses the HTTP API (requires server running)
+ * When useHttp is false, uses direct DB access
  */
-export async function getWhoamiInfo(apiKey: string): Promise<WhoamiResult> {
+export async function getWhoamiInfo(apiKey: string, useHttp: boolean = false): Promise<WhoamiResult> {
   try {
+    if (useHttp) {
+      // Use HTTP API - fully respects httpMigration flag
+      const agentInfo = await getCurrentAgent(apiKey);
+      return {
+        success: true,
+        agentId: agentInfo.agentId,
+        name: agentInfo.name,
+        role: agentInfo.role,
+        companyId: agentInfo.companyId,
+        departmentId: agentInfo.departmentId,
+      };
+    }
+
+    // Use direct DB (default behavior)
     const agentInfo = await getAgentInfoFromApiKey(apiKey);
     const name = await getAgentName(agentInfo.agentId);
 
@@ -68,7 +90,10 @@ export function registerWhoamiCommand(agentCommand: Command): void {
         process.exit(1);
       }
 
-      const result = await getWhoamiInfo(apiKey);
+      const config = loadConfig({ configPath: CONFIG_FILE });
+      const useHttp = config.features?.httpMigration ?? false;
+
+      const result = await getWhoamiInfo(apiKey, useHttp);
 
       if (result.success) {
         console.log(JSON.stringify({

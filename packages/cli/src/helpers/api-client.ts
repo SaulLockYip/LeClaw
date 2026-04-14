@@ -162,5 +162,88 @@ export function createApiClient({ apiKey, companyId }: ApiClientOptions) {
   };
 }
 
+// Methods that don't require companyId
+export interface ClaimInviteResult {
+  success: boolean;
+  agentId?: string;
+  apiKey?: string;
+  error?: string;
+}
+
+export interface CurrentAgentInfo {
+  agentId: string;
+  name: string;
+  role: string;
+  title?: string | null;
+  companyId: string;
+  departmentId?: string | null;
+}
+
+/**
+ * Claim an invite by invite key (no companyId needed)
+ */
+export async function claimInvite(inviteKey: string): Promise<ClaimInviteResult> {
+  const baseUrl = getLeClawServerUrl();
+  const url = `${baseUrl}/api/agent-invites/claim/${inviteKey}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const text = await response.text();
+  if (!text) {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return { success: true };
+  }
+
+  const result: ApiResponse<{ agentId: string; apiKey: string; message: string }> = JSON.parse(text);
+
+  if (!response.ok || !result.success) {
+    const errorMessage = result.error?.message || `HTTP ${response.status}`;
+    throw new Error(errorMessage);
+  }
+
+  return {
+    success: true,
+    agentId: result.data?.agentId,
+    apiKey: result.data?.apiKey,
+  };
+}
+
+/**
+ * Get current authenticated agent's info
+ */
+export async function getCurrentAgent(apiKey: string): Promise<CurrentAgentInfo> {
+  const baseUrl = getLeClawServerUrl();
+  const url = `${baseUrl}/api/agents/me`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+    },
+  });
+
+  const text = await response.text();
+  if (!text) {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return {} as CurrentAgentInfo;
+  }
+
+  const result: ApiResponse<CurrentAgentInfo> = JSON.parse(text);
+
+  if (!response.ok || !result.success) {
+    const errorMessage = result.error?.message || `HTTP ${response.status}`;
+    throw new Error(errorMessage);
+  }
+
+  return result.data as CurrentAgentInfo;
+}
+
 // Re-export AgentInfo for convenience
 export type { AgentInfo } from "./api-key.js";

@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { eq, and, lt, isNotNull } from "drizzle-orm";
 import { agentInvites, agents, companies, departments } from "@leclaw/db/schema";
 import { getDb } from "@leclaw/db/client";
+import * as agentService from "./agent.service.js";
 
 const INVITE_EXPIRY_MINUTES = 30;
 
@@ -199,4 +200,74 @@ export async function expireOldInvites(): Promise<number> {
     ));
 
   return 0; // Drizzle doesn't return count, this is an approximation
+}
+
+export interface ClaimInviteResult {
+  success: boolean;
+  agentId?: string;
+  apiKey?: string;
+  error?: string;
+}
+
+/**
+ * Claim an invite and create the agent
+ * This is the server-side implementation of what the CLI does directly
+ */
+export async function claimInvite(inviteKey: string): Promise<ClaimInviteResult> {
+  const db = await getDb();
+
+  // Find the invite
+  const [invite] = await db.select().from(agentInvites)
+    .where(eq(agentInvites.inviteKey, inviteKey))
+    .limit(1);
+
+  if (!invite) {
+    return { success: false, error: "Invalid invite key" };
+  }
+
+  // Check if already accepted
+  if (invite.status === "accepted") {
+    return { success: false, error: "Invite has already been used" };
+  }
+
+  // Check if expired
+  if (invite.status === "expired" || new Date() > invite.expiresAt) {
+    return { success: false, error: "Invite has expired" };
+  }
+
+  // Use the pre-stored OpenClaw agent info from invite
+  const { openClawAgentId, openClawAgentWorkspace, openClawAgentDir } = invite;
+
+  if (!openClawAgentId) {
+    return { success: false, error: "Invite does not have an OpenClaw agent assigned. Please recreate the invite with an agent selected." };
+  }
+
+  try {
+    const now = new Date();
+
+    // Create the agent record using agentService
+    const result = await agentService.createAgent(invite.companyId, {
+      name: invite.name,
+      role: invite.role as "CEO" | "Manager" | "Staff",
+      title: invite.title ?? undefined,
+      departmentId: invite.departmentId ?? undefined,
+      openClawAgentId: openClawAgentId ?? undefined,
+      openClawAgentWorkspace: openClawAgentWorkspace ?? undefined,
+      openClawAgentDir: openClawAgentDir ?? undefined,
+    });
+
+    // Mark invite as accepted
+    await db.update(agentInvites)
+      .set({ status: "accepted" } as any)
+      .where(eq(agentInvites.inviteKey, inviteKey));
+
+    return {
+      success: true,
+      agentId: result.agent.id,
+      apiKey: result.apiKey,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, error: message };
+  }
 }
