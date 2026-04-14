@@ -57,6 +57,7 @@ function ApprovalsListPage() {
 
   const openApproveDialog = (approval: Approval) => {
     setSelectedApproval(approval)
+    setMessage('')
     setShowApproveDialog(true)
   }
 
@@ -77,7 +78,7 @@ function ApprovalsListPage() {
     if (!selectedCompany || !selectedApproval) return
     setIsProcessing(true)
     try {
-      await approvalApi.approve(selectedCompany.id, selectedApproval.id)
+      await approvalApi.approve(selectedCompany.id, selectedApproval.id, message)
       setApprovals((prev) =>
         prev.map((a) => (a.id === selectedApproval.id ? { ...a, status: 'Approved' } : a))
       )
@@ -248,6 +249,16 @@ function ApprovalsListPage() {
               <div>
                 <label className="text-xs uppercase text-slate-500 tracking-wider">Requester</label>
                 <p className="text-slate-900 mt-1">{selectedApproval.requester}</p>
+              </div>
+              <div>
+                <label className="text-xs uppercase text-slate-500 tracking-wider">Message (optional)</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Enter approval message..."
+                  className="w-full mt-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  rows={3}
+                />
               </div>
             </div>
             <div className="flex gap-3 justify-end">
