@@ -142,8 +142,7 @@ goalsRouter.put("/:id", requireCeo, async (req: Request, res: Response) => {
 });
 
 // DELETE /api/companies/:companyId/goals/:id
-// Requires API key + CEO role
-goalsRouter.delete("/:id", requireCeo, async (req: Request, res: Response) => {
+goalsRouter.delete("/:id", async (req: Request, res: Response) => {
   try {
     if (!isValidUUID(req.params.id)) {
       return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
