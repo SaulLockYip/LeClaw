@@ -191,13 +191,13 @@ function ApprovalDetailPage() {
       </div>
 
       {/* Approval/Rejection Message Card */}
-      {approval.rejectMessage && (approval.status === 'Approved' || approval.status === 'Rejected') && (
+      {approval.message && (approval.status === 'Approved' || approval.status === 'Rejected') && (
         <div className={`rounded-lg border p-6 ${approval.status === 'Approved' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
           <h2 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${approval.status === 'Approved' ? 'text-green-900' : 'text-red-900'}`}>
             {approval.status === 'Approved' ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
             {approval.status === 'Approved' ? 'Approval Message' : 'Rejection Reason'}
           </h2>
-          <p className={approval.status === 'Approved' ? 'text-green-800' : 'text-red-800'}>{approval.rejectMessage}</p>
+          <p className={approval.status === 'Approved' ? 'text-green-800' : 'text-red-800'}>{approval.message}</p>
         </div>
       )}
 

@@ -1,0 +1,1 @@
+ALTER TABLE approvals RENAME COLUMN reject_message TO message;
