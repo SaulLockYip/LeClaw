@@ -94,10 +94,11 @@ export interface Project {
 
 export interface Approval {
   id: string
+  companyId: string
   title: string
-  description: string
+  description?: string
   type: string
-  requester: string
+  requester?: string
   status: 'Pending' | 'Approved' | 'Rejected'
   message?: string
   approverId?: string
