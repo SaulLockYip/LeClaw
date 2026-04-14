@@ -67,7 +67,7 @@ export async function closeDb(): Promise<void> {
 
 // Utility function for migration SQL connections
 function createUtilitySql(url: string) {
-  return postgres(url, { max: 1, onnotice: () => {} });
+  return postgres(url, { max: 1, connect_timeout: 5, onnotice: () => {} });
 }
 
 function isSafeIdentifier(value: string): boolean {
