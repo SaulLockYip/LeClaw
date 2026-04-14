@@ -222,8 +222,11 @@ leclaw config server <key> <value>     # Update server setting
 List all OpenClaw agents and their binding status.
 
 ```bash
-leclaw agents list
+leclaw agents list          # Fast - reads from local database
+leclaw agents list --refresh  # Forces fresh sync from OpenClaw files
 ```
+
+The `--refresh` flag forces a sync from OpenClaw files (`~/.openclaw/openclaw.json` and `~/.openclaw/agents/*/sessions/sessions.json`).
 
 Output:
 ```json
@@ -234,6 +237,9 @@ Output:
       "name": "CEO Agent",
       "workspace": "/openclaw/agents/ceo",
       "status": "online",
+      "statusLastUpdated": "2026-04-14T10:30:00Z",
+      "lastHeartbeatAt": "2026-04-14T10:29:45Z",
+      "heartbeatEnabled": true,
       "bound": true,
       "boundTo": { "companyId": "uuid", "role": "CEO" }
     }
@@ -241,6 +247,8 @@ Output:
   "errors": []
 }
 ```
+
+**Agent Status Values:** `online`, `busy`, `offline`
 
 ### `leclaw agent onboard`
 
@@ -511,7 +519,7 @@ Configuration file: `~/.leclaw/config.json`
 
 ```json
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "openclaw": {
     "dir": "/path/to/openclaw",
     "gatewayUrl": "ws://localhost:4396",
@@ -522,8 +530,27 @@ Configuration file: `~/.leclaw/config.json`
   },
   "database": {
     "connectionString": "postgres://..."
+  },
+  "features": {
+    "httpMigration": false
   }
 }
+```
+
+#### Feature Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `features.httpMigration` | `false` | When enabled, Tier 1/2/3 CLI commands use HTTP instead of direct DB. Tier 4 commands (init, doctor, status, onboard, whoami, agents-list) always use direct DB. |
+
+#### Setting Configuration via CLI
+
+```bash
+# View current config
+leclaw config
+
+# Set a specific config value
+leclaw config set --path features.httpMigration --value true
 ```
 
 ---

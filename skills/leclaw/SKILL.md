@@ -1182,6 +1182,41 @@ leclaw department list --api-key <key>
 
 ---
 
+## Configuration
+
+### Feature Flags
+
+LeClaw supports feature flags that control behavior:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `features.httpMigration` | `false` | When enabled, Tier 1/2/3 CLI commands use HTTP instead of direct DB access. Tier 4 commands (init, doctor, status, onboard, whoami, agents-list) always use direct DB. |
+
+### Agent Status Fields
+
+Agents have additional status tracking fields:
+
+| Field | Description |
+|-------|-------------|
+| `status` | Current status: `online`, `busy`, or `offline` |
+| `statusLastUpdated` | Timestamp of last status update |
+| `lastHeartbeatAt` | Timestamp of last heartbeat from OpenClaw |
+| `heartbeatEnabled` | Whether heartbeat monitoring is active |
+
+### Refreshing Agent List
+
+```bash
+# List agents from local cache (fast)
+leclaw agents list --api-key <key>
+
+# Force fresh sync from OpenClaw files
+leclaw agents list --api-key <key> --refresh
+```
+
+The `--refresh` flag syncs from `~/.openclaw/openclaw.json` and `~/.openclaw/agents/*/sessions/sessions.json`.
+
+---
+
 ## See Also
 
 - [a2a-chatting](https://clawhub.ai/saullockyip/a2a-chatting) - Recommended A2A communication CLI
