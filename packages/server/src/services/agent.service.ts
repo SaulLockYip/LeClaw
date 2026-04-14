@@ -9,6 +9,7 @@ export interface VerifyApiKeyResult {
   agentId: string;
   companyId: string;
   role: AgentRole;
+  departmentId: string | null;
 }
 
 export interface CreateAgentInput {
@@ -197,7 +198,7 @@ export async function verifyApiKey(apiKey: string): Promise<VerifyApiKeyResult> 
 
   // Look up agent directly by agentApiKey
   const [agentRecord] = await db
-    .select({ id: agents.id, companyId: agents.companyId, role: agents.role })
+    .select({ id: agents.id, companyId: agents.companyId, role: agents.role, departmentId: agents.departmentId })
     .from(agents)
     .where(eq(agents.agentApiKey, apiKey))
     .limit(1);
@@ -210,5 +211,6 @@ export async function verifyApiKey(apiKey: string): Promise<VerifyApiKeyResult> 
     agentId: agentRecord.id,
     companyId: agentRecord.companyId,
     role: agentRecord.role as AgentRole,
+    departmentId: agentRecord.departmentId,
   };
 }
