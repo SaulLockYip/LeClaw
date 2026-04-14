@@ -135,3 +135,24 @@ goalsRouter.put("/:id", requireCeo, async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update goal" } });
   }
 });
+
+// DELETE /api/companies/:companyId/goals/:id
+// Requires API key + CEO role
+goalsRouter.delete("/:id", requireCeo, async (req: Request, res: Response) => {
+  try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
+    const deleted = await goalService.deleteGoal(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Goal ${req.params.id} not found` } });
+    }
+
+    broadcastEvent({ type: "goal_deleted", payload: { id: req.params.id } });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting goal:", error);
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to delete goal" } });
+  }
+});

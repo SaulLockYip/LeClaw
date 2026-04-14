@@ -214,13 +214,13 @@ export const approvalApi = {
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}`),
   approve: (companyId: string, approvalId: string, message?: string) =>
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}/approve`, {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
     }),
   reject: (companyId: string, approvalId: string, message: string) =>
     fetchApi<Approval>(`/companies/${companyId}/approvals/${approvalId}/reject`, {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
     }),

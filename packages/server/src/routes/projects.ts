@@ -130,3 +130,21 @@ projectsRouter.put("/:id", requireCeoOrManager, async (req: Request, res: Respon
     res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to update project" } });
   }
 });
+
+// DELETE /api/companies/:companyId/projects/:id
+// Requires API key + CEO or Manager role
+projectsRouter.delete("/:id", requireCeoOrManager, async (req: Request, res: Response) => {
+  try {
+    if (!isValidUUID(req.params.id)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid ID format" } });
+    }
+    const deleted = await projectService.deleteProject(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `Project ${req.params.id} not found` } });
+    }
+    res.json({ success: true, data: { deleted: true } });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Failed to delete project" } });
+  }
+});
